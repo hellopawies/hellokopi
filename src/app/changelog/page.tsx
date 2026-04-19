@@ -1,5 +1,28 @@
 const VERSIONS = [
   {
+    version: "v1.7.0",
+    date: "19 Apr 2026, 8:13 pm",
+    title: "System dark mode",
+    changes: [
+      "App now follows your phone's dark/light mode setting automatically",
+      "Removed the manual moon/sun toggle",
+      "Dark mode handled entirely via CSS — no flash on refresh or navigation",
+    ],
+  },
+  {
+    version: "v1.6.0",
+    date: "19 Apr 2026, 7:59 pm",
+    title: "Time fixes & polish",
+    changes: [
+      "All times now use Singapore time (UTC+8) regardless of device timezone",
+      "Session window reduced to 15 minutes — orders placed more than 15 min apart start a new session",
+      "Orders page shows session time range e.g. \"3:01 – 3:16\"",
+      "Fixed name selector dropdown background — fully opaque in light mode",
+      "Added Rob to the colleague name list",
+      "Changelog page cleanup — removed redundant back button and Check Orders link",
+    ],
+  },
+  {
     version: "v1.5.0",
     date: "19 Apr 2026, 7:45 pm",
     title: "Multi-drink cart",
