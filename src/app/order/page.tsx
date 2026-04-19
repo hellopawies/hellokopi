@@ -252,8 +252,8 @@ function OrderContent() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="px-5 sm:px-8 border-b border-stone-100 dark:border-stone-800">
+      {/* Tabs — sticky so they stay visible while scrolling the drink list */}
+      <div className="sticky top-0 z-30 px-5 sm:px-8 border-b border-stone-100 dark:border-stone-800 bg-[#FAFAF8] dark:bg-black">
         <div className="max-w-lg mx-auto flex gap-5 sm:gap-7">
           {TABS.map((t) => (
             <button
