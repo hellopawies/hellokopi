@@ -8,10 +8,11 @@ import type { Order, DateGroup, Session } from "@/types/order";
 function groupByDrink(session: Session): { drink: string; names: string[] }[] {
   const map = new Map<string, string[]>();
   for (const order of session.orders) {
-    const drink = order.items?.[0]?.name;
-    if (!drink) continue;
-    if (!map.has(drink)) map.set(drink, []);
-    map.get(drink)!.push(order.person_name);
+    for (const item of order.items ?? []) {
+      if (!item?.name) continue;
+      if (!map.has(item.name)) map.set(item.name, []);
+      map.get(item.name)!.push(order.person_name);
+    }
   }
   return [...map.entries()]
     .sort((a, b) => b[1].length - a[1].length)
