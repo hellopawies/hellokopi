@@ -1,5 +1,15 @@
 const VERSIONS = [
   {
+    version: "v1.8.0",
+    date: "19 Apr 2026, 9:15 pm",
+    title: "Kopi icon & home screen app",
+    changes: [
+      "Kopi cup favicon now shows in browser tab and bookmarks",
+      "Add to Home Screen on iPhone — opens as a full-screen app with the kopi icon",
+      "Fixed navigation flash — no more black screen when tapping the home button",
+    ],
+  },
+  {
     version: "v1.7.0",
     date: "19 Apr 2026, 8:13 pm",
     title: "System dark mode",
@@ -18,7 +28,6 @@ const VERSIONS = [
       "Session window reduced to 15 minutes — orders placed more than 15 min apart start a new session",
       "Orders page shows session time range e.g. \"3:01 – 3:16\"",
       "Fixed name selector dropdown background — fully opaque in light mode",
-      "Added Rob to the colleague name list",
       "Changelog page cleanup — removed redundant back button and Check Orders link",
     ],
   },
