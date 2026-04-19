@@ -48,13 +48,13 @@ export default function OrdersPage() {
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-stone-900 px-5 sm:px-8 pt-5 sm:pt-6 pb-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-lg mx-auto">
         {/* Page header */}
         <div className="mb-10 sm:mb-14">
           <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
             hello kopi
           </span>
-          <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-2 mb-4" />
+          <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
           <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100">
             Orders
           </h1>
