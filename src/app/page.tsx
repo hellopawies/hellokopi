@@ -10,7 +10,9 @@ const COLLEAGUES = [
 ];
 
 function getGreeting(): string {
-  const hour = new Date().getHours();
+  const hour = parseInt(
+    new Date().toLocaleString("en-GB", { timeZone: "Asia/Singapore", hour: "2-digit", hour12: false })
+  );
   if (hour >= 5 && hour < 12) return "Good morning";
   if (hour >= 12 && hour < 17) return "Good afternoon";
   return "Good evening";

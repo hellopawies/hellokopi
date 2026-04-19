@@ -13,7 +13,7 @@ export function groupOrders(orders: Order[]): DateGroup[] {
   // Group by local date (YYYY-MM-DD)
   const dateMap = new Map<string, Order[]>();
   for (const order of sorted) {
-    const dateKey = new Date(order.created_at).toLocaleDateString("en-CA");
+    const dateKey = new Date(order.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
     if (!dateMap.has(dateKey)) dateMap.set(dateKey, []);
     dateMap.get(dateKey)!.push(order);
   }
