@@ -116,8 +116,8 @@ export default function GreetingPage() {
             {open && (
               <div className="
                 absolute top-full left-0 right-0 z-10 mt-1
-                bg-white dark:bg-[#111] border border-stone-200 dark:border-stone-700 shadow-sm
-                divide-y divide-stone-50 dark:divide-stone-700
+                bg-white dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black
+                divide-y divide-stone-50 dark:divide-[#3a3a3a]
                 max-h-[55vh] overflow-y-auto
               ">
                 {COLLEAGUES.map((name) => (
@@ -130,7 +130,7 @@ export default function GreetingPage() {
                       transition-colors duration-150 touch-manipulation
                       ${selected === name
                         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
-                        : "text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#1a1a1a] active:bg-stone-100 dark:active:bg-[#222] hover:text-stone-800 dark:hover:text-stone-100"
+                        : "text-stone-600 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-[#3a3a3a] active:bg-stone-100 dark:active:bg-[#444] hover:text-stone-800 dark:hover:text-stone-100"
                       }
                       ${name === "Others" ? "italic" : ""}
                     `}
