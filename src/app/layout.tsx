@@ -19,12 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.matches)document.documentElement.classList.add('dark');mq.addEventListener('change',function(e){e.matches?document.documentElement.classList.add('dark'):document.documentElement.classList.remove('dark');});}catch(e){}})();`
-        }} />
-      </head>
+    <html lang="en">
+      <head />
       <body>
         <Header />
         {children}
