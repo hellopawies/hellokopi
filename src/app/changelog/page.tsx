@@ -1,0 +1,159 @@
+"use client";
+
+import Link from "next/link";
+
+const VERSIONS = [
+  {
+    version: "v1.5.0",
+    date: "19 Apr 2026, 7:45 pm",
+    title: "Multi-drink cart",
+    changes: [
+      "Add drinks to a cart — order multiple different drinks in one go",
+      "Adjust quantity per drink with − and + controls in the order bar",
+      "Reordered tabs: My Picks → Top Orders → All Drinks",
+      "Orders display now correctly counts multi-drink orders",
+    ],
+  },
+  {
+    version: "v1.4.0",
+    date: "19 Apr 2026, 7:28 pm",
+    title: "Returning user & resilience",
+    changes: [
+      "Home page remembers your name — returning users skip the selector",
+      "\"Not you?\" link to switch to a different person",
+      "Fixed black screen flash when navigating back to home",
+      "Orders page now times out after 8 seconds instead of hanging",
+      "Added Try Again button when orders fail to load",
+    ],
+  },
+  {
+    version: "v1.3.0",
+    date: "19 Apr 2026, 7:06 pm",
+    title: "Sticky headers & orders UX",
+    changes: [
+      "Full header block (brand + heading + tabs) sticks to top while scrolling",
+      "Orders page matches the same sticky header behaviour",
+      "Day tabs on orders page — Today, Yesterday, or date",
+      "Rotating funny quips on the orders page",
+      "Removed decorative gradient lines for cleaner look",
+    ],
+  },
+  {
+    version: "v1.2.0",
+    date: "19 Apr 2026, 6:34 pm",
+    title: "Dark mode & layout polish",
+    changes: [
+      "Dark mode toggle (moon/sun) in the top-left corner",
+      "OLED pure black dark mode — saves battery on AMOLED screens",
+      "Hot drinks first, iced (Peng) drinks sorted to the end",
+      "Fixed mobile header overlap on small screens",
+      "Fixed dropdown readability in dark mode",
+      "Standardised content width across all pages",
+    ],
+  },
+  {
+    version: "v1.1.0",
+    date: "19 Apr 2026, 5:55 pm",
+    title: "Full drink menu & orders view",
+    changes: [
+      "Full kopitiam drink menu with categories and descriptions",
+      "Top Orders tab — see what the team is ordering most",
+      "My Picks tab — save favourite drinks with the heart button",
+      "All Drinks tab — browse the full menu by category",
+      "Orders page shows drinks grouped by session with cup counts",
+    ],
+  },
+  {
+    version: "v1.0.0",
+    date: "19 Apr 2026, 4:55 pm",
+    title: "Initial launch",
+    changes: [
+      "Greeting page with colleague name selector",
+      "Drink order page with confirmation and order reference",
+      "Check Orders page to see who ordered what",
+      "Deployed to GitHub Pages",
+    ],
+  },
+];
+
+export default function ChangelogPage() {
+  return (
+    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
+
+      {/* Sticky header */}
+      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+        <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
+          <div className="max-w-lg mx-auto">
+            <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
+              hello kopi
+            </span>
+            <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
+            <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
+              Changelog
+            </h1>
+            <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
+              What&apos;s new in hello kopi.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Version list */}
+      <div className="px-5 sm:px-8 pt-8 pb-16">
+        <div className="max-w-lg mx-auto flex flex-col gap-10">
+          {VERSIONS.map(({ version, date, title, changes }) => (
+            <div key={version} className="flex gap-5 sm:gap-7">
+              {/* Version pill + timeline line */}
+              <div className="flex flex-col items-center gap-2 pt-0.5">
+                <span className="text-[10px] font-sans font-medium text-stone-400 dark:text-stone-500 tabular-nums whitespace-nowrap">
+                  {version}
+                </span>
+                <div className="w-px flex-1 bg-stone-100 dark:bg-stone-800 min-h-[2rem]" />
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0 pb-2">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans mb-1.5">
+                  {date}
+                </p>
+                <h2 className="font-serif text-xl font-light tracking-wide text-stone-800 dark:text-stone-100 mb-3">
+                  {title}
+                </h2>
+                <ul className="flex flex-col gap-2">
+                  {changes.map((c, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <span className="mt-[5px] w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600 flex-shrink-0" />
+                      <span className="text-sm font-sans text-stone-500 dark:text-stone-400 leading-relaxed">
+                        {c}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+
+          {/* Bottom cap */}
+          <div className="flex gap-5 sm:gap-7">
+            <div className="flex flex-col items-center pt-0.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-stone-200 dark:bg-stone-700" />
+            </div>
+            <p className="font-serif text-sm font-light italic text-stone-300 dark:text-stone-600 pb-2">
+              The beginning.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Back link */}
+      <div className="fixed bottom-6 sm:bottom-8 left-0 right-0 flex justify-center pointer-events-none">
+        <Link
+          href="/"
+          className="pointer-events-auto text-[10px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors duration-200"
+        >
+          ← Back
+        </Link>
+      </div>
+    </main>
+  );
+}

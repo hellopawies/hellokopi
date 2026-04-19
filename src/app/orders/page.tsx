@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import type { Order, DateGroup, Session } from "@/types/order";
@@ -8,10 +8,11 @@ import type { Order, DateGroup, Session } from "@/types/order";
 function groupByDrink(session: Session): { drink: string; names: string[] }[] {
   const map = new Map<string, string[]>();
   for (const order of session.orders) {
-    const drink = order.items?.[0]?.name;
-    if (!drink) continue;
-    if (!map.has(drink)) map.set(drink, []);
-    map.get(drink)!.push(order.person_name);
+    for (const item of order.items ?? []) {
+      if (!item?.name) continue;
+      if (!map.has(item.name)) map.set(item.name, []);
+      map.get(item.name)!.push(order.person_name);
+    }
   }
   return [...map.entries()]
     .sort((a, b) => b[1].length - a[1].length)
@@ -53,26 +54,31 @@ export default function OrdersPage() {
     setQuip(QUIPS[Math.floor(Math.random() * QUIPS.length)]);
   }, []);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!isConfigured) { setLoading(false); return; }
-    async function load() {
-      try {
-        const { data, error } = await supabase
-          .from("orders")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        const g = groupOrders(data as Order[]);
-        setGroups(g);
-        if (g.length > 0) setSelectedDate(g[0].dateKey);
-      } catch {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    setError(false);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .abortSignal(controller.signal);
+      if (error) throw error;
+      const g = groupOrders(data as Order[]);
+      setGroups(g);
+      if (g.length > 0) setSelectedDate(g[0].dateKey);
+    } catch {
+      setError(true);
+    } finally {
+      clearTimeout(timer);
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const activeGroup = groups.find((g) => g.dateKey === selectedDate) ?? null;
 
@@ -134,9 +140,17 @@ export default function OrdersPage() {
             </p>
           )}
           {!loading && error && (
-            <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center py-20">
-              Could not load orders.
-            </p>
+            <div className="flex flex-col items-center gap-4 py-20">
+              <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">
+                Could not load orders.
+              </p>
+              <button
+                onClick={load}
+                className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-200 touch-manipulation"
+              >
+                Try again
+              </button>
+            </div>
           )}
           {!loading && !isConfigured && (
             <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-20">

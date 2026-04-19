@@ -13,7 +13,8 @@ const DRINKS_MAP = new Map(
 );
 
 type Tab = "crowd" | "yours" | "all";
-type OrderState = "idle" | "loading" | { orderRef: string; drinkName: string } | "error";
+type CartItem = { name: string; qty: number };
+type OrderState = "idle" | "loading" | { orderRef: string; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
 
 // Sort hot drinks first, iced (Peng) last
@@ -49,10 +50,11 @@ function Heart({ filled }: { filled: boolean }) {
 
 // ─── Drink card (grid view) ───────────────────────────────────
 function DrinkCard({
-  drink, selected, onSelect, favourited, onToggleFavourite, count,
+  drink, selected, qty, onSelect, favourited, onToggleFavourite, count,
 }: {
   drink: Drink;
   selected: boolean;
+  qty: number;
   onSelect: (d: Drink) => void;
   favourited: boolean;
   onToggleFavourite: (name: string) => void;
@@ -89,16 +91,22 @@ function DrinkCard({
           {count} {count === 1 ? "order" : "orders"}
         </p>
       )}
+      {selected && qty > 1 && (
+        <span className="absolute bottom-2 left-3 text-[10px] font-sans font-medium text-stone-400 dark:text-stone-600 tabular-nums">
+          ×{qty}
+        </span>
+      )}
     </button>
   );
 }
 
 // ─── Drink row (accordion view) ───────────────────────────────
 function DrinkRow({
-  drink, selected, onSelect, favourited, onToggleFavourite,
+  drink, selected, qty, onSelect, favourited, onToggleFavourite,
 }: {
   drink: Drink;
   selected: boolean;
+  qty: number;
   onSelect: (d: Drink) => void;
   favourited: boolean;
   onToggleFavourite: (name: string) => void;
@@ -119,9 +127,14 @@ function DrinkRow({
           </span>
         </div>
         {selected && (
-          <svg className="w-4 h-4 text-white dark:text-stone-900 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {qty > 1 && (
+              <span className="text-[11px] font-sans font-medium text-stone-400 dark:text-stone-600 tabular-nums">×{qty}</span>
+            )}
+            <svg className="w-4 h-4 text-white dark:text-stone-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
         )}
       </button>
       <button
@@ -150,9 +163,9 @@ function OrderContent() {
   const name = params.get("name") ?? "there";
 
   const [orderState, setOrderState] = useState<OrderState>("idle");
-  const [tab, setTab] = useState<Tab>("crowd");
+  const [tab, setTab] = useState<Tab>("yours");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [selectedDrink, setSelectedDrink] = useState<Drink | null>(null);
+  const [cart, setCart] = useState<Map<string, number>>(new Map());
   const [crowdData, setCrowdData] = useState<CrowdItem[]>([]);
   const [userFavs, setUserFavs] = useState<Set<string>>(new Set());
   const [loadingCrowd, setLoadingCrowd] = useState(true);
@@ -186,8 +199,37 @@ function OrderContent() {
     });
   }
 
-  function selectDrink(drink: Drink) {
-    setSelectedDrink((prev) => (prev?.name === drink.name ? null : drink));
+  function toggleCart(drink: Drink) {
+    setCart((prev) => {
+      const next = new Map(prev);
+      if (next.has(drink.name)) {
+        next.delete(drink.name);
+      } else {
+        next.set(drink.name, 1);
+      }
+      return next;
+    });
+  }
+
+  function incrementCart(drinkName: string) {
+    setCart((prev) => {
+      const next = new Map(prev);
+      next.set(drinkName, (next.get(drinkName) ?? 0) + 1);
+      return next;
+    });
+  }
+
+  function decrementCart(drinkName: string) {
+    setCart((prev) => {
+      const next = new Map(prev);
+      const qty = (next.get(drinkName) ?? 1) - 1;
+      if (qty <= 0) {
+        next.delete(drinkName);
+      } else {
+        next.set(drinkName, qty);
+      }
+      return next;
+    });
   }
 
   async function toggleFavourite(drinkName: string) {
@@ -206,31 +248,40 @@ function OrderContent() {
   }
 
   async function placeOrder() {
-    if (!selectedDrink) return;
+    if (cart.size === 0) return;
     setOrderState("loading");
     const orderRef = generateOrderRef();
+    // Expand cart: qty > 1 = repeated item entries (backward-compatible with orders display)
+    const items = [...cart.entries()].flatMap(([drinkName, qty]) => {
+      const drink = DRINKS_MAP.get(drinkName)!;
+      return Array(qty).fill({ name: drink.name, description: drink.description });
+    });
     try {
       const { error } = await supabase.from("orders").insert({
         order_ref: orderRef,
         person_name: name,
-        items: [{ name: selectedDrink.name, description: selectedDrink.description }],
+        items,
       });
       if (error) throw error;
-      setOrderState({ orderRef, drinkName: selectedDrink.name });
+      const cartItems: CartItem[] = [...cart.entries()].map(([drinkName, qty]) => ({ name: drinkName, qty }));
+      setOrderState({ orderRef, items: cartItems });
     } catch {
       setOrderState("error");
     }
   }
 
   if (typeof orderState === "object") {
-    return <ConfirmedState name={name} orderRef={orderState.orderRef} drinkName={orderState.drinkName} />;
+    return <ConfirmedState name={name} orderRef={orderState.orderRef} items={orderState.items} />;
   }
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "crowd", label: "Top Orders" },
     { id: "yours", label: "My Picks" },
+    { id: "crowd", label: "Top Orders" },
     { id: "all", label: "All Drinks" },
   ];
+
+  const cartEntries = [...cart.entries()];
+  const totalDrinks = cartEntries.reduce((s, [, q]) => s + q, 0);
 
   return (
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black">
@@ -277,42 +328,8 @@ function OrderContent() {
       </div>
 
       {/* Content */}
-      <div className={`px-5 sm:px-8 pt-5 ${selectedDrink ? "pb-28" : "pb-12"}`}>
+      <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 ? "pb-64" : "pb-12"}`}>
         <div className="max-w-lg mx-auto">
-
-          {/* TOP ORDERS */}
-          {tab === "crowd" && (
-            <>
-              {loadingCrowd && <TabLoading />}
-              {!loadingCrowd && crowdData.length === 0 && (
-                <div className="flex flex-col items-center gap-3 py-16">
-                  <div className="w-px h-8 bg-stone-200 dark:bg-stone-700" />
-                  <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 text-center">
-                    No orders yet — be the first!
-                  </p>
-                </div>
-              )}
-              {!loadingCrowd && crowdData.length > 0 && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {crowdData.map(({ drink_name, order_count }) => {
-                    const drink = DRINKS_MAP.get(drink_name);
-                    if (!drink) return null;
-                    return (
-                      <DrinkCard
-                        key={drink_name}
-                        drink={drink}
-                        selected={selectedDrink?.name === drink_name}
-                        onSelect={selectDrink}
-                        favourited={userFavs.has(drink_name)}
-                        onToggleFavourite={toggleFavourite}
-                        count={order_count}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )}
 
           {/* MY PICKS */}
           {tab === "yours" && (
@@ -335,10 +352,46 @@ function OrderContent() {
                       <DrinkCard
                         key={drinkName}
                         drink={drink}
-                        selected={selectedDrink?.name === drinkName}
-                        onSelect={selectDrink}
+                        selected={cart.has(drinkName)}
+                        qty={cart.get(drinkName) ?? 0}
+                        onSelect={toggleCart}
                         favourited={true}
                         onToggleFavourite={toggleFavourite}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* TOP ORDERS */}
+          {tab === "crowd" && (
+            <>
+              {loadingCrowd && <TabLoading />}
+              {!loadingCrowd && crowdData.length === 0 && (
+                <div className="flex flex-col items-center gap-3 py-16">
+                  <div className="w-px h-8 bg-stone-200 dark:bg-stone-700" />
+                  <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 text-center">
+                    No orders yet — be the first!
+                  </p>
+                </div>
+              )}
+              {!loadingCrowd && crowdData.length > 0 && (
+                <div className="grid grid-cols-2 gap-2.5">
+                  {crowdData.map(({ drink_name, order_count }) => {
+                    const drink = DRINKS_MAP.get(drink_name);
+                    if (!drink) return null;
+                    return (
+                      <DrinkCard
+                        key={drink_name}
+                        drink={drink}
+                        selected={cart.has(drink_name)}
+                        qty={cart.get(drink_name) ?? 0}
+                        onSelect={toggleCart}
+                        favourited={userFavs.has(drink_name)}
+                        onToggleFavourite={toggleFavourite}
+                        count={order_count}
                       />
                     );
                   })}
@@ -378,8 +431,9 @@ function OrderContent() {
                         <DrinkRow
                           key={drink.name}
                           drink={drink}
-                          selected={selectedDrink?.name === drink.name}
-                          onSelect={selectDrink}
+                          selected={cart.has(drink.name)}
+                          qty={cart.get(drink.name) ?? 0}
+                          onSelect={toggleCart}
                           favourited={userFavs.has(drink.name)}
                           onToggleFavourite={toggleFavourite}
                         />
@@ -394,33 +448,64 @@ function OrderContent() {
         </div>
       </div>
 
-      {/* Sticky place-order bar */}
-      {selectedDrink && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 py-3.5">
-          <div className="max-w-lg mx-auto flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">{selectedDrink.name}</p>
-              <p className="text-[11px] text-stone-400 dark:text-stone-500 font-sans truncate">{selectedDrink.description}</p>
-            </div>
+      {/* Sticky cart + place-order bar */}
+      {cart.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
+          <div className="max-w-lg mx-auto flex flex-col gap-2.5">
+            {cartEntries.map(([drinkName, qty]) => (
+              <div key={drinkName} className="flex items-center gap-3">
+                <p className="flex-1 min-w-0 text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">
+                  {drinkName}
+                </p>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => decrementCart(drinkName)}
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation"
+                    aria-label="Decrease quantity"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                    </svg>
+                  </button>
+                  <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 w-5 text-center tabular-nums">
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => incrementCart(drinkName)}
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation"
+                    aria-label="Increase quantity"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
             <button
               onClick={placeOrder}
               disabled={orderState === "loading" || !isConfigured}
               className="
-                flex-shrink-0 px-6 py-3 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
+                mt-1 w-full py-3
+                bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
                 text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                 transition-all duration-200 touch-manipulation
                 hover:bg-stone-700 dark:hover:bg-stone-300 active:bg-stone-900 dark:active:bg-stone-100
                 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none
               "
             >
-              {orderState === "loading" ? "Placing…" : "Place Order"}
+              {orderState === "loading"
+                ? "Placing…"
+                : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
             </button>
+            {orderState === "error" && (
+              <p className="text-center text-xs text-red-400 font-sans">
+                Something went wrong. Please try again.
+              </p>
+            )}
           </div>
-          {orderState === "error" && (
-            <p className="text-center text-xs text-red-400 font-sans mt-2">
-              Something went wrong. Please try again.
-            </p>
-          )}
         </div>
       )}
     </main>
@@ -428,7 +513,7 @@ function OrderContent() {
 }
 
 // ─── Confirmation screen ──────────────────────────────────────
-function ConfirmedState({ name, orderRef, drinkName }: { name: string; orderRef: string; drinkName: string }) {
+function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: string; items: CartItem[] }) {
   return (
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
@@ -440,7 +525,13 @@ function ConfirmedState({ name, orderRef, drinkName }: { name: string; orderRef:
         <div className="flex flex-col items-center gap-3">
           <p className="text-[11px] uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500 font-sans">Order placed</p>
           <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">{name}</h1>
-          <p className="font-serif text-xl font-light italic text-stone-500 dark:text-stone-400 mt-1">{drinkName}</p>
+          <div className="flex flex-col items-center gap-1 mt-1">
+            {items.map(({ name: drinkName, qty }) => (
+              <p key={drinkName} className="font-serif text-xl font-light italic text-stone-500 dark:text-stone-400">
+                {drinkName}{qty > 1 ? ` ×${qty}` : ""}
+              </p>
+            ))}
+          </div>
           <div className="flex flex-col items-center gap-1.5 mt-3 pt-3 border-t border-stone-100 dark:border-stone-800 w-full">
             <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Order reference</p>
             <p className="font-serif text-3xl sm:text-4xl font-light tracking-[0.2em] text-stone-700 dark:text-stone-200">{orderRef}</p>

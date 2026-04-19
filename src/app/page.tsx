@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const COLLEAGUES = [
   "Aaron", "Steve", "YK", "Kristie", "Alvin",
@@ -17,7 +18,11 @@ function getGreeting(): string {
 
 export default function GreetingPage() {
   const [greeting, setGreeting] = useState("");
-  const [cachedName, setCachedName] = useState<string | null>(null);
+  // Read synchronously so the correct view renders on first paint — no state flip or black flash
+  const [cachedName, setCachedName] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try { return localStorage.getItem("hellokopi_name"); } catch { return null; }
+  });
   const [selected, setSelected] = useState("");
   const [otherName, setOtherName] = useState("");
   const [open, setOpen] = useState(false);
@@ -27,12 +32,7 @@ export default function GreetingPage() {
 
   useEffect(() => {
     setGreeting(getGreeting());
-    try {
-      const saved = localStorage.getItem("hellokopi_name");
-      if (saved) setCachedName(saved);
-    } catch {}
-    const t = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(t);
+    setReady(true); // no delay — first paint is already correct, just trigger animations
   }, []);
 
   useEffect(() => {
@@ -70,7 +70,6 @@ export default function GreetingPage() {
     <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
-        style={{ opacity: ready ? 1 : 0, transition: "opacity 0.6s ease-out" }}
       >
         {/* Brand */}
         <div
@@ -242,13 +241,14 @@ export default function GreetingPage() {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-6 sm:bottom-8 flex flex-col items-center gap-2 pointer-events-none">
-        <div className="w-px h-5 sm:h-6 bg-stone-200 dark:bg-stone-700" />
-        <span className="text-[10px] uppercase tracking-[0.25em] text-stone-300 dark:text-stone-600 font-sans">
-          Lunch Orders
-        </span>
+      <div className="absolute bottom-6 sm:bottom-8 flex justify-center">
+        <Link
+          href="/changelog"
+          className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
+        >
+          v1.5.0
+        </Link>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       <style jsx global>{`
         @keyframes fadeUp {
