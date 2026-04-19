@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        serif: ["Nunito Sans", "system-ui", "sans-serif"],
-        sans: ["Nunito Sans", "system-ui", "sans-serif"],
+        serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
         cream: "#FAFAF8",
