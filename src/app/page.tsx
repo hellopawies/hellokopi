@@ -52,8 +52,6 @@ export default function GreetingPage() {
 
   return (
     <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
-
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
         style={{ opacity: ready ? 1 : 0, transition: "opacity 0.6s ease-out" }}
