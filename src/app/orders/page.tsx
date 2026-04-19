@@ -19,15 +19,17 @@ function groupByDrink(session: Session): { drink: string; names: string[] }[] {
     .map(([drink, names]) => ({ drink, names }));
 }
 
+const SGT = "Asia/Singapore";
+
 function shortLabel(dateKey: string): string {
-  const d = new Date(dateKey + "T00:00:00");
-  const todayKey = new Date().toLocaleDateString("en-CA");
+  const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: SGT });
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = yesterday.toLocaleDateString("en-CA");
+  const yesterdayKey = yesterday.toLocaleDateString("en-CA", { timeZone: SGT });
   if (dateKey === todayKey) return "Today";
   if (dateKey === yesterdayKey) return "Yesterday";
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const d = new Date(dateKey + "T00:00:00+08:00");
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: SGT });
 }
 
 const QUIPS = [
@@ -176,9 +178,9 @@ export default function OrdersPage() {
                   <div key={si}>
                     <div className="flex items-baseline gap-3 mb-3">
                       <span className="text-[11px] uppercase tracking-[0.25em] text-stone-600 dark:text-stone-300 font-sans font-medium">
-                        {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                        {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
                         {" – "}
-                        {new Date(session.sessionStart.getTime() + 15 * 60 * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(session.sessionStart.getTime() + 15 * 60 * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
                       </span>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans">
                         {cups} {cups === 1 ? "cup" : "cups"}
