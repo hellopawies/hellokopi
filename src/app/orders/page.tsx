@@ -45,7 +45,7 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-stone-900 px-5 sm:px-8 pt-5 sm:pt-6 pb-16">
+    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black px-5 sm:px-8 pt-5 sm:pt-6 pb-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       <div className="max-w-lg mx-auto">
@@ -98,8 +98,8 @@ export default function OrdersPage() {
 
             <div className="flex flex-col gap-8">
               {sessions.map((session, si) => {
-                const cups = session.orders.length;
                 const drinkGroups = groupByDrink(session);
+                const cups = drinkGroups.reduce((sum, g) => sum + g.names.length, 0);
 
                 return (
                   <div key={si}>

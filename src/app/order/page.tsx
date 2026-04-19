@@ -66,7 +66,7 @@ function DrinkCard({
         relative text-left p-3.5 border transition-all duration-150 touch-manipulation active:scale-[0.98]
         ${selected
           ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200"
-          : "bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"}
+          : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"}
       `}
     >
       {/* Heart toggle */}
@@ -104,7 +104,7 @@ function DrinkRow({
   onToggleFavourite: (name: string) => void;
 }) {
   return (
-    <div className={`flex items-center mb-0.5 transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-stone-800 active:bg-stone-100 dark:active:bg-stone-700"}`}>
+    <div className={`flex items-center mb-0.5 transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-[#111] active:bg-stone-100 dark:active:bg-[#1a1a1a]"}`}>
       <button
         type="button"
         onClick={() => onSelect(drink)}
@@ -233,7 +233,7 @@ function OrderContent() {
   ];
 
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-stone-900">
+    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       {/* Header */}
@@ -393,7 +393,7 @@ function OrderContent() {
 
       {/* Sticky place-order bar */}
       {selectedDrink && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-stone-900 border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 py-3.5">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 py-3.5">
           <div className="max-w-lg mx-auto flex items-center gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">{selectedDrink.name}</p>
@@ -427,7 +427,7 @@ function OrderContent() {
 // ─── Confirmation screen ──────────────────────────────────────
 function ConfirmedState({ name, orderRef, drinkName }: { name: string; orderRef: string; drinkName: string }) {
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-stone-900 flex flex-col items-center justify-center px-5 sm:px-8 py-16">
+    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
       <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8">
         <div className="flex flex-col items-center gap-1">

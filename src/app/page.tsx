@@ -51,7 +51,7 @@ export default function GreetingPage() {
   };
 
   return (
-    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-stone-900 flex flex-col items-center justify-center px-5 sm:px-8 py-16">
+    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       <div
@@ -116,7 +116,7 @@ export default function GreetingPage() {
             {open && (
               <div className="
                 absolute top-full left-0 right-0 z-10 mt-1
-                bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm
+                bg-white dark:bg-[#111] border border-stone-200 dark:border-stone-700 shadow-sm
                 divide-y divide-stone-50 dark:divide-stone-700
                 max-h-[55vh] overflow-y-auto
               ">
@@ -130,7 +130,7 @@ export default function GreetingPage() {
                       transition-colors duration-150 touch-manipulation
                       ${selected === name
                         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
-                        : "text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 active:bg-stone-100 dark:active:bg-stone-600 hover:text-stone-800 dark:hover:text-stone-100"
+                        : "text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#1a1a1a] active:bg-stone-100 dark:active:bg-[#222] hover:text-stone-800 dark:hover:text-stone-100"
                       }
                       ${name === "Others" ? "italic" : ""}
                     `}
