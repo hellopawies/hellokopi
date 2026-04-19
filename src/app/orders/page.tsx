@@ -29,11 +29,29 @@ function shortLabel(dateKey: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+const QUIPS = [
+  "So who's paying today?",
+  "Today's forecast: 100% chance of kopi.",
+  "No kopi, no talk.",
+  "Confirm plus chop, someone forgot to order.",
+  "Your kopi order says a lot about you.",
+  "Boss says no OT, but the kopi must flow.",
+  "All drinks, no drama. Hopefully.",
+  "The real question: who's going to collect?",
+  "Kopi first, meetings second.",
+  "One does not simply skip kopi.",
+];
+
 export default function OrdersPage() {
   const [groups, setGroups] = useState<DateGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [quip, setQuip] = useState("");
+
+  useEffect(() => {
+    setQuip(QUIPS[Math.floor(Math.random() * QUIPS.length)]);
+  }, []);
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
@@ -74,6 +92,11 @@ export default function OrdersPage() {
             <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100">
               Orders
             </h1>
+            {quip && (
+              <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
+                {quip}
+              </p>
+            )}
           </div>
         </div>
 
