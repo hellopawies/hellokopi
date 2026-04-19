@@ -83,13 +83,13 @@ export default function OrdersPage() {
       <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
 
         {/* Brand + heading */}
-        <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-3">
+        <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4">
           <div className="max-w-lg mx-auto">
             <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
               hello kopi
             </span>
             <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
-            <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100">
+            <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
               Orders
             </h1>
             {quip && (
