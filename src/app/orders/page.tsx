@@ -177,6 +177,8 @@ export default function OrdersPage() {
                     <div className="flex items-baseline gap-3 mb-3">
                       <span className="text-[11px] uppercase tracking-[0.25em] text-stone-600 dark:text-stone-300 font-sans font-medium">
                         {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                        {" – "}
+                        {new Date(session.sessionStart.getTime() + 15 * 60 * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                       </span>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans">
                         {cups} {cups === 1 ? "cup" : "cups"}
