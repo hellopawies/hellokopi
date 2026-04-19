@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const COLLEAGUES = [
   "Aaron", "Steve", "YK", "Kristie", "Alvin",
@@ -240,13 +241,14 @@ export default function GreetingPage() {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-6 sm:bottom-8 flex flex-col items-center gap-2 pointer-events-none">
-        <div className="w-px h-5 sm:h-6 bg-stone-200 dark:bg-stone-700" />
-        <span className="text-[10px] uppercase tracking-[0.25em] text-stone-300 dark:text-stone-600 font-sans">
-          Lunch Orders
-        </span>
+      <div className="absolute bottom-6 sm:bottom-8 flex justify-center">
+        <Link
+          href="/changelog"
+          className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
+        >
+          v1.5.0
+        </Link>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       <style jsx global>{`
         @keyframes fadeUp {
