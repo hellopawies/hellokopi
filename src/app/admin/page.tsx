@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import { CATEGORIES } from "@/data/drinks";
@@ -23,6 +23,11 @@ function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [name, setName] = useState<string | null>(null);
+
+  useEffect(() => {
+    setName(localStorage.getItem("hellokopi_name"));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +57,7 @@ function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
         <div>
           <h1 className="font-serif text-3xl font-light tracking-wide text-stone-800 dark:text-stone-100">Admin</h1>
           <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 mt-2">
-            Enter password to continue.
+            {name ? `Welcome back, ${name}.` : "Enter password to continue."}
           </p>
         </div>
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
@@ -219,7 +224,17 @@ function MenuTab() {
   const [newDesc, setNewDesc] = useState("");
   const [newCat, setNewCat] = useState(CATEGORIES[0].id);
   const [adding, setAdding] = useState(false);
+  const [catOpen, setCatOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const catRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
@@ -288,15 +303,38 @@ function MenuTab() {
             placeholder="Description (optional)"
             className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 transition-colors duration-200"
           />
-          <select
-            value={newCat}
-            onChange={e => setNewCat(e.target.value)}
-            className="w-full bg-[#FAFAF8] dark:bg-[#111] border-0 border-b border-stone-200 dark:border-stone-700 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light py-2.5 transition-colors duration-200"
-          >
-            {CATEGORIES.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.label}</option>
-            ))}
-          </select>
+          <div className="w-full relative" ref={catRef}>
+            <button
+              type="button"
+              onClick={() => setCatOpen(o => !o)}
+              className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:outline-none flex items-center justify-between gap-2 py-2.5 transition-colors duration-200 touch-manipulation"
+            >
+              <span className="text-sm font-sans font-light text-stone-800 dark:text-stone-100">
+                {CATEGORIES.find(c => c.id === newCat)?.label ?? newCat}
+              </span>
+              <svg className={`w-3.5 h-3.5 text-stone-400 dark:text-stone-500 transition-transform duration-150 ${catOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {catOpen && (
+              <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black divide-y divide-stone-100 dark:divide-[#3a3a3a] max-h-[40vh] overflow-y-auto">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => { setNewCat(cat.id); setCatOpen(false); }}
+                    className={`w-full px-4 py-3 text-left text-sm font-sans font-light tracking-wide transition-colors duration-100 ${
+                      newCat === cat.id
+                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
+                        : "text-stone-600 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-[#3a3a3a]"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             type="submit"
             disabled={!newName.trim() || adding}

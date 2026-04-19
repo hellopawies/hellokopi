@@ -1,0 +1,23 @@
+{
+  "name": "Hello Kopi",
+  "short_name": "Hello Kopi",
+  "description": "Lunch drink orders, made easy.",
+  "start_url": "/hellokopi/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#292524",
+  "icons": [
+    {
+      "src": "/hellokopi/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/hellokopi/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
