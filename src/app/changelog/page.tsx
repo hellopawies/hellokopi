@@ -1,7 +1,3 @@
-"use client";
-
-import Link from "next/link";
-
 const VERSIONS = [
   {
     version: "v1.5.0",
@@ -145,15 +141,6 @@ export default function ChangelogPage() {
         </div>
       </div>
 
-      {/* Back link */}
-      <div className="fixed bottom-6 sm:bottom-8 left-0 right-0 flex justify-center pointer-events-none">
-        <Link
-          href="/"
-          className="pointer-events-auto text-[10px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors duration-200"
-        >
-          ← Back
-        </Link>
-      </div>
     </main>
   );
 }
