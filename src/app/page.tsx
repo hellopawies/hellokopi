@@ -51,16 +51,18 @@ export default function GreetingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-6">
+    <main className="min-h-[100dvh] bg-[#FAFAF8] flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 to-transparent" />
 
       <div
-        className="w-full max-w-md flex flex-col items-center text-center gap-10"
+        className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
         style={{ opacity: ready ? 1 : 0, transition: "opacity 0.6s ease-out" }}
       >
         {/* Brand */}
-        <div style={{ animation: ready ? "fadeUp 0.7s ease-out forwards" : "none" }}
-          className="flex flex-col items-center gap-1">
+        <div
+          style={{ animation: ready ? "fadeUp 0.7s ease-out forwards" : "none" }}
+          className="flex flex-col items-center gap-1"
+        >
           <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 font-sans font-medium">
             hello kopi
           </span>
@@ -68,12 +70,14 @@ export default function GreetingPage() {
         </div>
 
         {/* Greeting */}
-        <div style={{ animation: ready ? "fadeUp 0.7s 0.15s ease-out both" : "none" }}
-          className="flex flex-col items-center gap-4">
-          <h1 className="font-serif text-5xl font-light tracking-wide text-stone-800 leading-tight">
+        <div
+          style={{ animation: ready ? "fadeUp 0.7s 0.15s ease-out both" : "none" }}
+          className="flex flex-col items-center gap-3 sm:gap-4"
+        >
+          <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 leading-tight">
             {greeting}
           </h1>
-          <p className="font-serif text-xl font-light italic text-stone-400 leading-relaxed">
+          <p className="font-serif text-lg sm:text-xl font-light italic text-stone-400 leading-relaxed">
             Who shall we say is ordering?
           </p>
         </div>
@@ -81,7 +85,7 @@ export default function GreetingPage() {
         {/* Form */}
         <form
           onSubmit={handleContinue}
-          className="w-full flex flex-col items-center gap-6"
+          className="w-full flex flex-col items-center gap-5 sm:gap-6"
           style={{ animation: ready ? "fadeUp 0.7s 0.3s ease-out both" : "none" }}
         >
           {/* Dropdown */}
@@ -92,15 +96,16 @@ export default function GreetingPage() {
               className="
                 w-full bg-transparent border-0 border-b border-stone-300
                 hover:border-stone-600 focus:border-stone-600 focus:outline-none
-                text-center py-3 transition-colors duration-300
+                text-center py-3.5 transition-colors duration-300
                 flex items-center justify-center gap-2
+                touch-manipulation
               "
             >
-              <span className={`text-lg font-sans font-light tracking-wide ${selected ? "text-stone-800" : "text-stone-300"}`}>
+              <span className={`text-base sm:text-lg font-sans font-light tracking-wide ${selected ? "text-stone-800" : "text-stone-300"}`}>
                 {selected || "Select your name"}
               </span>
               <svg
-                className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+                className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -113,6 +118,7 @@ export default function GreetingPage() {
                 absolute top-full left-0 right-0 z-10 mt-1
                 bg-white border border-stone-200 shadow-sm
                 divide-y divide-stone-50
+                max-h-[55vh] overflow-y-auto
               ">
                 {COLLEAGUES.map((name) => (
                   <button
@@ -120,11 +126,11 @@ export default function GreetingPage() {
                     type="button"
                     onClick={() => { setSelected(name); setOpen(false); setOtherName(""); }}
                     className={`
-                      w-full px-4 py-3 text-center text-sm font-sans font-light tracking-wide
-                      transition-colors duration-150
+                      w-full px-4 py-3.5 text-center text-sm font-sans font-light tracking-wide
+                      transition-colors duration-150 touch-manipulation
                       ${selected === name
                         ? "bg-stone-800 text-white"
-                        : "text-stone-600 hover:bg-stone-50 hover:text-stone-800"
+                        : "text-stone-600 hover:bg-stone-50 active:bg-stone-100 hover:text-stone-800"
                       }
                       ${name === "Others" ? "italic" : ""}
                     `}
@@ -148,8 +154,8 @@ export default function GreetingPage() {
                 className="
                   w-full bg-transparent border-0 border-b border-stone-300
                   focus:border-stone-600 focus:outline-none
-                  text-center text-stone-800 text-lg font-sans font-light
-                  placeholder:text-stone-300 py-3 tracking-wide
+                  text-center text-stone-800 text-base sm:text-lg font-sans font-light
+                  placeholder:text-stone-300 py-3.5 tracking-wide
                   transition-colors duration-300
                 "
               />
@@ -160,11 +166,12 @@ export default function GreetingPage() {
             type="submit"
             disabled={!canContinue}
             className="
-              mt-2 px-10 py-3
+              mt-1 w-full sm:w-auto sm:px-10 py-3.5
               border border-stone-800 text-stone-800
               text-[11px] uppercase tracking-[0.25em] font-sans font-medium
-              transition-all duration-300
+              transition-all duration-300 touch-manipulation
               hover:bg-stone-800 hover:text-white
+              active:bg-stone-800 active:text-white
               disabled:opacity-25 disabled:cursor-not-allowed
               disabled:hover:bg-transparent disabled:hover:text-stone-800
               focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-2
@@ -176,8 +183,8 @@ export default function GreetingPage() {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-8 flex flex-col items-center gap-2">
-        <div className="w-px h-6 bg-stone-200" />
+      <div className="absolute bottom-6 sm:bottom-8 flex flex-col items-center gap-2 pointer-events-none">
+        <div className="w-px h-5 sm:h-6 bg-stone-200" />
         <span className="text-[10px] uppercase tracking-[0.25em] text-stone-300 font-sans">
           Lunch Orders
         </span>
