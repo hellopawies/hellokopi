@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase, isConfigured } from "@/lib/supabase";
 
-const COLLEAGUES = [
+const COLLEAGUES_FALLBACK = [
   "Aaron", "Steve", "YK", "Kristie", "Alvin",
   "Saw", "Jerwin", "Kai Mun", "Adric", "Zaki", "Rob", "Others",
 ];
@@ -20,6 +21,7 @@ function getGreeting(): string {
 
 export default function GreetingPage() {
   const [greeting, setGreeting] = useState("");
+  const [colleagues, setColleagues] = useState<string[]>(COLLEAGUES_FALLBACK);
   // Read synchronously so the correct view renders on first paint — no state flip or black flash
   const [cachedName, setCachedName] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -35,6 +37,14 @@ export default function GreetingPage() {
   useEffect(() => {
     setGreeting(getGreeting());
     setReady(true); // no delay — first paint is already correct, just trigger animations
+    if (isConfigured) {
+      supabase.from("members").select("name, sort_order").order("sort_order")
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setColleagues([...data.map((m: { name: string }) => m.name), "Others"]);
+          }
+        });
+    }
   }, []);
 
   useEffect(() => {
@@ -179,7 +189,7 @@ export default function GreetingPage() {
                     divide-y divide-stone-100 dark:divide-[#3a3a3a]
                     max-h-[55vh] overflow-y-auto
                   ">
-                    {COLLEAGUES.map((name) => (
+                    {colleagues.map((name) => (
                       <button
                         key={name}
                         type="button"
