@@ -10,6 +10,9 @@ const COLLEAGUES_FALLBACK = [
   "Saw", "Jerwin", "Kai Mun", "Adric", "Zaki", "Rob", "Others",
 ];
 
+// Persists across client-side navigations so animations only fire on fresh page load
+let hasMounted = false;
+
 function getGreeting(): string {
   const hour = parseInt(
     new Date().toLocaleString("en-GB", { timeZone: "Asia/Singapore", hour: "2-digit", hour12: false })
@@ -31,12 +34,14 @@ export default function GreetingPage() {
   const [otherName, setOtherName] = useState("");
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [firstLoad] = useState(!hasMounted);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
+    hasMounted = true;
     setGreeting(getGreeting());
-    setReady(true); // no delay — first paint is already correct, just trigger animations
+    setReady(true);
     if (isConfigured) {
       supabase.from("members").select("name, sort_order").order("sort_order")
         .then(({ data }) => {
@@ -85,7 +90,7 @@ export default function GreetingPage() {
       >
         {/* Brand */}
         <div
-          style={{ animation: ready ? "fadeUp 0.7s ease-out forwards" : "none" }}
+          style={firstLoad ? (ready ? { animation: "fadeUp 0.7s ease-out both" } : { opacity: 0 }) : {}}
           className="flex flex-col items-center gap-1"
         >
           <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
@@ -98,7 +103,7 @@ export default function GreetingPage() {
           /* ── Returning user view ── */
           <>
             <div
-              style={{ animation: ready ? "fadeUp 0.7s 0.15s ease-out both" : "none" }}
+              style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.15s ease-out both" } : { opacity: 0 }) : {}}
               className="flex flex-col items-center gap-3 sm:gap-4"
             >
               <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
@@ -113,7 +118,7 @@ export default function GreetingPage() {
             </div>
 
             <div
-              style={{ animation: ready ? "fadeUp 0.7s 0.3s ease-out both" : "none" }}
+              style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.3s ease-out both" } : { opacity: 0 }) : {}}
               className="w-full flex flex-col items-center gap-4"
             >
               <button
@@ -142,7 +147,7 @@ export default function GreetingPage() {
           /* ── First-time / selector view ── */
           <>
             <div
-              style={{ animation: ready ? "fadeUp 0.7s 0.15s ease-out both" : "none" }}
+              style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.15s ease-out both" } : { opacity: 0 }) : {}}
               className="flex flex-col items-center gap-3 sm:gap-4"
             >
               <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
@@ -156,7 +161,7 @@ export default function GreetingPage() {
             <form
               onSubmit={handleContinue}
               className="w-full flex flex-col items-center gap-5 sm:gap-6"
-              style={{ animation: ready ? "fadeUp 0.7s 0.3s ease-out both" : "none" }}
+              style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.3s ease-out both" } : { opacity: 0 }) : {}}
             >
               {/* Dropdown */}
               <div className="w-full relative" ref={dropdownRef}>
@@ -258,7 +263,7 @@ export default function GreetingPage() {
           href="/changelog"
           className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
         >
-          v1.7.0
+          v1.8.0
         </Link>
       </div>
 
