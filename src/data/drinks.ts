@@ -9,22 +9,6 @@ export interface DrinkCategory {
   drinks: Drink[];
 }
 
-export const FAVOURITES: Drink[] = [
-  { name: "Kopi", description: "Coffee + condensed milk" },
-  { name: "Kopi O Kosong", description: "Black coffee, no sugar" },
-  { name: "Kopi C Siew Dai", description: "Coffee + evap milk, less sweet" },
-  { name: "Kopi C Siew Dai Peng", description: "Iced, evap milk, less sweet" },
-  { name: "Teh", description: "Tea + condensed milk" },
-  { name: "Teh O", description: "Black tea + sugar" },
-  { name: "Teh C Siew Dai", description: "Tea + evap milk, less sweet" },
-  { name: "Teh Tarik", description: "Pulled frothy tea" },
-  { name: "Teh Halia", description: "Ginger tea + condensed milk" },
-  { name: "Yuan Yang Peng", description: "Iced coffee + tea blend" },
-  { name: "Milo Peng", description: "Iced chocolate malt" },
-  { name: "Milo Dinosaur", description: "Iced Milo + Milo powder mountain" },
-  { name: "Bandung Peng", description: "Iced rose syrup milk" },
-  { name: "Horlicks Peng", description: "Iced malted milk" },
-];
 
 export const CATEGORIES: DrinkCategory[] = [
   {
