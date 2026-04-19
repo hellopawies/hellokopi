@@ -17,7 +17,11 @@ function getGreeting(): string {
 
 export default function GreetingPage() {
   const [greeting, setGreeting] = useState("");
-  const [cachedName, setCachedName] = useState<string | null>(null);
+  // Read synchronously so the correct view renders on first paint — no state flip or black flash
+  const [cachedName, setCachedName] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try { return localStorage.getItem("hellokopi_name"); } catch { return null; }
+  });
   const [selected, setSelected] = useState("");
   const [otherName, setOtherName] = useState("");
   const [open, setOpen] = useState(false);
@@ -27,12 +31,7 @@ export default function GreetingPage() {
 
   useEffect(() => {
     setGreeting(getGreeting());
-    try {
-      const saved = localStorage.getItem("hellokopi_name");
-      if (saved) setCachedName(saved);
-    } catch {}
-    const t = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(t);
+    setReady(true); // no delay — first paint is already correct, just trigger animations
   }, []);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export default function GreetingPage() {
     <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
-        style={{ opacity: ready ? 1 : 0, transition: "opacity 0.6s ease-out" }}
       >
         {/* Brand */}
         <div
