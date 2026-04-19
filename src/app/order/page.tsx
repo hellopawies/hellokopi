@@ -1,16 +1,18 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
 import { CATEGORIES, type Drink } from "@/data/drinks";
 
-// Flat lookup map built once at module level
-const DRINKS_MAP = new Map(
+// Base lookup map for hardcoded drinks
+const BASE_DRINKS_MAP = new Map(
   CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d])
 );
+
+interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
 type Tab = "crowd" | "yours" | "all";
 type CartItem = { name: string; qty: number };
@@ -168,8 +170,28 @@ function OrderContent() {
   const [cart, setCart] = useState<Map<string, number>>(new Map());
   const [crowdData, setCrowdData] = useState<CrowdItem[]>([]);
   const [userFavs, setUserFavs] = useState<Set<string>>(new Set());
+  const [customDrinks, setCustomDrinks] = useState<CustomDrink[]>([]);
+  const [hiddenDrinks, setHiddenDrinks] = useState<Set<string>>(new Set());
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
+
+  // Merged drink map (hardcoded + custom)
+  const DRINKS_MAP = useMemo(() => {
+    const map = new Map(BASE_DRINKS_MAP);
+    for (const d of customDrinks) map.set(d.name, { name: d.name, description: d.description });
+    return map;
+  }, [customDrinks]);
+
+  // Effective categories (hide hidden, append custom)
+  const effectiveCategories = useMemo(() => {
+    return CATEGORIES.map(cat => ({
+      ...cat,
+      drinks: [
+        ...cat.drinks.filter(d => !hiddenDrinks.has(d.name)),
+        ...customDrinks.filter(cd => cd.category_id === cat.id).map(cd => ({ name: cd.name, description: cd.description })),
+      ],
+    })).filter(cat => cat.drinks.length > 0);
+  }, [customDrinks, hiddenDrinks]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -189,6 +211,13 @@ function OrderContent() {
         if (data) setUserFavs(new Set(data.map((d: { drink_name: string }) => d.drink_name)));
         setLoadingFavs(false);
       });
+    Promise.all([
+      supabase.from("custom_drinks").select("*"),
+      supabase.from("hidden_drinks").select("drink_name"),
+    ]).then(([custom, hidden]) => {
+      if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
+      if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
+    });
   }, [name]);
 
   function toggleCategory(id: string) {
@@ -403,7 +432,7 @@ function OrderContent() {
           {/* ALL DRINKS */}
           {tab === "all" && (
             <div>
-              {CATEGORIES.map((cat) => (
+              {effectiveCategories.map((cat) => (
                 <div key={cat.id} className="border-b border-stone-100 dark:border-stone-800 last:border-0">
                   <button
                     type="button"
