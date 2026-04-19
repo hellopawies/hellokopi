@@ -1,8 +1,13 @@
+export interface OrderItem {
+  name: string;
+  description: string;
+}
+
 export interface Order {
   id: string;
   order_ref: string;
   person_name: string;
-  items: unknown[];
+  items: OrderItem[];
   notes: string | null;
   created_at: string;
 }

@@ -107,14 +107,23 @@ export default function OrdersPage() {
 
                   {/* Order rows */}
                   <div className="border-t border-stone-100">
-                    {session.orders.map((order) => (
+                    {session.orders.map((order) => {
+                      const drink = order.items?.[0]?.name ?? null;
+                      return (
                       <div
                         key={order.id}
-                        className="flex items-center gap-4 py-3 border-b border-stone-100"
+                        className="flex items-center gap-3 py-3 border-b border-stone-100"
                       >
-                        <span className="flex-1 font-sans font-light text-stone-800 text-sm truncate">
-                          {order.person_name}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-sans font-medium text-stone-800 truncate">
+                            {order.person_name}
+                          </p>
+                          {drink && (
+                            <p className="text-[11px] font-sans text-stone-400 truncate mt-0.5">
+                              {drink}
+                            </p>
+                          )}
+                        </div>
                         <span className="font-serif text-sm tracking-[0.15em] text-stone-500 flex-shrink-0">
                           {order.order_ref}
                         </span>
@@ -125,7 +134,7 @@ export default function OrdersPage() {
                           })}
                         </span>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               ))}
