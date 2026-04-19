@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const COLLEAGUES = [
   "Aaron", "Steve", "YK", "Kristie", "Alvin",
-  "Saw", "Jerwin", "Kai Mun", "Adric", "Zaki", "Others",
+  "Saw", "Jerwin", "Kai Mun", "Adric", "Zaki", "Rob", "Others",
 ];
 
 function getGreeting(): string {
@@ -173,8 +173,8 @@ export default function GreetingPage() {
                 {open && (
                   <div className="
                     absolute top-full left-0 right-0 z-10 mt-1
-                    bg-white dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black
-                    divide-y divide-stone-50 dark:divide-[#3a3a3a]
+                    bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black
+                    divide-y divide-stone-100 dark:divide-[#3a3a3a]
                     max-h-[55vh] overflow-y-auto
                   ">
                     {COLLEAGUES.map((name) => (
