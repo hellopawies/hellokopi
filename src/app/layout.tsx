@@ -20,7 +20,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head />
+      <head>
+        <link rel="manifest" href="/hellokopi/manifest.json" />
+        <link rel="apple-touch-icon" href="/hellokopi/icon.svg" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Hello Kopi" />
+        <meta name="theme-color" content="#292524" />
+      </head>
       <body>
         <Header />
         {children}
