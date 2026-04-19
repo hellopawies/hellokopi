@@ -237,7 +237,7 @@ function OrderContent() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       {/* Header */}
-      <div className="px-5 sm:px-8 pt-12 pb-5">
+      <div className="px-5 sm:px-8 pt-5 sm:pt-6 pb-5">
         <div className="max-w-lg mx-auto">
           <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
             hello kopi
