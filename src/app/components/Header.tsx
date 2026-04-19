@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Header() {
   const path = usePathname();
@@ -9,22 +10,27 @@ export function Header() {
   const onOrders = path.endsWith("/orders");
 
   return (
-    <div className="fixed top-0 right-0 z-50 p-5 sm:p-6">
-      {onOrders ? (
-        <button
-          onClick={() => router.back()}
-          className="text-[10px] uppercase tracking-[0.25em] text-stone-400 hover:text-stone-700 transition-colors duration-200 font-sans font-medium touch-manipulation"
-        >
-          ← Place Order
-        </button>
-      ) : (
-        <Link
-          href="/orders"
-          className="text-[10px] uppercase tracking-[0.25em] text-stone-400 hover:text-stone-700 transition-colors duration-200 font-sans font-medium touch-manipulation"
-        >
-          Check Orders →
-        </Link>
-      )}
-    </div>
+    <>
+      <div className="fixed top-0 left-0 z-50 p-5 sm:p-6">
+        <ThemeToggle />
+      </div>
+      <div className="fixed top-0 right-0 z-50 p-5 sm:p-6">
+        {onOrders ? (
+          <button
+            onClick={() => router.back()}
+            className="text-[10px] uppercase tracking-[0.25em] text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200 transition-colors duration-200 font-sans font-medium touch-manipulation"
+          >
+            ← Place Order
+          </button>
+        ) : (
+          <Link
+            href="/orders"
+            className="text-[10px] uppercase tracking-[0.25em] text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200 transition-colors duration-200 font-sans font-medium touch-manipulation"
+          >
+            Check Orders →
+          </Link>
+        )}
+      </div>
+    </>
   );
 }
