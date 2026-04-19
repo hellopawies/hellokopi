@@ -3,7 +3,22 @@
 import { useEffect, useState } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
-import type { Order, DateGroup } from "@/types/order";
+import type { Order, DateGroup, Session } from "@/types/order";
+
+// Group a session's orders by drink, returning drink → [person names]
+function groupByDrink(session: Session): { drink: string; names: string[] }[] {
+  const map = new Map<string, string[]>();
+  for (const order of session.orders) {
+    const drink = order.items?.[0]?.name;
+    if (!drink) continue;
+    if (!map.has(drink)) map.set(drink, []);
+    map.get(drink)!.push(order.person_name);
+  }
+  // Sort by qty desc so the most-ordered drink sits on top
+  return [...map.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([drink, names]) => ({ drink, names }));
+}
 
 export default function OrdersPage() {
   const [groups, setGroups] = useState<DateGroup[]>([]);
@@ -11,11 +26,8 @@ export default function OrdersPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!isConfigured) {
-      setLoading(false);
-      return;
-    }
-    async function fetch() {
+    if (!isConfigured) { setLoading(false); return; }
+    async function load() {
       try {
         const { data, error } = await supabase
           .from("orders")
@@ -29,7 +41,7 @@ export default function OrdersPage() {
         setLoading(false);
       }
     }
-    fetch();
+    load();
   }, []);
 
   return (
@@ -54,19 +66,16 @@ export default function OrdersPage() {
             Loading…
           </p>
         )}
-
         {!loading && error && (
           <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 text-center py-20">
             Could not load orders.
           </p>
         )}
-
         {!loading && !isConfigured && (
           <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 text-center py-20">
             Supabase not configured
           </p>
         )}
-
         {!loading && !error && isConfigured && groups.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-24">
             <div className="w-px h-10 bg-stone-200" />
@@ -76,7 +85,7 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* Order groups */}
+        {/* Date groups */}
         {groups.map(({ dateKey, dateLabel, sessions }) => (
           <div key={dateKey} className="mb-12 sm:mb-16">
             {/* Date header */}
@@ -87,57 +96,54 @@ export default function OrdersPage() {
               <div className="flex-1 h-px bg-stone-200" />
             </div>
 
-            {/* Sessions within this date */}
             <div className="flex flex-col gap-8">
-              {sessions.map((session, si) => (
-                <div key={si}>
-                  {/* Session time + count */}
-                  <div className="flex items-baseline gap-3 mb-2">
-                    <span className="text-[11px] uppercase tracking-[0.25em] text-stone-600 font-sans font-medium">
-                      {session.sessionStart.toLocaleTimeString("en-GB", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-stone-300 font-sans">
-                      {session.orders.length}{" "}
-                      {session.orders.length === 1 ? "order" : "orders"}
-                    </span>
-                  </div>
+              {sessions.map((session, si) => {
+                const cups = session.orders.length;
+                const drinkGroups = groupByDrink(session);
 
-                  {/* Order rows */}
-                  <div className="border-t border-stone-100">
-                    {session.orders.map((order) => {
-                      const drink = order.items?.[0]?.name ?? null;
-                      return (
-                      <div
-                        key={order.id}
-                        className="flex items-center gap-3 py-3 border-b border-stone-100"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-sans font-medium text-stone-800 truncate">
-                            {order.person_name}
-                          </p>
-                          {drink && (
-                            <p className="text-[11px] font-sans text-stone-400 truncate mt-0.5">
+                return (
+                  <div key={si}>
+                    {/* Session header: time + cup count */}
+                    <div className="flex items-baseline gap-3 mb-3">
+                      <span className="text-[11px] uppercase tracking-[0.25em] text-stone-600 font-sans font-medium">
+                        {session.sessionStart.toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-300 font-sans">
+                        {cups} {cups === 1 ? "cup" : "cups"}
+                      </span>
+                    </div>
+
+                    {/* Drink-first rows */}
+                    <div className="border-t border-stone-100">
+                      {drinkGroups.map(({ drink, names }) => (
+                        <div
+                          key={drink}
+                          className="flex items-start justify-between gap-4 py-3.5 border-b border-stone-100"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-sans font-medium text-stone-800 leading-snug">
                               {drink}
                             </p>
+                            <p className="text-[11px] font-sans text-stone-400 mt-1 leading-relaxed">
+                              {names.join(" · ")}
+                            </p>
+                          </div>
+
+                          {/* Qty badge — only shown when more than 1 */}
+                          {names.length > 1 && (
+                            <span className="flex-shrink-0 mt-0.5 px-2 py-0.5 border border-stone-200 text-[10px] font-sans font-medium text-stone-500 tracking-wide">
+                              × {names.length}
+                            </span>
                           )}
                         </div>
-                        <span className="font-serif text-sm tracking-[0.15em] text-stone-500 flex-shrink-0">
-                          {order.order_ref}
-                        </span>
-                        <span className="text-[11px] text-stone-400 font-sans flex-shrink-0 tabular-nums">
-                          {new Date(order.created_at).toLocaleTimeString("en-GB", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    )})}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
