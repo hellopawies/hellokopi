@@ -59,10 +59,10 @@ function DrinkCard({
       type="button"
       onClick={onSelect}
       className={`
-        relative text-left p-3.5 border transition-all duration-150 touch-manipulation active:scale-[0.98] w-full
+        relative text-left p-3.5 border transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
         ${selected
-          ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200"
-          : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"}
+          ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
+          : "bg-[#FFFCF9] dark:bg-[#1C1410] border-stone-200/70 dark:border-stone-700/70 hover:border-stone-300 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
       `}
     >
       <span
@@ -603,11 +603,11 @@ function OrderContent() {
   const totalDrinks = cartEntries.reduce((s, [, q]) => s + q, 0);
 
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black">
+    <main className="relative min-h-[100dvh] bg-[#FAF8F5] dark:bg-[#0E0C0A]">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       {/* Sticky header + tabs block */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="sticky top-0 z-30 bg-[#FAF8F5]/90 dark:bg-[#0E0C0A]/90 backdrop-blur-xl border-b border-stone-100/80 dark:border-stone-800/80">
         {/* Brand + greeting */}
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4">
           <div className="max-w-lg mx-auto">
@@ -755,7 +755,7 @@ function OrderContent() {
 
       {/* Sticky cart + place-order bar */}
       {cart.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAF8F5]/90 dark:bg-[#0E0C0A]/90 backdrop-blur-xl border-t border-stone-200/60 dark:border-stone-700/60 px-5 sm:px-8 pt-3.5 pb-5">
           <div className="max-w-lg mx-auto flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">Your order</p>
@@ -830,7 +830,7 @@ function OrderContent() {
 // ─── Confirmation screen ──────────────────────────────────────
 function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: string; items: CartItem[] }) {
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
+    <main className="relative min-h-[100dvh] bg-[#FAF8F5] dark:bg-[#0E0C0A] flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
       <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8">
         <div className="flex flex-col items-center gap-1">

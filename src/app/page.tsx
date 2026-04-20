@@ -84,7 +84,7 @@ export default function GreetingPage() {
   };
 
   return (
-    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
+    <main className="min-h-[100dvh] bg-[#FAF8F5] dark:bg-[#0E0C0A] flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
       >
@@ -190,7 +190,7 @@ export default function GreetingPage() {
                 {open && (
                   <div className="
                     absolute top-full left-0 right-0 z-10 mt-1
-                    bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black
+                    bg-[#FAF8F5] dark:bg-[#1C1410] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black
                     divide-y divide-stone-100 dark:divide-[#3a3a3a]
                     max-h-[55vh] overflow-y-auto
                   ">
@@ -263,7 +263,7 @@ export default function GreetingPage() {
           href="/changelog"
           className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
         >
-          v2.1.0
+          v2.2.0
         </Link>
       </div>
 
