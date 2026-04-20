@@ -515,9 +515,12 @@ function AdminContent({ onLock }: { onLock: () => void }) {
             </div>
             <button
               onClick={() => { sessionStorage.removeItem("hk_admin"); onLock(); }}
-              className="mt-1 text-[10px] uppercase tracking-[0.2em] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
+              className="mt-1 p-1 text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
+              aria-label="Lock"
             >
-              Lock
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V7a4.5 4.5 0 10-9 0v3.5M5 10.5h14a1 1 0 011 1V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5a1 1 0 011-1z" />
+              </svg>
             </button>
           </div>
         </div>
