@@ -98,13 +98,14 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!isConfigured) return;
+    const interval = setInterval(silentRefresh, 30000);
     const channel = supabase
       .channel("orders-live")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
         silentRefresh();
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => { clearInterval(interval); supabase.removeChannel(channel); };
   }, [silentRefresh]);
 
   const activeGroup = groups.find((g) => g.dateKey === selectedDate) ?? null;
