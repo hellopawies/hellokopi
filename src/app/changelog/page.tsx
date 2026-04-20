@@ -1,5 +1,14 @@
 const VERSIONS = [
   {
+    version: "v2.1.0",
+    date: "20 Apr 2026, 1:00 am",
+    title: "Order countdown",
+    changes: [
+      "Live countdown timer on each active session — shows how long before the window closes",
+      "Turns amber under 5 minutes, red under 2 minutes",
+    ],
+  },
+  {
     version: "v2.0.0",
     date: "20 Apr 2026, 12:30 am",
     title: "Quality of life",
