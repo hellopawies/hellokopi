@@ -160,7 +160,7 @@ function ModifierRow({
   disabled?: boolean;
 }) {
   const pillCls = (active: boolean) =>
-    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation ${
+    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation active:scale-[0.95] ${
       active
         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
         : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
@@ -270,7 +270,7 @@ function DrinkBuilder({
   }, [search, allDrinksFlat]);
 
   const baseChipCls = (active: boolean) =>
-    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-colors duration-100 touch-manipulation ${
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-colors duration-100 touch-manipulation active:scale-[0.95] ${
       active
         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
         : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
@@ -400,7 +400,7 @@ function DrinkBuilder({
                     key={sp.label}
                     type="button"
                     onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
-                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation ${
+                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation active:scale-[0.95] ${
                       special === sp.label
                         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
                         : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
@@ -431,7 +431,7 @@ function DrinkBuilder({
             <button
               type="button"
               onClick={() => onToggleCart(composedName)}
-              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation ${
+              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation active:scale-[0.95] ${
                 cart.has(composedName)
                   ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
                   : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
@@ -693,7 +693,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => setCart(new Map(lastOrder.map(({ name: n, qty }) => [n, qty])))}
-                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-150 touch-manipulation"
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
                   >
                     Re-order
                   </button>
@@ -802,7 +802,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => decrementCart(drinkName)}
-                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full"
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full active:scale-[0.95]"
                     aria-label="Decrease quantity"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -815,7 +815,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => incrementCart(drinkName)}
-                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full"
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full active:scale-[0.95]"
                     aria-label="Increase quantity"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -833,6 +833,7 @@ function OrderContent() {
                 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
                 text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                 transition-all duration-200 touch-manipulation
+                shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                 hover:bg-stone-700 dark:hover:bg-stone-300 active:bg-stone-900 dark:active:bg-stone-100
                 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none
               "
@@ -902,10 +903,10 @@ function ConfirmedState({ name, orderedAt, sessionStart, items }: {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
-          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
+          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
             View Orders
           </Link>
-          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
+          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
             Back
           </Link>
         </div>

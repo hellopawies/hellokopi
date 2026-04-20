@@ -81,7 +81,7 @@ function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
           <button
             type="submit"
             disabled={!password || checking}
-            className="mt-1 w-full py-3.5 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
+            className="mt-1 w-full py-3.5 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
           >
             {checking ? "Checking…" : "Enter"}
           </button>
@@ -142,7 +142,7 @@ function OrdersTab() {
   if (error) return (
     <div className="flex flex-col items-center gap-4 py-20">
       <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">Could not load orders.</p>
-      <button onClick={load} className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 rounded-xl px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 transition-colors duration-200 touch-manipulation">Try again</button>
+      <button onClick={load} className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 rounded-xl px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]">Try again</button>
     </div>
   );
   if (orders.length === 0) return (
@@ -189,7 +189,7 @@ function OrdersTab() {
                                     <button
                                       onClick={() => removeItem(order, name)}
                                       title="Remove one"
-                                      className="w-5 h-5 flex items-center justify-center border border-stone-200 dark:border-stone-700 rounded-full text-stone-400 dark:text-stone-500 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500 transition-colors touch-manipulation text-sm leading-none"
+                                      className="w-5 h-5 flex items-center justify-center border border-stone-200 dark:border-stone-700 rounded-full text-stone-400 dark:text-stone-500 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500 transition-colors touch-manipulation text-sm leading-none active:scale-[0.95]"
                                     >
                                       −
                                     </button>
@@ -296,7 +296,7 @@ function MenuTab() {
           <button
             type="submit"
             disabled={!newName.trim() || adding}
-            className="mt-1 w-full py-3 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
+            className="mt-1 w-full py-3 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
           >
             {adding ? "Adding…" : "Add Drink"}
           </button>
@@ -349,7 +349,7 @@ function MenuTab() {
                 </div>
                 <button
                   onClick={() => toggleHide(drink.name)}
-                  className={`flex-shrink-0 text-[10px] font-sans font-medium uppercase tracking-[0.15em] px-2.5 py-1 border rounded-full transition-colors duration-150 touch-manipulation ${
+                  className={`flex-shrink-0 text-[10px] font-sans font-medium uppercase tracking-[0.15em] px-2.5 py-1 border rounded-full transition-colors duration-150 touch-manipulation active:scale-[0.95] ${
                     hidden
                       ? "border-stone-400 dark:border-stone-500 text-stone-500 dark:text-stone-400 hover:border-stone-600"
                       : "border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500"
@@ -438,7 +438,7 @@ function MembersTab() {
           <button
             type="submit"
             disabled={!newName.trim() || adding}
-            className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium px-4 py-2 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none touch-manipulation"
+            className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium px-4 py-2 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] focus:outline-none"
           >
             {adding ? "…" : "Add"}
           </button>
