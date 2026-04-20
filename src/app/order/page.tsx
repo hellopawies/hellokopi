@@ -83,7 +83,7 @@ function DrinkCard({
       )}
       {count !== undefined && (
         <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-          {count} {count === 1 ? "order" : "orders"}
+          {count} {count === 1 ? "cup" : "cups"}
         </p>
       )}
     </button>
@@ -478,8 +478,20 @@ function OrderContent() {
       setLoadingFavs(false);
       return;
     }
-    supabase.rpc("get_crowd_favourites").then(({ data }) => {
-      if (data) setCrowdData(data as CrowdItem[]);
+    supabase.from("orders").select("items").then(({ data }) => {
+      if (data) {
+        const counts = new Map<string, number>();
+        for (const order of data) {
+          for (const item of order.items ?? []) {
+            if (item?.name) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          }
+        }
+        setCrowdData(
+          [...counts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([drink_name, order_count]) => ({ drink_name, order_count }))
+        );
+      }
       setLoadingCrowd(false);
     });
     supabase
@@ -590,7 +602,7 @@ function OrderContent() {
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
-    { id: "crowd", label: "Top Orders" },
+    { id: "crowd", label: "Top Choice" },
     { id: "all", label: "All Drinks" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
