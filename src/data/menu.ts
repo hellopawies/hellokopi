@@ -3,7 +3,7 @@ export interface DrinkSpecial { label: string; fullName?: string; }
 export interface DrinkBase {
   id: string;
   label: string;
-  milk: string[];       // 'O' / 'C' — empty = no milk row (e.g. Bandung)
+  milk: string[];       // 'O' / 'C' — empty = no milk row
   strength: string[];   // 'Gao' / 'Po' / 'Di Lo'
   sweetness: string[];  // 'Siew Dai' / 'Gah Dai' / 'Kosong'
   temp: string[];       // 'Peng' / 'Pua Sio'
@@ -69,17 +69,17 @@ export const DRINK_BASES: DrinkBase[] = [
     temp: ["Peng"],
     specials: [{ label: "Dinosaur" }, { label: "Godzilla" }],
   },
-  {
-    id: "bandung", label: "Bandung",
-    milk: [],
-    strength: ["Gao"],
-    sweetness: ["Siew Dai", "Kosong"],
-    temp: ["Peng"],
-    specials: [{ label: "Soda" }, { label: "Cincau" }, { label: "Dinosaur" }],
-  },
 ];
 
 export const OTHERS_DRINKS = [
+  { name: "Bandung", description: "Rose syrup + milk (hot)" },
+  { name: "Bandung Peng", description: "Iced rose syrup milk" },
+  { name: "Bandung Siew Dai", description: "Less sweet" },
+  { name: "Bandung Kosong", description: "Rose + milk, no added sugar" },
+  { name: "Bandung Gao", description: "Stronger rose flavor" },
+  { name: "Bandung Soda", description: "Rose milk + soda water (fizzy)" },
+  { name: "Bandung Cincau", description: "Bandung + grass jelly" },
+  { name: "Bandung Dinosaur", description: "Iced Bandung + extra rose syrup" },
   { name: "Michael Jackson", description: "Soya milk + black grass jelly" },
   { name: "Tiao He", description: "Chinese tea, teabag-style" },
   { name: "Barley", description: "Homemade barley drink (hot)" },

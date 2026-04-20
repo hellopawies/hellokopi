@@ -1,5 +1,18 @@
 const VERSIONS = [
   {
+    version: "v1.9.0",
+    date: "20 Apr 2026, 12:00 am",
+    title: "Drink builder",
+    changes: [
+      "Pick your base (Kopi, Teh, Milo…) then dial in your modifiers",
+      "Milk: condensed / O (black) / C (evap) — only one at a time",
+      "Sweetness, strength, and temperature each pick one option",
+      "Specials (Tarik, Dinosaur, Godzilla…) as quick-pick chips",
+      "Tap ♡ on any customised drink to save it to My Picks",
+      "Bandung has its own set of options",
+    ],
+  },
+  {
     version: "v1.8.0",
     date: "19 Apr 2026, 9:15 pm",
     title: "Kopi icon & home screen app",
