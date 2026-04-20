@@ -1,5 +1,15 @@
 const VERSIONS = [
   {
+    version: "v2.0.0",
+    date: "20 Apr 2026, 12:30 am",
+    title: "Quality of life",
+    changes: [
+      "Search drinks — type to find any drink instantly across all categories",
+      "Re-order with one tap — your last order shows up in My Picks",
+      "Clear cart button to start over without removing drinks one by one",
+    ],
+  },
+  {
     version: "v1.9.0",
     date: "20 Apr 2026, 12:00 am",
     title: "Drink builder",
