@@ -56,6 +56,20 @@ export default function OrdersPage() {
     setQuip(QUIPS[Math.floor(Math.random() * QUIPS.length)]);
   }, []);
 
+  const silentRefresh = useCallback(async () => {
+    if (!isConfigured) return;
+    try {
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (data) {
+        const g = groupOrders(data as Order[]);
+        setGroups(g);
+      }
+    } catch { /* silent */ }
+  }, []);
+
   const load = useCallback(async () => {
     if (!isConfigured) { setLoading(false); return; }
     setLoading(true);
@@ -82,6 +96,17 @@ export default function OrdersPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    if (!isConfigured) return;
+    const channel = supabase
+      .channel("orders-live")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
+        silentRefresh();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [silentRefresh]);
+
   const activeGroup = groups.find((g) => g.dateKey === selectedDate) ?? null;
 
   return (
@@ -97,9 +122,17 @@ export default function OrdersPage() {
               hello kopi
             </span>
             <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
-            <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
-              Orders
-            </h1>
+            <div className="flex items-baseline gap-3">
+              <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
+                Orders
+              </h1>
+              {isConfigured && (
+                <span className="flex items-center gap-1.5 mb-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 dark:bg-green-500 animate-pulse" />
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-300 dark:text-stone-600">Live</span>
+                </span>
+              )}
+            </div>
             {quip && (
               <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
                 {quip}
