@@ -1,5 +1,18 @@
 const VERSIONS = [
   {
+    version: "v2.3.0",
+    date: "20 Apr 2026, 3:00 am",
+    title: "Rounded design language",
+    changes: [
+      "All buttons and chips consistently rounded — pill shape for filters and modifiers, rounded-xl for CTAs",
+      "Admin tabs now use the same sliding pill animation as the order page",
+      "All Drinks base and specials chips are now pills",
+      "Orders page quantity badge is now a rounded pill",
+      "Every admin action button (Enter, Add Drink, Add Member, Try again) is now rounded-xl",
+      "Admin remove-item and hide/show toggles are now rounded-full",
+    ],
+  },
+  {
     version: "v2.2.0",
     date: "20 Apr 2026, 2:00 am",
     title: "Refined warmth",

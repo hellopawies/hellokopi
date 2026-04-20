@@ -264,7 +264,7 @@ export default function OrdersPage() {
                             </p>
                           </div>
                           {names.length > 1 && (
-                            <span className="flex-shrink-0 mt-0.5 px-2 py-0.5 border border-stone-200 dark:border-stone-600 text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide">
+                            <span className="flex-shrink-0 mt-0.5 px-2 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide">
                               × {names.length}
                             </span>
                           )}

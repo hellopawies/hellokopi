@@ -160,7 +160,7 @@ function ModifierRow({
   disabled?: boolean;
 }) {
   const pillCls = (active: boolean) =>
-    `px-3 py-1.5 text-[11px] font-sans border transition-colors duration-100 touch-manipulation ${
+    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation ${
       active
         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
         : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
@@ -270,7 +270,7 @@ function DrinkBuilder({
   }, [search, allDrinksFlat]);
 
   const baseChipCls = (active: boolean) =>
-    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border transition-colors duration-100 touch-manipulation ${
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-colors duration-100 touch-manipulation ${
       active
         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
         : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
@@ -400,7 +400,7 @@ function DrinkBuilder({
                     key={sp.label}
                     type="button"
                     onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
-                    className={`px-3 py-1.5 text-[11px] font-sans border transition-colors duration-100 touch-manipulation ${
+                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation ${
                       special === sp.label
                         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
                         : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
