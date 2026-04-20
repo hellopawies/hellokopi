@@ -249,6 +249,31 @@ function DrinkBuilder({
     ];
   }, [customDrinks, hiddenDrinks]);
 
+  const [search, setSearch] = useState("");
+
+  const allDrinksFlat = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { name: string; description: string }[] = [];
+    for (const cat of CATEGORIES) {
+      for (const d of cat.drinks) {
+        if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
+      }
+    }
+    for (const d of OTHERS_DRINKS) {
+      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
+    }
+    for (const d of customDrinks) {
+      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push({ name: d.name, description: d.description }); }
+    }
+    return out;
+  }, [customDrinks, hiddenDrinks]);
+
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return null;
+    return allDrinksFlat.filter((d) => d.name.toLowerCase().includes(q));
+  }, [search, allDrinksFlat]);
+
   const baseChipCls = (active: boolean) =>
     `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border transition-colors duration-100 touch-manipulation ${
       active
@@ -258,13 +283,43 @@ function DrinkBuilder({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Search */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => { setSearch(e.target.value); if (e.target.value) setBaseId(null); }}
+        placeholder="Search drinks…"
+        className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 tracking-wide transition-colors duration-200"
+      />
+
+      {/* Search results */}
+      {searchResults ? (
+        <div className="border-t border-stone-100 dark:border-stone-800 -mt-2">
+          {searchResults.length === 0 ? (
+            <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">No results.</p>
+          ) : searchResults.map((drink) => (
+            <DrinkRow
+              key={drink.name}
+              name={drink.name}
+              description={drink.description}
+              selected={cart.has(drink.name)}
+              qty={cart.get(drink.name) ?? 0}
+              onSelect={() => onToggleCart(drink.name)}
+              favourited={userFavs.has(drink.name)}
+              onToggleFavourite={() => onToggleFavourite(drink.name)}
+            />
+          ))}
+        </div>
+      ) : (
+      <>
+
       {/* Base selector */}
       <div className="flex flex-wrap gap-2">
         {DRINK_BASES.map((b) => (
           <button
             key={b.id}
             type="button"
-            onClick={() => setBaseId(baseId === b.id ? null : b.id)}
+            onClick={() => { setSearch(""); setBaseId(baseId === b.id ? null : b.id); }}
             className={baseChipCls(baseId === b.id)}
           >
             {b.label}
@@ -272,7 +327,7 @@ function DrinkBuilder({
         ))}
         <button
           type="button"
-          onClick={() => setBaseId(baseId === "others" ? null : "others")}
+          onClick={() => { setSearch(""); setBaseId(baseId === "others" ? null : "others"); }}
           className={baseChipCls(baseId === "others")}
         >
           Others
@@ -392,6 +447,9 @@ function DrinkBuilder({
           </div>
         </div>
       )}
+
+      </>
+      )}
     </div>
   );
 }
@@ -410,6 +468,7 @@ function OrderContent() {
   const [hiddenDrinks, setHiddenDrinks] = useState<Set<string>>(new Set());
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
+  const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -443,6 +502,20 @@ function OrderContent() {
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
     });
+    supabase
+      .from("orders")
+      .select("items")
+      .eq("person_name", name)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const items = data[0].items as { name: string }[];
+          const counts = new Map<string, number>();
+          for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
+        }
+      });
   }, [name]);
 
   function toggleCart(drinkName: string) {
@@ -581,6 +654,25 @@ function OrderContent() {
           {tab === "yours" && (
             <>
               {loadingFavs && <TabLoading />}
+              {!loadingFavs && lastOrder && lastOrder.length > 0 && (
+                <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-2.5">Last order</p>
+                  <div className="flex flex-col gap-1 mb-3">
+                    {lastOrder.map(({ name: n, qty }) => (
+                      <p key={n} className="text-sm font-sans text-stone-600 dark:text-stone-400">
+                        {n}{qty > 1 ? ` ×${qty}` : ""}
+                      </p>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCart(new Map(lastOrder.map(({ name: n, qty }) => [n, qty])))}
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-150 touch-manipulation"
+                  >
+                    Re-order
+                  </button>
+                </div>
+              )}
               {!loadingFavs && userFavs.size === 0 && (
                 <div className="flex flex-col items-center gap-3 py-16">
                   <div className="w-px h-8 bg-stone-200 dark:bg-stone-700" />
@@ -665,6 +757,16 @@ function OrderContent() {
       {cart.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
           <div className="max-w-lg mx-auto flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">Your order</p>
+              <button
+                type="button"
+                onClick={() => setCart(new Map())}
+                className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
+              >
+                Clear
+              </button>
+            </div>
             {cartEntries.map(([drinkName, qty]) => (
               <div key={drinkName} className="flex items-center gap-3">
                 <p className="flex-1 min-w-0 text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">
