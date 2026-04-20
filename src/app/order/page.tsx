@@ -59,7 +59,7 @@ function DrinkCard({
       type="button"
       onClick={onSelect}
       className={`
-        relative text-left p-3.5 border transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
+        relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
         ${selected
           ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
           : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
@@ -431,7 +431,7 @@ function DrinkBuilder({
             <button
               type="button"
               onClick={() => onToggleCart(composedName)}
-              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border transition-all duration-150 touch-manipulation ${
+              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation ${
                 cart.has(composedName)
                   ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
                   : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
@@ -593,6 +593,7 @@ function OrderContent() {
     { id: "crowd", label: "Top Orders" },
     { id: "all", label: "All Drinks" },
   ];
+  const tabIndex = TABS.findIndex((t) => t.id === tab);
 
   const cartEntries = [...cart.entries()];
   const totalDrinks = cartEntries.reduce((s, [, q]) => s + q, 0);
@@ -622,16 +623,24 @@ function OrderContent() {
         {/* Tabs */}
         <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
-            <div className="flex gap-1 bg-stone-100 dark:bg-stone-900 rounded-full p-1 w-fit">
+            <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
+              {/* Sliding pill */}
+              <div
+                className="absolute top-1 bottom-1 w-1/3 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                style={{
+                  transform: `translateX(${tabIndex * 100}%)`,
+                  transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }}
+              />
               {TABS.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={`
-                    px-4 py-1.5 text-[10px] uppercase tracking-[0.15em]
-                    font-sans font-medium rounded-full transition-all duration-200 touch-manipulation whitespace-nowrap
+                    relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
+                    font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
                     ${tab === t.id
-                      ? "bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 shadow-sm"
+                      ? "text-stone-800 dark:text-stone-100"
                       : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-400"}
                   `}
                 >
@@ -664,7 +673,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => setCart(new Map(lastOrder.map(({ name: n, qty }) => [n, qty])))}
-                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-150 touch-manipulation"
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-150 touch-manipulation"
                   >
                     Re-order
                   </button>
@@ -773,7 +782,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => decrementCart(drinkName)}
-                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation"
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full"
                     aria-label="Decrease quantity"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -786,7 +795,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => incrementCart(drinkName)}
-                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation"
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full"
                     aria-label="Increase quantity"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -800,7 +809,7 @@ function OrderContent() {
               onClick={placeOrder}
               disabled={orderState === "loading" || !isConfigured}
               className="
-                mt-1 w-full py-3
+                mt-1 w-full py-3 rounded-xl
                 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
                 text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                 transition-all duration-200 touch-manipulation
@@ -850,10 +859,10 @@ function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: str
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
-          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
+          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
             View Orders
           </Link>
-          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
+          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
             Back
           </Link>
         </div>
