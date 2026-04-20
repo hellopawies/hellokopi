@@ -17,7 +17,7 @@ interface CustomDrink { id: string; name: string; description: string; category_
 
 type Tab = "crowd" | "yours" | "all";
 type CartItem = { name: string; qty: number };
-type OrderState = "idle" | "loading" | { orderRef: string; items: CartItem[] } | "error";
+type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
 
 // ─── Heart icon ───────────────────────────────────────────────
@@ -576,28 +576,36 @@ function OrderContent() {
   async function placeOrder() {
     if (cart.size === 0) return;
     setOrderState("loading");
-    const orderRef = generateOrderRef();
-    // Expand cart: qty > 1 = repeated item entries (backward-compatible with orders display)
+    const orderedAt = new Date();
     const items = [...cart.entries()].flatMap(([drinkName, qty]) => {
       const drink = DRINKS_MAP.get(drinkName) ?? { name: drinkName, description: "" };
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
     try {
       const { error } = await supabase.from("orders").insert({
-        order_ref: orderRef,
+        order_ref: generateOrderRef(),
         person_name: name,
         items,
       });
       if (error) throw error;
+      // Find session start: earliest order placed in the last 15 minutes
+      const windowStart = new Date(orderedAt.getTime() - 15 * 60 * 1000).toISOString();
+      const { data: sessionData } = await supabase
+        .from("orders")
+        .select("created_at")
+        .gte("created_at", windowStart)
+        .order("created_at", { ascending: true })
+        .limit(1);
+      const sessionStart = sessionData?.[0] ? new Date(sessionData[0].created_at) : orderedAt;
       const cartItems: CartItem[] = [...cart.entries()].map(([drinkName, qty]) => ({ name: drinkName, qty }));
-      setOrderState({ orderRef, items: cartItems });
+      setOrderState({ orderedAt, sessionStart, items: cartItems });
     } catch {
       setOrderState("error");
     }
   }
 
   if (typeof orderState === "object") {
-    return <ConfirmedState name={name} orderRef={orderState.orderRef} items={orderState.items} />;
+    return <ConfirmedState name={name} orderedAt={orderState.orderedAt} sessionStart={orderState.sessionStart} items={orderState.items} />;
   }
 
   const TABS: { id: Tab; label: string }[] = [
@@ -846,16 +854,26 @@ function OrderContent() {
 }
 
 // ─── Confirmation screen ──────────────────────────────────────
-function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: string; items: CartItem[] }) {
+const SGT = "Asia/Singapore";
+const CONFIRM_SESSION_MS = 15 * 60 * 1000;
+
+function ConfirmedState({ name, orderedAt, sessionStart, items }: {
+  name: string;
+  orderedAt: Date;
+  sessionStart: Date;
+  items: CartItem[];
+}) {
+  const sessionEnd = new Date(sessionStart.getTime() + CONFIRM_SESSION_MS);
+  const fmt = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
+
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
+    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8">
         <div className="flex flex-col items-center gap-1">
           <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">hello kopi</span>
           <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1" />
         </div>
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 w-full">
           <p className="text-[11px] uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500 font-sans">Order placed</p>
           <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">{name}</h1>
           <div className="flex flex-col items-center gap-1 mt-1">
@@ -865,9 +883,22 @@ function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: str
               </p>
             ))}
           </div>
-          <div className="flex flex-col items-center gap-1.5 mt-3 pt-3 border-t border-stone-100 dark:border-stone-800 w-full">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Order reference</p>
-            <p className="font-serif text-3xl sm:text-4xl font-light tracking-[0.2em] text-stone-700 dark:text-stone-200">{orderRef}</p>
+          <div className="w-full mt-3 pt-4 border-t border-stone-100 dark:border-stone-800 flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Ordered at</p>
+              <p className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">
+                {fmt(orderedAt)}
+              </p>
+              <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-0.5">
+                {orderedAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: SGT })}
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Session window</p>
+              <p className="font-serif text-lg font-light tracking-wide text-stone-600 dark:text-stone-300">
+                {fmt(sessionStart)} – {fmt(sessionEnd)}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
@@ -879,7 +910,6 @@ function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: str
           </Link>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
     </main>
   );
 }
