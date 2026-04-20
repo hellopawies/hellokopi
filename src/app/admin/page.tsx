@@ -3,8 +3,14 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
-import { CATEGORIES } from "@/data/drinks";
+import { DRINK_BASES, OTHERS_DRINKS } from "@/data/menu";
 import type { Order } from "@/types/order";
+
+// Dropdown categories: all bases + Others
+const MENU_CATEGORIES: { id: string; label: string }[] = [
+  ...DRINK_BASES.map((b) => ({ id: b.id, label: b.label })),
+  { id: "others", label: "Others" },
+];
 
 const ADMIN_HASH = "86623b9b3871ac27c810a27912ad683c67a1525fb15b0100366ad98fa93ac93d";
 const SGT = "Asia/Singapore";
@@ -228,10 +234,9 @@ function MenuTab() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [newCat, setNewCat] = useState(CATEGORIES[0].id);
+  const [newCat, setNewCat] = useState(MENU_CATEGORIES[0].id);
   const [adding, setAdding] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const catRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -283,10 +288,6 @@ function MenuTab() {
     }
   }
 
-  function toggleCategory(id: string) {
-    setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  }
-
   if (loading) return <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-20">Loading…</p>;
 
   return (
@@ -316,7 +317,7 @@ function MenuTab() {
               className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:outline-none flex items-center justify-between gap-2 py-2.5 transition-colors duration-200 touch-manipulation"
             >
               <span className="text-sm font-sans font-light text-stone-800 dark:text-stone-100">
-                {CATEGORIES.find(c => c.id === newCat)?.label ?? newCat}
+                {MENU_CATEGORIES.find(c => c.id === newCat)?.label ?? newCat}
               </span>
               <svg className={`w-3.5 h-3.5 text-stone-400 dark:text-stone-500 transition-transform duration-150 ${catOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -324,7 +325,7 @@ function MenuTab() {
             </button>
             {catOpen && (
               <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black divide-y divide-stone-100 dark:divide-[#3a3a3a] max-h-[40vh] overflow-y-auto">
-                {CATEGORIES.map(cat => (
+                {MENU_CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
                     type="button"
@@ -362,7 +363,7 @@ function MenuTab() {
                   <p className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">{drink.name}</p>
                   {drink.description && <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 truncate">{drink.description}</p>}
                   <p className="text-[10px] font-sans text-stone-300 dark:text-stone-600 mt-0.5">
-                    {CATEGORIES.find(c => c.id === drink.category_id)?.label ?? drink.category_id}
+                    {MENU_CATEGORIES.find(c => c.id === drink.category_id)?.label ?? drink.category_id}
                   </p>
                 </div>
                 <button
@@ -379,64 +380,42 @@ function MenuTab() {
         </div>
       )}
 
-      {/* Default menu toggles */}
+      {/* Others menu toggles */}
       <div>
         <p className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-600 dark:text-stone-400 mb-3">
-          Default menu
-          {hiddenDrinks.size > 0 && (
+          Others menu
+          {OTHERS_DRINKS.filter(d => hiddenDrinks.has(d.name)).length > 0 && (
             <span className="ml-2 text-stone-300 dark:text-stone-600 normal-case tracking-normal font-normal">
-              ({hiddenDrinks.size} hidden)
+              ({OTHERS_DRINKS.filter(d => hiddenDrinks.has(d.name)).length} hidden)
             </span>
           )}
         </p>
-        <div>
-          {CATEGORIES.map(cat => (
-            <div key={cat.id} className="border-b border-stone-100 dark:border-stone-800 last:border-0">
-              <button
-                type="button"
-                onClick={() => toggleCategory(cat.id)}
-                className="w-full flex items-center justify-between py-4 touch-manipulation"
-              >
-                <span className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-600 dark:text-stone-400">{cat.label}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-stone-300 dark:text-stone-600 font-sans tabular-nums">
-                    {cat.drinks.filter(d => hiddenDrinks.has(d.name)).length > 0
-                      ? `${cat.drinks.filter(d => hiddenDrinks.has(d.name)).length} hidden`
-                      : cat.drinks.length}
-                  </span>
-                  <svg className={`w-3.5 h-3.5 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${expanded.has(cat.id) ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
+        <div className="border-t border-stone-100 dark:border-stone-800">
+          {OTHERS_DRINKS.map(drink => {
+            const hidden = hiddenDrinks.has(drink.name);
+            return (
+              <div key={drink.name} className={`flex items-center justify-between gap-3 py-2.5 border-b border-stone-100 dark:border-stone-800 transition-opacity ${hidden ? "opacity-40" : ""}`}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-sans text-stone-800 dark:text-stone-100 truncate">{drink.name}</p>
+                  <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 truncate">{drink.description}</p>
                 </div>
-              </button>
-              {expanded.has(cat.id) && (
-                <div className="pb-2">
-                  {cat.drinks.map(drink => {
-                    const hidden = hiddenDrinks.has(drink.name);
-                    return (
-                      <div key={drink.name} className={`flex items-center justify-between gap-3 px-1 py-2.5 border-b border-stone-50 dark:border-[#1a1a1a] last:border-0 transition-opacity ${hidden ? "opacity-40" : ""}`}>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-sans text-stone-800 dark:text-stone-100 truncate">{drink.name}</p>
-                          <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 truncate">{drink.description}</p>
-                        </div>
-                        <button
-                          onClick={() => toggleHide(drink.name)}
-                          className={`flex-shrink-0 text-[10px] font-sans font-medium uppercase tracking-[0.15em] px-2.5 py-1 border transition-colors duration-150 touch-manipulation ${
-                            hidden
-                              ? "border-stone-400 dark:border-stone-500 text-stone-500 dark:text-stone-400 hover:border-stone-600"
-                              : "border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500"
-                          }`}
-                        >
-                          {hidden ? "Show" : "Hide"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
+                <button
+                  onClick={() => toggleHide(drink.name)}
+                  className={`flex-shrink-0 text-[10px] font-sans font-medium uppercase tracking-[0.15em] px-2.5 py-1 border transition-colors duration-150 touch-manipulation ${
+                    hidden
+                      ? "border-stone-400 dark:border-stone-500 text-stone-500 dark:text-stone-400 hover:border-stone-600"
+                      : "border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500"
+                  }`}
+                >
+                  {hidden ? "Show" : "Hide"}
+                </button>
+              </div>
+            );
+          })}
         </div>
+        <p className="text-[11px] font-sans italic text-stone-300 dark:text-stone-600 mt-3 leading-relaxed">
+          Kopi, Teh, Milo etc. are built from modifiers (O/C, Siew Dai, Peng…) so there are no individual drinks to hide there. Custom drinks you add above will appear as specials under the chosen base.
+        </p>
       </div>
     </div>
   );
