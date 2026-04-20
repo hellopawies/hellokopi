@@ -81,7 +81,7 @@ function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
           <button
             type="submit"
             disabled={!password || checking}
-            className="mt-1 w-full py-3.5 border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
+            className="mt-1 w-full py-3.5 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
           >
             {checking ? "Checking…" : "Enter"}
           </button>
@@ -142,7 +142,7 @@ function OrdersTab() {
   if (error) return (
     <div className="flex flex-col items-center gap-4 py-20">
       <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">Could not load orders.</p>
-      <button onClick={load} className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 transition-colors duration-200 touch-manipulation">Try again</button>
+      <button onClick={load} className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 rounded-xl px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 transition-colors duration-200 touch-manipulation">Try again</button>
     </div>
   );
   if (orders.length === 0) return (
@@ -189,7 +189,7 @@ function OrdersTab() {
                                     <button
                                       onClick={() => removeItem(order, name)}
                                       title="Remove one"
-                                      className="w-5 h-5 flex items-center justify-center border border-stone-200 dark:border-stone-700 text-stone-400 dark:text-stone-500 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500 transition-colors touch-manipulation text-sm leading-none"
+                                      className="w-5 h-5 flex items-center justify-center border border-stone-200 dark:border-stone-700 rounded-full text-stone-400 dark:text-stone-500 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500 transition-colors touch-manipulation text-sm leading-none"
                                     >
                                       −
                                     </button>
@@ -296,7 +296,7 @@ function MenuTab() {
           <button
             type="submit"
             disabled={!newName.trim() || adding}
-            className="mt-1 w-full py-3 border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
+            className="mt-1 w-full py-3 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
           >
             {adding ? "Adding…" : "Add Drink"}
           </button>
@@ -349,7 +349,7 @@ function MenuTab() {
                 </div>
                 <button
                   onClick={() => toggleHide(drink.name)}
-                  className={`flex-shrink-0 text-[10px] font-sans font-medium uppercase tracking-[0.15em] px-2.5 py-1 border transition-colors duration-150 touch-manipulation ${
+                  className={`flex-shrink-0 text-[10px] font-sans font-medium uppercase tracking-[0.15em] px-2.5 py-1 border rounded-full transition-colors duration-150 touch-manipulation ${
                     hidden
                       ? "border-stone-400 dark:border-stone-500 text-stone-500 dark:text-stone-400 hover:border-stone-600"
                       : "border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 hover:border-red-300 dark:hover:border-red-800 hover:text-red-400 dark:hover:text-red-500"
@@ -438,7 +438,7 @@ function MembersTab() {
           <button
             type="submit"
             disabled={!newName.trim() || adding}
-            className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium px-4 py-2 border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none touch-manipulation"
+            className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium px-4 py-2 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none touch-manipulation"
           >
             {adding ? "…" : "Add"}
           </button>
@@ -502,6 +502,7 @@ function AdminContent({ onLock }: { onLock: () => void }) {
     { id: "menu", label: "Menu" },
     { id: "members", label: "Members" },
   ];
+  const tabIndex = TABS.findIndex((t) => t.id === tab);
 
   return (
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
@@ -524,21 +525,32 @@ function AdminContent({ onLock }: { onLock: () => void }) {
             </button>
           </div>
         </div>
-        <div className="px-5 sm:px-8 border-b border-stone-100 dark:border-stone-800">
-          <div className="max-w-lg mx-auto flex gap-5 sm:gap-7">
-            {TABS.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`pb-3 text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.25em] font-sans font-medium border-b-2 transition-colors duration-150 touch-manipulation whitespace-nowrap ${
-                  tab === t.id
-                    ? "text-stone-800 dark:text-stone-100 border-stone-800 dark:border-stone-100"
-                    : "text-stone-400 dark:text-stone-500 border-transparent hover:text-stone-600 dark:hover:text-stone-300"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+        <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
+          <div className="max-w-lg mx-auto">
+            <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
+              <div
+                className="absolute top-1 bottom-1 w-1/3 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                style={{
+                  transform: `translateX(${tabIndex * 100}%)`,
+                  transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }}
+              />
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`
+                    relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
+                    font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
+                    ${tab === t.id
+                      ? "text-stone-800 dark:text-stone-100"
+                      : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-400"}
+                  `}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
