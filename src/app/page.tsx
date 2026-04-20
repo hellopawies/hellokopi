@@ -263,7 +263,7 @@ export default function GreetingPage() {
           href="/changelog"
           className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
         >
-          v2.0.0
+          v2.1.0
         </Link>
       </div>
 

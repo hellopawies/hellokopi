@@ -45,6 +45,34 @@ const QUIPS = [
   "One does not simply skip kopi.",
 ];
 
+const SESSION_MS = 15 * 60 * 1000;
+
+function Countdown({ sessionStart }: { sessionStart: Date }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const remaining = sessionStart.getTime() + SESSION_MS - now;
+  if (remaining <= 0) return null;
+
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const label = mins > 0 ? `${mins}m ${secs}s left` : `${secs}s left`;
+  const colour = remaining < 2 * 60000
+    ? "text-red-400 dark:text-red-500"
+    : remaining < 5 * 60000
+    ? "text-amber-400 dark:text-amber-500"
+    : "text-stone-300 dark:text-stone-600";
+
+  return (
+    <span className={`text-[10px] uppercase tracking-[0.2em] font-sans tabular-nums ${colour}`}>
+      {label}
+    </span>
+  );
+}
+
 export default function OrdersPage() {
   const [groups, setGroups] = useState<DateGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -214,11 +242,12 @@ export default function OrdersPage() {
                       <span className="text-[11px] uppercase tracking-[0.25em] text-stone-600 dark:text-stone-300 font-sans font-medium">
                         {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
                         {" – "}
-                        {new Date(session.sessionStart.getTime() + 15 * 60 * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
+                        {new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
                       </span>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans">
                         {cups} {cups === 1 ? "cup" : "cups"}
                       </span>
+                      <Countdown sessionStart={session.sessionStart} />
                     </div>
                     <div className="border-t border-stone-100 dark:border-stone-800">
                       {drinkGroups.map(({ drink, names }) => (
