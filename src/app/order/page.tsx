@@ -74,7 +74,7 @@ function DrinkCard({
       </span>
 
       <p className={`text-sm font-sans font-medium leading-snug pr-5 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-        {name}
+        {name}{selected && qty > 1 ? <span className="ml-1 text-[11px] font-normal opacity-60">×{qty}</span> : null}
       </p>
       {description && (
         <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
@@ -85,11 +85,6 @@ function DrinkCard({
         <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
           {count} {count === 1 ? "order" : "orders"}
         </p>
-      )}
-      {selected && qty > 1 && (
-        <span className="absolute bottom-2 left-3 text-[10px] font-sans font-medium text-stone-400 dark:text-stone-600 tabular-nums">
-          ×{qty}
-        </span>
       )}
     </button>
   );
