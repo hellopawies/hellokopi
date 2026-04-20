@@ -98,7 +98,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!isConfigured) return;
-    const interval = setInterval(silentRefresh, 30000);
+    const interval = setInterval(silentRefresh, 10000);
     const channel = supabase
       .channel("orders-live")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
