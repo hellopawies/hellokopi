@@ -620,23 +620,25 @@ function OrderContent() {
         </div>
 
         {/* Tabs */}
-        <div className="px-5 sm:px-8 border-b border-stone-100 dark:border-stone-800">
-          <div className="max-w-lg mx-auto flex gap-5 sm:gap-7">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`
-                  pb-3 text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.25em]
-                  font-sans font-medium border-b-2 transition-colors duration-150 touch-manipulation whitespace-nowrap
-                  ${tab === t.id
-                    ? "text-stone-800 dark:text-stone-100 border-stone-800 dark:border-stone-100"
-                    : "text-stone-400 dark:text-stone-500 border-transparent hover:text-stone-600 dark:hover:text-stone-300"}
-                `}
-              >
-                {t.label}
-              </button>
-            ))}
+        <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
+          <div className="max-w-lg mx-auto">
+            <div className="flex gap-1 bg-stone-100 dark:bg-stone-900 rounded-full p-1 w-fit">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`
+                    px-4 py-1.5 text-[10px] uppercase tracking-[0.15em]
+                    font-sans font-medium rounded-full transition-all duration-200 touch-manipulation whitespace-nowrap
+                    ${tab === t.id
+                      ? "bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 shadow-sm"
+                      : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-400"}
+                  `}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
