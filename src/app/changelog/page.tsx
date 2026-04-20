@@ -1,5 +1,16 @@
 const VERSIONS = [
   {
+    version: "v2.2.0",
+    date: "20 Apr 2026, 2:00 am",
+    title: "Refined warmth",
+    changes: [
+      "Warmer cream background — softer on the eyes, more café-like",
+      "Frosted glass on sticky headers and cart bar — depth without heaviness",
+      "Drink cards now lift and cast a shadow on hover",
+      "Smoother transitions and subtle active press feel throughout",
+    ],
+  },
+  {
     version: "v2.1.0",
     date: "20 Apr 2026, 1:00 am",
     title: "Order countdown",
@@ -138,10 +149,10 @@ const VERSIONS = [
 
 export default function ChangelogPage() {
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
+    <main className="relative min-h-[100dvh] bg-[#FAF8F5] dark:bg-[#0E0C0A] pb-16">
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="sticky top-0 z-30 bg-[#FAF8F5]/90 dark:bg-[#0E0C0A]/90 backdrop-blur-xl border-b border-stone-100/80 dark:border-stone-800/80">
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
             <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
