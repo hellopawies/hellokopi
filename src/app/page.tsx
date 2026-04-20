@@ -190,9 +190,9 @@ export default function GreetingPage() {
                 {open && (
                   <div className="
                     absolute top-full left-0 right-0 z-10 mt-1
-                    bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black
+                    bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 rounded-xl shadow-md dark:shadow-black
                     divide-y divide-stone-100 dark:divide-[#3a3a3a]
-                    max-h-[55vh] overflow-y-auto
+                    max-h-[55vh] overflow-y-auto overflow-hidden
                   ">
                     {colleagues.map((name) => (
                       <button
@@ -239,7 +239,7 @@ export default function GreetingPage() {
                 type="submit"
                 disabled={!canContinue}
                 className="
-                  mt-1 w-full sm:w-auto sm:px-10 py-3.5
+                  mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
                   text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                   transition-all duration-300 touch-manipulation
