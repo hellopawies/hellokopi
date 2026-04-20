@@ -7,7 +7,98 @@ import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
 import { CATEGORIES, type Drink } from "@/data/drinks";
 
-// Base lookup map for hardcoded drinks
+// ─── Drink builder config ─────────────────────────────────────
+interface DrinkSpecial { label: string; fullName?: string; }
+interface DrinkBase {
+  id: string;
+  label: string;
+  milk: string[];       // 'O' / 'C' — empty = no milk row (e.g. Bandung)
+  strength: string[];   // 'Gao' / 'Po' / 'Di Lo'
+  sweetness: string[];  // 'Siew Dai' / 'Gah Dai' / 'Kosong'
+  temp: string[];       // 'Peng' / 'Pua Sio'
+  specials: DrinkSpecial[];
+}
+
+const DRINK_BASES: DrinkBase[] = [
+  {
+    id: "kopi", label: "Kopi",
+    milk: ["O", "C"],
+    strength: ["Gao", "Po", "Di Lo"],
+    sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
+    temp: ["Peng", "Pua Sio"],
+    specials: [{ label: "Tarik" }, { label: "Gu You" }, { label: "Ka Dai" }],
+  },
+  {
+    id: "teh", label: "Teh",
+    milk: ["O", "C"],
+    strength: ["Gao", "Po"],
+    sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
+    temp: ["Peng", "Pua Sio"],
+    specials: [
+      { label: "Tarik" },
+      { label: "C Peng Special", fullName: "Teh C Peng Special" },
+    ],
+  },
+  {
+    id: "teh-halia", label: "Teh Halia",
+    milk: ["O", "C"],
+    strength: ["Gao"],
+    sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
+    temp: ["Peng"],
+    specials: [{ label: "Tarik" }],
+  },
+  {
+    id: "yuan-yang", label: "Yuan Yang",
+    milk: ["O", "C"],
+    strength: ["Gao"],
+    sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
+    temp: ["Peng"],
+    specials: [{ label: "Kopi Cham", fullName: "Kopi Cham" }],
+  },
+  {
+    id: "milo", label: "Milo",
+    milk: ["C"],
+    strength: ["Gao"],
+    sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
+    temp: ["Peng"],
+    specials: [
+      { label: "Dinosaur" },
+      { label: "Godzilla" },
+      { label: "Cino" },
+      { label: "Neslo", fullName: "Neslo" },
+      { label: "Neslo Peng", fullName: "Neslo Peng" },
+      { label: "Tak Giu", fullName: "Tak Giu" },
+    ],
+  },
+  {
+    id: "horlicks", label: "Horlicks",
+    milk: ["C"],
+    strength: ["Gao"],
+    sweetness: ["Siew Dai", "Kosong"],
+    temp: ["Peng"],
+    specials: [{ label: "Dinosaur" }, { label: "Godzilla" }],
+  },
+  {
+    id: "bandung", label: "Bandung",
+    milk: [],
+    strength: ["Gao"],
+    sweetness: ["Siew Dai", "Kosong"],
+    temp: ["Peng"],
+    specials: [{ label: "Soda" }, { label: "Cincau" }, { label: "Dinosaur" }],
+  },
+];
+
+const OTHERS_DRINKS: Drink[] = [
+  { name: "Michael Jackson", description: "Soya milk + black grass jelly" },
+  { name: "Tiao He", description: "Chinese tea, teabag-style" },
+  { name: "Barley", description: "Homemade barley drink (hot)" },
+  { name: "Barley Peng", description: "Iced barley" },
+  { name: "Soya Cincau", description: "Soya milk + grass jelly" },
+  { name: "Lime Juice", description: "Fresh lime juice" },
+  { name: "Sng Bao", description: "Frozen drink in plastic bag" },
+];
+
+// Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
 const BASE_DRINKS_MAP = new Map(
   CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d])
 );
@@ -18,16 +109,6 @@ type Tab = "crowd" | "yours" | "all";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderRef: string; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
-
-// Sort hot drinks first, iced (Peng) last
-function sortHotFirst(drinks: Drink[]): Drink[] {
-  return [...drinks].sort((a, b) => {
-    const aIced = /peng/i.test(a.name);
-    const bIced = /peng/i.test(b.name);
-    if (aIced === bIced) return 0;
-    return aIced ? 1 : -1;
-  });
-}
 
 // ─── Heart icon ───────────────────────────────────────────────
 function Heart({ filled }: { filled: boolean }) {
@@ -52,42 +133,44 @@ function Heart({ filled }: { filled: boolean }) {
 
 // ─── Drink card (grid view) ───────────────────────────────────
 function DrinkCard({
-  drink, selected, qty, onSelect, favourited, onToggleFavourite, count,
+  name, description, selected, qty, onSelect, favourited, onToggleFavourite, count,
 }: {
-  drink: Drink;
+  name: string;
+  description?: string;
   selected: boolean;
   qty: number;
-  onSelect: (d: Drink) => void;
+  onSelect: () => void;
   favourited: boolean;
-  onToggleFavourite: (name: string) => void;
+  onToggleFavourite: () => void;
   count?: number;
 }) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(drink)}
+      onClick={onSelect}
       className={`
-        relative text-left p-3.5 border transition-all duration-150 touch-manipulation active:scale-[0.98]
+        relative text-left p-3.5 border transition-all duration-150 touch-manipulation active:scale-[0.98] w-full
         ${selected
           ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200"
           : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"}
       `}
     >
-      {/* Heart toggle */}
       <span
         role="button"
         className="group/heart absolute top-2.5 right-2.5 p-1 touch-manipulation"
-        onClick={(e) => { e.stopPropagation(); onToggleFavourite(drink.name); }}
+        onClick={(e) => { e.stopPropagation(); onToggleFavourite(); }}
       >
         <Heart filled={favourited} />
       </span>
 
       <p className={`text-sm font-sans font-medium leading-snug pr-5 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-        {drink.name}
+        {name}
       </p>
-      <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-        {drink.description}
-      </p>
+      {description && (
+        <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
+          {description}
+        </p>
+      )}
       {count !== undefined && (
         <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
           {count} {count === 1 ? "order" : "orders"}
@@ -102,30 +185,31 @@ function DrinkCard({
   );
 }
 
-// ─── Drink row (accordion view) ───────────────────────────────
+// ─── Drink row (Others flat list) ─────────────────────────────
 function DrinkRow({
-  drink, selected, qty, onSelect, favourited, onToggleFavourite,
+  name, description, selected, qty, onSelect, favourited, onToggleFavourite,
 }: {
-  drink: Drink;
+  name: string;
+  description: string;
   selected: boolean;
   qty: number;
-  onSelect: (d: Drink) => void;
+  onSelect: () => void;
   favourited: boolean;
-  onToggleFavourite: (name: string) => void;
+  onToggleFavourite: () => void;
 }) {
   return (
     <div className={`flex items-center mb-0.5 transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-[#111] active:bg-stone-100 dark:active:bg-[#1a1a1a]"}`}>
       <button
         type="button"
-        onClick={() => onSelect(drink)}
+        onClick={onSelect}
         className="flex-1 flex items-center justify-between px-3 py-3 text-left touch-manipulation min-w-0"
       >
         <div className="flex flex-col gap-0.5 min-w-0 mr-2">
           <span className={`text-sm font-sans font-medium truncate ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-            {drink.name}
+            {name}
           </span>
           <span className={`text-[11px] font-sans truncate ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-            {drink.description}
+            {description}
           </span>
         </div>
         {selected && (
@@ -141,7 +225,7 @@ function DrinkRow({
       </button>
       <button
         type="button"
-        onClick={() => onToggleFavourite(drink.name)}
+        onClick={onToggleFavourite}
         className="group/heart px-3 py-3 touch-manipulation flex-shrink-0"
       >
         <Heart filled={favourited} />
@@ -159,6 +243,249 @@ function TabLoading() {
   );
 }
 
+// ─── Modifier row (pill buttons, one selected at a time) ─────
+function ModifierRow({
+  label, defaultLabel, options, selected, onChange, disabled,
+}: {
+  label: string;
+  defaultLabel: string;
+  options: { id: string; label: string }[];
+  selected: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  const pillCls = (active: boolean) =>
+    `px-3 py-1.5 text-[11px] font-sans border transition-colors duration-100 touch-manipulation ${
+      active
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
+        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
+    }`;
+  return (
+    <div className={`flex flex-col gap-2 ${disabled ? "opacity-30 pointer-events-none" : ""}`}>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        <button type="button" onClick={() => onChange("")} className={pillCls(!selected)}>
+          {defaultLabel}
+        </button>
+        {options.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onChange(selected === opt.id ? "" : opt.id)}
+            className={pillCls(selected === opt.id)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Drink builder (replaces "All Drinks" flat list) ──────────
+function DrinkBuilder({
+  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks,
+}: {
+  cart: Map<string, number>;
+  onToggleCart: (name: string) => void;
+  userFavs: Set<string>;
+  onToggleFavourite: (name: string) => void;
+  customDrinks: CustomDrink[];
+  hiddenDrinks: Set<string>;
+}) {
+  const [baseId, setBaseId] = useState<string | null>(null);
+  const [milk, setMilk] = useState("");
+  const [strength, setStrength] = useState("");
+  const [sweetness, setSweetness] = useState("");
+  const [temp, setTemp] = useState("");
+  const [special, setSpecial] = useState("");
+
+  const base = DRINK_BASES.find((b) => b.id === baseId) ?? null;
+
+  // Reset modifiers when base changes
+  useEffect(() => {
+    setMilk(""); setStrength(""); setSweetness(""); setTemp(""); setSpecial("");
+  }, [baseId]);
+
+  const allSpecials = useMemo(() => {
+    if (!base) return [];
+    const custom = customDrinks
+      .filter((cd) => cd.category_id === base.id && !hiddenDrinks.has(cd.name))
+      .map<DrinkSpecial>((cd) => ({ label: cd.name, fullName: cd.name }));
+    return [...base.specials, ...custom];
+  }, [base, customDrinks, hiddenDrinks]);
+
+  const composedName = useMemo(() => {
+    if (!base) return "";
+    if (special) {
+      const sp = allSpecials.find((s) => s.label === special);
+      return sp?.fullName ?? `${base.label} ${special}`;
+    }
+    const parts = [base.label];
+    if (milk) parts.push(milk);
+    if (strength) parts.push(strength);
+    if (sweetness) parts.push(sweetness);
+    if (temp) parts.push(temp);
+    return parts.join(" ");
+  }, [base, milk, strength, sweetness, temp, special, allSpecials]);
+
+  const othersAll = useMemo(() => {
+    const custom = customDrinks
+      .filter((cd) => cd.category_id === "others" && !hiddenDrinks.has(cd.name))
+      .map((cd) => ({ name: cd.name, description: cd.description }));
+    return [
+      ...OTHERS_DRINKS.filter((d) => !hiddenDrinks.has(d.name)),
+      ...custom,
+    ];
+  }, [customDrinks, hiddenDrinks]);
+
+  const baseChipCls = (active: boolean) =>
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border transition-colors duration-100 touch-manipulation ${
+      active
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
+        : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
+    }`;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Base selector */}
+      <div className="flex flex-wrap gap-2">
+        {DRINK_BASES.map((b) => (
+          <button
+            key={b.id}
+            type="button"
+            onClick={() => setBaseId(baseId === b.id ? null : b.id)}
+            className={baseChipCls(baseId === b.id)}
+          >
+            {b.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setBaseId(baseId === "others" ? null : "others")}
+          className={baseChipCls(baseId === "others")}
+        >
+          Others
+        </button>
+      </div>
+
+      {/* Others flat list */}
+      {baseId === "others" && (
+        <div className="border-t border-stone-100 dark:border-stone-800">
+          {othersAll.length === 0 ? (
+            <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">Nothing here.</p>
+          ) : othersAll.map((drink) => (
+            <DrinkRow
+              key={drink.name}
+              name={drink.name}
+              description={drink.description}
+              selected={cart.has(drink.name)}
+              qty={cart.get(drink.name) ?? 0}
+              onSelect={() => onToggleCart(drink.name)}
+              favourited={userFavs.has(drink.name)}
+              onToggleFavourite={() => onToggleFavourite(drink.name)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Builder modifiers */}
+      {base && (
+        <div className="flex flex-col gap-5">
+          {base.milk.length > 0 && (
+            <ModifierRow
+              label="Milk"
+              defaultLabel="Condensed"
+              options={base.milk.map((m) => ({ id: m, label: m === "O" ? "O · Black" : "C · Evap" }))}
+              selected={milk}
+              onChange={setMilk}
+              disabled={!!special}
+            />
+          )}
+          <ModifierRow
+            label="Sweetness"
+            defaultLabel="Normal"
+            options={base.sweetness.map((s) => ({ id: s, label: s }))}
+            selected={sweetness}
+            onChange={setSweetness}
+            disabled={!!special}
+          />
+          {base.strength.length > 0 && (
+            <ModifierRow
+              label="Strength"
+              defaultLabel="Normal"
+              options={base.strength.map((s) => ({ id: s, label: s }))}
+              selected={strength}
+              onChange={setStrength}
+              disabled={!!special}
+            />
+          )}
+          {base.temp.length > 0 && (
+            <ModifierRow
+              label="Temp"
+              defaultLabel="Hot"
+              options={base.temp.map((t) => ({ id: t, label: t }))}
+              selected={temp}
+              onChange={setTemp}
+              disabled={!!special}
+            />
+          )}
+
+          {allSpecials.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Specials</p>
+              <div className="flex flex-wrap gap-1.5">
+                {allSpecials.map((sp) => (
+                  <button
+                    key={sp.label}
+                    type="button"
+                    onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
+                    className={`px-3 py-1.5 text-[11px] font-sans border transition-colors duration-100 touch-manipulation ${
+                      special === sp.label
+                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
+                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
+                    }`}
+                  >
+                    {sp.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preview + actions */}
+          <div className="border-t border-stone-100 dark:border-stone-800 pt-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug truncate">
+                {composedName}
+              </p>
+              <button
+                type="button"
+                onClick={() => onToggleFavourite(composedName)}
+                className="group/heart flex-shrink-0 p-1 touch-manipulation"
+                aria-label="Favourite"
+              >
+                <Heart filled={userFavs.has(composedName)} />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => onToggleCart(composedName)}
+              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border transition-all duration-150 touch-manipulation ${
+                cart.has(composedName)
+                  ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
+                  : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
+              }`}
+            >
+              {cart.has(composedName) ? `In cart · ${cart.get(composedName)}` : "+ Add"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main order content ───────────────────────────────────────
 function OrderContent() {
   const params = useSearchParams();
@@ -166,7 +493,6 @@ function OrderContent() {
 
   const [orderState, setOrderState] = useState<OrderState>("idle");
   const [tab, setTab] = useState<Tab>("yours");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [cart, setCart] = useState<Map<string, number>>(new Map());
   const [crowdData, setCrowdData] = useState<CrowdItem[]>([]);
   const [userFavs, setUserFavs] = useState<Set<string>>(new Set());
@@ -175,23 +501,12 @@ function OrderContent() {
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
 
-  // Merged drink map (hardcoded + custom)
+  // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
     const map = new Map(BASE_DRINKS_MAP);
     for (const d of customDrinks) map.set(d.name, { name: d.name, description: d.description });
     return map;
   }, [customDrinks]);
-
-  // Effective categories (hide hidden, append custom)
-  const effectiveCategories = useMemo(() => {
-    return CATEGORIES.map(cat => ({
-      ...cat,
-      drinks: [
-        ...cat.drinks.filter(d => !hiddenDrinks.has(d.name)),
-        ...customDrinks.filter(cd => cd.category_id === cat.id).map(cd => ({ name: cd.name, description: cd.description })),
-      ],
-    })).filter(cat => cat.drinks.length > 0);
-  }, [customDrinks, hiddenDrinks]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -220,21 +535,13 @@ function OrderContent() {
     });
   }, [name]);
 
-  function toggleCategory(id: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  function toggleCart(drink: Drink) {
+  function toggleCart(drinkName: string) {
     setCart((prev) => {
       const next = new Map(prev);
-      if (next.has(drink.name)) {
-        next.delete(drink.name);
+      if (next.has(drinkName)) {
+        next.delete(drinkName);
       } else {
-        next.set(drink.name, 1);
+        next.set(drinkName, 1);
       }
       return next;
     });
@@ -282,7 +589,7 @@ function OrderContent() {
     const orderRef = generateOrderRef();
     // Expand cart: qty > 1 = repeated item entries (backward-compatible with orders display)
     const items = [...cart.entries()].flatMap(([drinkName, qty]) => {
-      const drink = DRINKS_MAP.get(drinkName)!;
+      const drink = DRINKS_MAP.get(drinkName) ?? { name: drinkName, description: "" };
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
     try {
@@ -376,16 +683,16 @@ function OrderContent() {
                 <div className="grid grid-cols-2 gap-2.5">
                   {[...userFavs].map((drinkName) => {
                     const drink = DRINKS_MAP.get(drinkName);
-                    if (!drink) return null;
                     return (
                       <DrinkCard
                         key={drinkName}
-                        drink={drink}
+                        name={drinkName}
+                        description={drink?.description}
                         selected={cart.has(drinkName)}
                         qty={cart.get(drinkName) ?? 0}
-                        onSelect={toggleCart}
+                        onSelect={() => toggleCart(drinkName)}
                         favourited={true}
-                        onToggleFavourite={toggleFavourite}
+                        onToggleFavourite={() => toggleFavourite(drinkName)}
                       />
                     );
                   })}
@@ -410,16 +717,16 @@ function OrderContent() {
                 <div className="grid grid-cols-2 gap-2.5">
                   {crowdData.map(({ drink_name, order_count }) => {
                     const drink = DRINKS_MAP.get(drink_name);
-                    if (!drink) return null;
                     return (
                       <DrinkCard
                         key={drink_name}
-                        drink={drink}
+                        name={drink_name}
+                        description={drink?.description}
                         selected={cart.has(drink_name)}
                         qty={cart.get(drink_name) ?? 0}
-                        onSelect={toggleCart}
+                        onSelect={() => toggleCart(drink_name)}
                         favourited={userFavs.has(drink_name)}
-                        onToggleFavourite={toggleFavourite}
+                        onToggleFavourite={() => toggleFavourite(drink_name)}
                         count={order_count}
                       />
                     );
@@ -429,49 +736,16 @@ function OrderContent() {
             </>
           )}
 
-          {/* ALL DRINKS */}
+          {/* ALL DRINKS — builder */}
           {tab === "all" && (
-            <div>
-              {effectiveCategories.map((cat) => (
-                <div key={cat.id} className="border-b border-stone-100 dark:border-stone-800 last:border-0">
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(cat.id)}
-                    className="w-full flex items-center justify-between py-4 touch-manipulation"
-                  >
-                    <span className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-600 dark:text-stone-400">
-                      {cat.label}
-                    </span>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-[10px] text-stone-300 dark:text-stone-600 font-sans tabular-nums">
-                        {cat.drinks.length}
-                      </span>
-                      <svg
-                        className={`w-3.5 h-3.5 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${expanded.has(cat.id) ? "rotate-180" : ""}`}
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </button>
-                  {expanded.has(cat.id) && (
-                    <div className="pb-2">
-                      {sortHotFirst(cat.drinks).map((drink) => (
-                        <DrinkRow
-                          key={drink.name}
-                          drink={drink}
-                          selected={cart.has(drink.name)}
-                          qty={cart.get(drink.name) ?? 0}
-                          onSelect={toggleCart}
-                          favourited={userFavs.has(drink.name)}
-                          onToggleFavourite={toggleFavourite}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <DrinkBuilder
+              cart={cart}
+              onToggleCart={toggleCart}
+              userFavs={userFavs}
+              onToggleFavourite={toggleFavourite}
+              customDrinks={customDrinks}
+              hiddenDrinks={hiddenDrinks}
+            />
           )}
 
         </div>
