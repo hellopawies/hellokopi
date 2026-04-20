@@ -1,16 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
-import { DRINK_BASES, OTHERS_DRINKS } from "@/data/menu";
+import { OTHERS_DRINKS } from "@/data/menu";
 import type { Order } from "@/types/order";
-
-// Dropdown categories: all bases + Others
-const MENU_CATEGORIES: { id: string; label: string }[] = [
-  ...DRINK_BASES.map((b) => ({ id: b.id, label: b.label })),
-  { id: "others", label: "Others" },
-];
 
 const ADMIN_HASH = "86623b9b3871ac27c810a27912ad683c67a1525fb15b0100366ad98fa93ac93d";
 const SGT = "Asia/Singapore";
@@ -234,18 +228,7 @@ function MenuTab() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [newCat, setNewCat] = useState(MENU_CATEGORIES[0].id);
   const [adding, setAdding] = useState(false);
-  const [catOpen, setCatOpen] = useState(false);
-  const catRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
@@ -264,7 +247,7 @@ function MenuTab() {
     if (!newName.trim()) return;
     setAdding(true);
     const { data, error } = await supabase.from("custom_drinks")
-      .insert({ name: newName.trim(), description: newDesc.trim(), category_id: newCat })
+      .insert({ name: newName.trim(), description: newDesc.trim(), category_id: "others" })
       .select().single();
     if (!error && data) {
       setCustomDrinks(prev => [...prev, data as CustomDrink]);
@@ -310,38 +293,6 @@ function MenuTab() {
             placeholder="Description (optional)"
             className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 transition-colors duration-200"
           />
-          <div className="w-full relative" ref={catRef}>
-            <button
-              type="button"
-              onClick={() => setCatOpen(o => !o)}
-              className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:outline-none flex items-center justify-between gap-2 py-2.5 transition-colors duration-200 touch-manipulation"
-            >
-              <span className="text-sm font-sans font-light text-stone-800 dark:text-stone-100">
-                {MENU_CATEGORIES.find(c => c.id === newCat)?.label ?? newCat}
-              </span>
-              <svg className={`w-3.5 h-3.5 text-stone-400 dark:text-stone-500 transition-transform duration-150 ${catOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {catOpen && (
-              <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 shadow-md dark:shadow-black divide-y divide-stone-100 dark:divide-[#3a3a3a] max-h-[40vh] overflow-y-auto">
-                {MENU_CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => { setNewCat(cat.id); setCatOpen(false); }}
-                    className={`w-full px-4 py-3 text-left text-sm font-sans font-light tracking-wide transition-colors duration-100 ${
-                      newCat === cat.id
-                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
-                        : "text-stone-600 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-[#3a3a3a]"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
           <button
             type="submit"
             disabled={!newName.trim() || adding}
@@ -362,9 +313,6 @@ function MenuTab() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">{drink.name}</p>
                   {drink.description && <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 truncate">{drink.description}</p>}
-                  <p className="text-[10px] font-sans text-stone-300 dark:text-stone-600 mt-0.5">
-                    {MENU_CATEGORIES.find(c => c.id === drink.category_id)?.label ?? drink.category_id}
-                  </p>
                 </div>
                 <button
                   onClick={() => removeCustomDrink(drink.id)}
@@ -414,7 +362,7 @@ function MenuTab() {
           })}
         </div>
         <p className="text-[11px] font-sans italic text-stone-300 dark:text-stone-600 mt-3 leading-relaxed">
-          Kopi, Teh, Milo etc. are built from modifiers (O/C, Siew Dai, Peng…) so there are no individual drinks to hide there. Custom drinks you add above will appear as specials under the chosen base.
+          Kopi, Teh, Milo etc. are built from modifiers (O/C, Siew Dai, Peng…) so there are no individual drinks to hide there. Custom drinks you add above will appear in the Others list.
         </p>
       </div>
     </div>
