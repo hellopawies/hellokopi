@@ -149,10 +149,10 @@ const VERSIONS = [
 
 export default function ChangelogPage() {
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAF8F5] dark:bg-[#0E0C0A] pb-16">
+    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-[#FAF8F5]/90 dark:bg-[#0E0C0A]/90 backdrop-blur-xl border-b border-stone-100/80 dark:border-stone-800/80">
+      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
             <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
