@@ -124,7 +124,7 @@ export default function GreetingPage() {
               <button
                 onClick={handleCachedContinue}
                 className="
-                  mt-1 w-full sm:w-auto sm:px-10 py-3.5
+                  mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
                   text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                   transition-all duration-300 touch-manipulation
