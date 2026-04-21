@@ -35,6 +35,13 @@ export default function RootLayout({
       <body>
         <Header />
         {children}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/hellokopi/sw.js', { scope: '/hellokopi/' });
+            });
+          }
+        `}} />
       </body>
     </html>
   );
