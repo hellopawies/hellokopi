@@ -1,17 +1,32 @@
 const VERSIONS = [
   {
+    version: "v2.5.0",
+    date: "21 Apr 2026, 11:00 am",
+    title: "Active order controls",
+    changes: [
+      "Cancel your own active order — tap Cancel next to Edit to remove just your order from the current session",
+      "Cancel and Edit buttons have a filled background in dark mode so they look like proper buttons",
+    ],
+  },
+  {
+    version: "v2.4.0",
+    date: "21 Apr 2026, 10:00 am",
+    title: "Floating cart & liquid glass",
+    changes: [
+      "Cart bar lifts off the screen edge — rounded corners, backdrop blur, and a soft drop shadow",
+      "Sticky headers on all pages now blur content scrolling behind them — iOS-style frosted glass effect",
+    ],
+  },
+  {
     version: "v2.3.0",
     date: "20 Apr 2026, 3:00 am",
     title: "Design consistency pass",
     changes: [
       "Smooth page-in animation on every page — content fades up on arrival",
       "Order tabs use a sliding pill with a spring bounce instead of a static underline",
-      "Admin tabs match the same sliding pill animation",
       "All buttons and chips consistently rounded — pill shape for filters and modifiers, rounded-xl for CTAs",
       "All Drinks base selectors and specials chips are now pills",
       "Orders page quantity badge is now a rounded pill",
-      "Every admin action button (Enter, Add Drink, Add Member, Try again) rounded",
-      "Admin remove-item and hide/show toggles are rounded pills",
       "Greeting page name dropdown panel now has rounded corners",
       "Drink card quantity no longer overlaps the description — shown inline with the drink name",
     ],
