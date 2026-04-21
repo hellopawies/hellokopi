@@ -8,6 +8,10 @@ import { generateOrderRef } from "@/lib/orderRef";
 import { CATEGORIES } from "@/data/drinks";
 import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
 
+function haptic(pattern: number | number[] = 8) {
+  try { navigator.vibrate?.(pattern); } catch {}
+}
+
 // Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
 const BASE_DRINKS_MAP = new Map(
   CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d])
@@ -471,6 +475,7 @@ function OrderContent() {
   const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
+  const [sessionExpired, setSessionExpired] = useState(false);
   const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
@@ -564,19 +569,32 @@ function OrderContent() {
       });
   }, [name]);
 
+  // Detect when the active session window expires
+  useEffect(() => {
+    if (!existingOrder) { setSessionExpired(false); return; }
+    const remaining = existingOrder.sessionStart.getTime() + SESSION_MS - Date.now();
+    if (remaining <= 0) { setSessionExpired(true); return; }
+    setSessionExpired(false);
+    const t = setTimeout(() => setSessionExpired(true), remaining);
+    return () => clearTimeout(t);
+  }, [existingOrder]);
+
   function toggleCart(drinkName: string) {
     setCart((prev) => {
       const next = new Map(prev);
       if (next.has(drinkName)) {
         next.delete(drinkName);
+        haptic(4);
       } else {
         next.set(drinkName, 1);
+        haptic(8);
       }
       return next;
     });
   }
 
   function incrementCart(drinkName: string) {
+    haptic(8);
     setCart((prev) => {
       const next = new Map(prev);
       next.set(drinkName, (next.get(drinkName) ?? 0) + 1);
@@ -585,6 +603,7 @@ function OrderContent() {
   }
 
   function decrementCart(drinkName: string) {
+    haptic(4);
     setCart((prev) => {
       const next = new Map(prev);
       const qty = (next.get(drinkName) ?? 1) - 1;
@@ -622,6 +641,7 @@ function OrderContent() {
         next.set(pick.name, (next.get(pick.name) ?? 0) + 1);
         return next;
       });
+      haptic([5, 30, 5, 30, 10]);
       setSurprise(pick.name);
       setTimeout(() => setSurprise("idle"), 2500);
     }, 500);
@@ -629,6 +649,7 @@ function OrderContent() {
 
   async function cancelOrder() {
     if (!existingOrder) return;
+    haptic([8, 60, 8]);
     const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
     setExistingOrder(null);
@@ -675,6 +696,7 @@ function OrderContent() {
       const mergedCounts = new Map<string, number>();
       for (const item of finalItems) mergedCounts.set(item.name, (mergedCounts.get(item.name) ?? 0) + 1);
       const cartItems: CartItem[] = [...mergedCounts.entries()].map(([n, qty]) => ({ name: n, qty }));
+      haptic([10, 40, 10]);
       setOrderState({ orderedAt, sessionStart, items: cartItems });
     } catch {
       setOrderState("error");
@@ -757,37 +779,52 @@ function OrderContent() {
 
           {/* Active order card */}
           {existingOrder && !isEditing && (
-            <div className="mb-5 rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Active order</p>
-                  <ActiveCountdown sessionStart={existingOrder.sessionStart} />
+            <div className={`mb-5 rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex flex-col gap-2 transition-colors duration-500 ${
+              sessionExpired
+                ? "border-amber-200 dark:border-amber-800/60"
+                : "border-stone-200 dark:border-stone-700/60"
+            }`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">
+                      {sessionExpired ? "Session ended" : "Active order"}
+                    </p>
+                    {!sessionExpired && <ActiveCountdown sessionStart={existingOrder.sessionStart} />}
+                  </div>
+                  <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
+                    {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
+                  </p>
                 </div>
-                <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
-                  {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={cancelOrder}
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-red-400 dark:text-red-300 border border-red-200 dark:border-red-800 dark:bg-red-950 px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900 transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                  >
+                    Cancel
+                  </button>
+                  {!sessionExpired && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editingOrderId.current = existingOrder.id;
+                        setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
+                        setIsEditing(true);
+                        setExistingOrder(null);
+                      }}
+                      className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+              </div>
+              {sessionExpired && (
+                <p className="text-[11px] font-sans text-amber-500 dark:text-amber-400">
+                  The order window has closed — the collector may have already left.
                 </p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={cancelOrder}
-                  className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-red-400 dark:text-red-300 border border-red-200 dark:border-red-800 dark:bg-red-950 px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900 transition-all duration-200 touch-manipulation active:scale-[0.95]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    editingOrderId.current = existingOrder.id;
-                    setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
-                    setIsEditing(true);
-                    setExistingOrder(null);
-                  }}
-                  className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 touch-manipulation active:scale-[0.95]"
-                >
-                  Edit
-                </button>
-              </div>
+              )}
             </div>
           )}
 
