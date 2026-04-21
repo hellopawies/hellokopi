@@ -160,10 +160,10 @@ function ModifierRow({
   disabled?: boolean;
 }) {
   const pillCls = (active: boolean) =>
-    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation active:scale-[0.95] ${
+    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
       active
-        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
     }`;
   return (
     <div className={`flex flex-col gap-2 ${disabled ? "opacity-30 pointer-events-none" : ""}`}>
@@ -270,10 +270,10 @@ function DrinkBuilder({
   }, [search, allDrinksFlat]);
 
   const baseChipCls = (active: boolean) =>
-    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-colors duration-100 touch-manipulation active:scale-[0.95] ${
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
       active
-        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-        : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+        : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
     }`;
 
   return (
@@ -400,10 +400,10 @@ function DrinkBuilder({
                     key={sp.label}
                     type="button"
                     onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
-                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation active:scale-[0.95] ${
+                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
                       special === sp.label
-                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
+                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
                     }`}
                   >
                     {sp.label}
@@ -646,8 +646,10 @@ function OrderContent() {
             <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
               {/* Sliding pill */}
               <div
-                className="absolute top-1 bottom-1 w-1/3 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
+                  left: 4,
+                  width: "calc((100% - 8px) / 3)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}

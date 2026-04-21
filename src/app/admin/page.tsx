@@ -529,8 +529,10 @@ function AdminContent({ onLock }: { onLock: () => void }) {
           <div className="max-w-lg mx-auto">
             <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
               <div
-                className="absolute top-1 bottom-1 w-1/3 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
+                  left: 4,
+                  width: "calc((100% - 8px) / 3)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
