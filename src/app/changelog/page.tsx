@@ -190,8 +190,8 @@ export default function ChangelogPage() {
           {VERSIONS.map(({ version, date, title, changes }) => (
             <div key={version} className="flex gap-5 sm:gap-7">
               {/* Version pill + timeline line */}
-              <div className="flex flex-col items-center gap-2 pt-0.5">
-                <span className="text-[10px] font-sans font-medium text-stone-400 dark:text-stone-500 tabular-nums whitespace-nowrap">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[10px] font-sans font-medium text-stone-400 dark:text-stone-500 tabular-nums whitespace-nowrap leading-[1.6]">
                   {version}
                 </span>
                 <div className="w-px flex-1 bg-stone-100 dark:bg-stone-800 min-h-[2rem]" />
@@ -199,7 +199,7 @@ export default function ChangelogPage() {
 
               {/* Content */}
               <div className="flex-1 min-w-0 pb-2">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans mb-1.5">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans mb-1.5 leading-[1.6]">
                   {date}
                 </p>
                 <h2 className="font-serif text-xl font-light tracking-wide text-stone-800 dark:text-stone-100 mb-3">
