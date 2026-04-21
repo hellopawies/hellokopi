@@ -260,7 +260,11 @@ export default function OrdersPage() {
                               {drink}
                             </p>
                             <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-1 leading-relaxed">
-                              {names.join(" · ")}
+                              {(() => {
+                                const counts = new Map<string, number>();
+                                for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
+                                return [...counts.entries()].map(([n, c]) => c > 1 ? `${n} ×${c}` : n).join(" · ");
+                              })()}
                             </p>
                           </div>
                           {names.length > 1 && (
