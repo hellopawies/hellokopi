@@ -11,45 +11,54 @@ function rubberBand(x: number): number {
 
 type Phase = "idle" | "pulling" | "ready" | "refreshing";
 
-function KopiCup({ progress, ready, spinning }: { progress: number; ready: boolean; spinning: boolean }) {
-  const opacity = 0.35 + progress * 0.65;
-  const steamOpacity = Math.max(0, (progress - 0.2) / 0.8);
-  const animated = ready || spinning;
+function KopiCupOutline({ progress, brewing }: { progress: number; brewing: boolean }) {
+  const opacity = Math.max(0, (progress - 0.1) / 0.9);
+  const steamOpacity = Math.max(0, (progress - 0.3) / 0.7);
 
   return (
-    <svg
-      viewBox="0 0 100 100"
-      width="30"
-      height="30"
-      className={spinning ? "kopi-cup-spin" : ""}
-      style={{
-        overflow: "visible",
-        transform: spinning ? undefined : `scale(${0.65 + progress * 0.35})`,
-        transition: spinning ? undefined : "transform 0.06s ease",
-      }}
-    >
-      {/* Steam */}
+    <svg viewBox="0 0 64 64" width="36" height="36" style={{ overflow: "visible" }}>
+      {/* Steam / smoke */}
       <g opacity={steamOpacity}>
-        <path d="M38 37 Q42 26 38 17" fill="none" stroke="#a8a29e" strokeWidth="3.5" strokeLinecap="round"
-          className={animated ? "kopi-steam-1" : ""} />
-        <path d="M50 33 Q54 20 50 9" fill="none" stroke="#a8a29e" strokeWidth="3.5" strokeLinecap="round"
-          className={animated ? "kopi-steam-2" : ""} />
-        <path d="M62 37 Q66 26 62 17" fill="none" stroke="#a8a29e" strokeWidth="3.5" strokeLinecap="round"
-          className={animated ? "kopi-steam-3" : ""} />
+        <path
+          d="M22 22 Q19 16 22 10"
+          fill="none" strokeWidth="1.8" strokeLinecap="round"
+          className={`ptr-steam ptr-steam-1 ${brewing ? "ptr-brewing" : ""}`}
+        />
+        <path
+          d="M32 19 Q29 12 32 5"
+          fill="none" strokeWidth="1.8" strokeLinecap="round"
+          className={`ptr-steam ptr-steam-2 ${brewing ? "ptr-brewing" : ""}`}
+        />
+        <path
+          d="M42 22 Q39 16 42 10"
+          fill="none" strokeWidth="1.8" strokeLinecap="round"
+          className={`ptr-steam ptr-steam-3 ${brewing ? "ptr-brewing" : ""}`}
+        />
       </g>
 
       {/* Cup body */}
-      <path d="M28 43 L34 70 Q35.5 76 42 76 L58 76 Q64.5 76 66 70 L72 43 Z"
-        className="kopi-cup-body" opacity={opacity} />
+      <path
+        d="M16 26 L20 50 Q21 54 25 54 L39 54 Q43 54 44 50 L48 26 Z"
+        fill="none" strokeWidth="1.8" strokeLinejoin="round"
+        className="ptr-cup-stroke"
+        opacity={opacity}
+      />
 
       {/* Handle */}
-      <path d="M66 53 Q80 53 80 63 Q80 73 66 73"
-        fill="none" className="kopi-cup-handle-stroke" strokeWidth="5" strokeLinecap="round"
-        opacity={opacity} />
+      <path
+        d="M44 34 Q54 34 54 41 Q54 48 44 48"
+        fill="none" strokeWidth="1.8" strokeLinecap="round"
+        className="ptr-cup-stroke"
+        opacity={opacity}
+      />
 
       {/* Saucer */}
-      <ellipse cx="50" cy="78" rx="18" ry="3.5"
-        fill="#78716c" opacity={0.4 + progress * 0.5} />
+      <path
+        d="M12 56 Q32 61 52 56"
+        fill="none" strokeWidth="1.8" strokeLinecap="round"
+        className="ptr-cup-stroke"
+        opacity={opacity * 0.7}
+      />
     </svg>
   );
 }
@@ -88,7 +97,7 @@ export function PullToRefresh() {
     active.current = false;
     if (latestPull.current >= THRESHOLD) {
       setPhase("refreshing");
-      setTimeout(() => window.location.reload(), 900);
+      setTimeout(() => window.location.reload(), 1000);
     } else {
       setPhase("idle");
       setPullY(0);
@@ -108,7 +117,7 @@ export function PullToRefresh() {
 
   const progress = Math.min(pullY / THRESHOLD, 1);
   const show = phase !== "idle";
-  const indicatorY = phase === "refreshing" ? 20 : pullY - 56;
+  const indicatorY = phase === "refreshing" ? 24 : pullY - 60;
 
   return (
     <div
@@ -125,15 +134,7 @@ export function PullToRefresh() {
         opacity: show ? 1 : 0,
       }}
     >
-      <div
-        className="ptr-indicator w-14 h-14 rounded-full flex items-center justify-center"
-        style={{
-          backdropFilter: "blur(20px) saturate(160%)",
-          WebkitBackdropFilter: "blur(20px) saturate(160%)",
-        }}
-      >
-        <KopiCup progress={progress} ready={phase === "ready"} spinning={phase === "refreshing"} />
-      </div>
+      <KopiCupOutline progress={progress} brewing={phase === "ready" || phase === "refreshing"} />
     </div>
   );
 }
