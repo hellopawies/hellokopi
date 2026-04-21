@@ -428,6 +428,30 @@ function DrinkBuilder({
 }
 
 
+// ─── Active order countdown ───────────────────────────────────
+const SESSION_MS = 15 * 60 * 1000;
+function ActiveCountdown({ sessionStart }: { sessionStart: Date }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const remaining = sessionStart.getTime() + SESSION_MS - now;
+  if (remaining <= 0) return null;
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const colour = remaining < 2 * 60000
+    ? "text-red-400 dark:text-red-500"
+    : remaining < 5 * 60000
+    ? "text-amber-400 dark:text-amber-500"
+    : "text-stone-400 dark:text-stone-500";
+  return (
+    <span className={`text-[10px] uppercase tracking-[0.2em] font-sans tabular-nums ${colour}`}>
+      {mins > 0 ? `${mins}m ${secs}s left` : `${secs}s left`}
+    </span>
+  );
+}
+
 // ─── Main order content ───────────────────────────────────────
 function OrderContent() {
   const params = useSearchParams();
@@ -444,7 +468,7 @@ function OrderContent() {
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
   const [builderDrink, setBuilderDrink] = useState("");
-  const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[] } | null>(null);
+  const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const editingOrderId = useRef<string | null>(null);
 
@@ -508,9 +532,9 @@ function OrderContent() {
           const counts = new Map<string, number>();
           for (const order of sessionOrders)
             for (const item of order.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          // Use the oldest session order id as the canonical one for cancel/edit
-          const canonicalId = sessionOrders[sessionOrders.length - 1].id;
-          setExistingOrder({ id: canonicalId, items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
+          // Use the oldest session order as canonical — its id and created_at define the session
+          const oldest = sessionOrders[sessionOrders.length - 1];
+          setExistingOrder({ id: oldest.id, sessionStart: new Date(oldest.created_at), items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
         } else {
           // No active order — show most recent as "last order" suggestion
           const prev = data[0] as Row;
@@ -701,7 +725,10 @@ function OrderContent() {
           {existingOrder && !isEditing && (
             <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-1">Active order</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Active order</p>
+                  <ActiveCountdown sessionStart={existingOrder.sessionStart} />
+                </div>
                 <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
                   {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
                 </p>
