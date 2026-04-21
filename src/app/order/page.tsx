@@ -15,7 +15,7 @@ const BASE_DRINKS_MAP = new Map(
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
-type Tab = "crowd" | "yours" | "all";
+type Tab = "crowd" | "yours" | "all" | "wheel";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
@@ -427,6 +427,267 @@ function DrinkBuilder({
   );
 }
 
+// ─── Wheel builder (radial buy-menu style) ────────────────────
+function WheelBuilder({
+  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks, onComposedNameChange,
+}: {
+  cart: Map<string, number>;
+  onToggleCart: (name: string) => void;
+  userFavs: Set<string>;
+  onToggleFavourite: (name: string) => void;
+  customDrinks: CustomDrink[];
+  hiddenDrinks: Set<string>;
+  onComposedNameChange: (name: string) => void;
+}) {
+  const [baseId, setBaseId] = useState<string | null>(null);
+  const [milk, setMilk] = useState("");
+  const [strength, setStrength] = useState("");
+  const [sweetness, setSweetness] = useState("");
+  const [temp, setTemp] = useState("");
+  const [special, setSpecial] = useState("");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const base = DRINK_BASES.find((b) => b.id === baseId) ?? null;
+
+  useEffect(() => {
+    setMilk(""); setStrength(""); setSweetness(""); setTemp(""); setSpecial("");
+  }, [baseId]);
+
+  const allSpecials = useMemo(() => {
+    if (!base) return [];
+    const custom = customDrinks
+      .filter((cd) => cd.category_id === base.id && !hiddenDrinks.has(cd.name))
+      .map<DrinkSpecial>((cd) => ({ label: cd.name, fullName: cd.name }));
+    return [...base.specials, ...custom];
+  }, [base, customDrinks, hiddenDrinks]);
+
+  const composedName = useMemo(() => {
+    if (!base) return "";
+    if (special) {
+      const sp = allSpecials.find((s) => s.label === special);
+      return sp?.fullName ?? `${base.label} ${special}`;
+    }
+    const parts = [base.label];
+    if (milk) parts.push(milk);
+    if (strength) parts.push(strength);
+    if (sweetness) parts.push(sweetness);
+    if (temp) parts.push(temp);
+    return parts.join(" ");
+  }, [base, milk, strength, sweetness, temp, special, allSpecials]);
+
+  useEffect(() => {
+    onComposedNameChange(composedName);
+  }, [composedName, onComposedNameChange]);
+
+  const othersAll = useMemo(() => {
+    const custom = customDrinks
+      .filter((cd) => cd.category_id === "others" && !hiddenDrinks.has(cd.name))
+      .map((cd) => ({ name: cd.name, description: cd.description }));
+    return [...OTHERS_DRINKS.filter((d) => !hiddenDrinks.has(d.name)), ...custom];
+  }, [customDrinks, hiddenDrinks]);
+
+  const wheelSegs = useMemo(() => [
+    ...DRINK_BASES.map((b) => ({ id: b.id, label: b.label })),
+    { id: "others", label: "Others" },
+  ], []);
+
+  const N = wheelSegs.length;
+  const CX = 200, CY = 200, OR = 175, IR = 60, GAP = 0.048;
+
+  const sector = (i: number) => {
+    const a0 = (i / N) * 2 * Math.PI - Math.PI / 2 + GAP;
+    const a1 = ((i + 1) / N) * 2 * Math.PI - Math.PI / 2 - GAP;
+    const c = Math.cos, s = Math.sin, la = a1 - a0 > Math.PI ? 1 : 0;
+    return [
+      `M ${CX + IR * c(a0)} ${CY + IR * s(a0)}`,
+      `L ${CX + OR * c(a0)} ${CY + OR * s(a0)}`,
+      `A ${OR} ${OR} 0 ${la} 1 ${CX + OR * c(a1)} ${CY + OR * s(a1)}`,
+      `L ${CX + IR * c(a1)} ${CY + IR * s(a1)}`,
+      `A ${IR} ${IR} 0 ${la} 0 ${CX + IR * c(a0)} ${CY + IR * s(a0)}`,
+      "Z",
+    ].join(" ");
+  };
+
+  const mid = (i: number, r: number) => {
+    const a = ((i + 0.5) / N) * 2 * Math.PI - Math.PI / 2;
+    return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+  };
+
+  const LR = (OR + IR) / 2 + 4;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-center">
+        <svg
+          viewBox="0 0 400 400"
+          className="w-full max-w-[300px] sm:max-w-[340px] touch-manipulation"
+          style={{ filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.45))" }}
+        >
+          <circle cx={CX} cy={CY} r={OR + 8} fill="#111109" />
+          {wheelSegs.map((seg, i) => {
+            const sel = baseId === seg.id;
+            const hov = hoveredId === seg.id && !sel;
+            const lp = mid(i, LR);
+            const np = mid(i, IR + 16);
+            const lines = seg.label.toUpperCase().split(" ");
+            const lineH = 14;
+            const yStart = lp.y - ((lines.length - 1) * lineH) / 2;
+            return (
+              <g
+                key={seg.id}
+                style={{ cursor: "pointer" }}
+                onPointerEnter={() => setHoveredId(seg.id)}
+                onPointerLeave={() => setHoveredId(null)}
+                onClick={() => setBaseId(baseId === seg.id ? null : seg.id)}
+              >
+                <path
+                  d={sector(i)}
+                  fill={sel ? "#363624" : hov ? "#282818" : "#1c1c12"}
+                  stroke="#111109"
+                  strokeWidth={3}
+                  style={{ transition: "fill 0.12s ease" }}
+                />
+                {lines.map((line, li) => (
+                  <text
+                    key={li}
+                    x={lp.x}
+                    y={yStart + li * lineH}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize={11}
+                    fontFamily="ui-sans-serif, system-ui, sans-serif"
+                    fontWeight="700"
+                    letterSpacing="0.12em"
+                    fill={sel ? "#e2d49a" : hov ? "#b0a660" : "#6b6440"}
+                    style={{ transition: "fill 0.12s ease", userSelect: "none" }}
+                  >
+                    {line}
+                  </text>
+                ))}
+                <text
+                  x={np.x}
+                  y={np.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={9}
+                  fontFamily="ui-sans-serif, system-ui, sans-serif"
+                  fontWeight="700"
+                  fill={sel ? "#9a8a40" : "#383620"}
+                  style={{ transition: "fill 0.12s ease", userSelect: "none" }}
+                >
+                  {i + 1}
+                </text>
+              </g>
+            );
+          })}
+          <circle cx={CX} cy={CY} r={IR - 4} fill="#6b4e18" />
+          <circle cx={CX} cy={CY} r={IR - 14} fill="#b8893a" />
+          {["HELLO", "KOPI"].map((word, i) => (
+            <text
+              key={word}
+              x={CX}
+              y={CY + (i === 0 ? -6 : 6)}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={8}
+              fontFamily="ui-sans-serif, system-ui, sans-serif"
+              fontWeight="800"
+              letterSpacing="0.14em"
+              fill="#3a2808"
+              style={{ userSelect: "none" }}
+            >
+              {word}
+            </text>
+          ))}
+        </svg>
+      </div>
+
+      {base && (
+        <div className="flex flex-col gap-5" style={{ animation: "fadeUp 0.2s ease-out both" }}>
+          {base.milk.length > 0 && (
+            <ModifierRow
+              label="Milk"
+              defaultLabel="Condensed"
+              options={base.milk.map((m) => ({ id: m, label: m === "O" ? "O · Black" : "C · Evap" }))}
+              selected={milk}
+              onChange={setMilk}
+              disabled={!!special}
+            />
+          )}
+          <ModifierRow
+            label="Sweetness"
+            defaultLabel="Normal"
+            options={base.sweetness.map((s) => ({ id: s, label: s }))}
+            selected={sweetness}
+            onChange={setSweetness}
+            disabled={!!special}
+          />
+          {base.strength.length > 0 && (
+            <ModifierRow
+              label="Strength"
+              defaultLabel="Normal"
+              options={base.strength.map((s) => ({ id: s, label: s }))}
+              selected={strength}
+              onChange={setStrength}
+              disabled={!!special}
+            />
+          )}
+          {base.temp.length > 0 && (
+            <ModifierRow
+              label="Temp"
+              defaultLabel="Hot"
+              options={base.temp.map((t) => ({ id: t, label: t }))}
+              selected={temp}
+              onChange={setTemp}
+              disabled={!!special}
+            />
+          )}
+          {allSpecials.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Specials</p>
+              <div className="flex flex-wrap gap-1.5">
+                {allSpecials.map((sp) => (
+                  <button
+                    key={sp.label}
+                    type="button"
+                    onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
+                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+                      special === sp.label
+                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
+                    }`}
+                  >
+                    {sp.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {baseId === "others" && (
+        <div className="border-t border-stone-100 dark:border-stone-800" style={{ animation: "fadeUp 0.2s ease-out both" }}>
+          {othersAll.length === 0 ? (
+            <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">Nothing here.</p>
+          ) : othersAll.map((drink) => (
+            <DrinkRow
+              key={drink.name}
+              name={drink.name}
+              description={drink.description}
+              selected={cart.has(drink.name)}
+              qty={cart.get(drink.name) ?? 0}
+              onSelect={() => onToggleCart(drink.name)}
+              favourited={userFavs.has(drink.name)}
+              onToggleFavourite={() => onToggleFavourite(drink.name)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main order content ───────────────────────────────────────
 function OrderContent() {
   const params = useSearchParams();
@@ -615,6 +876,7 @@ function OrderContent() {
     { id: "yours", label: "My Picks" },
     { id: "crowd", label: "Top Choice" },
     { id: "all", label: "All Drinks" },
+    { id: "wheel", label: "Wheel" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
 
@@ -652,7 +914,7 @@ function OrderContent() {
                 className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
                   left: 4,
-                  width: "calc((100% - 8px) / 3)",
+                  width: "calc((100% - 8px) / 4)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
@@ -660,7 +922,7 @@ function OrderContent() {
               {TABS.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => { setTab(t.id); if (t.id !== "all") setBuilderDrink(""); }}
+                  onClick={() => { setTab(t.id); setBuilderDrink(""); }}
                   className={`
                     relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
                     font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
@@ -796,6 +1058,19 @@ function OrderContent() {
           {/* ALL DRINKS — builder */}
           {tab === "all" && (
             <DrinkBuilder
+              cart={cart}
+              onToggleCart={toggleCart}
+              userFavs={userFavs}
+              onToggleFavourite={toggleFavourite}
+              customDrinks={customDrinks}
+              hiddenDrinks={hiddenDrinks}
+              onComposedNameChange={setBuilderDrink}
+            />
+          )}
+
+          {/* WHEEL */}
+          {tab === "wheel" && (
+            <WheelBuilder
               cart={cart}
               onToggleCart={toggleCart}
               userFavs={userFavs}
