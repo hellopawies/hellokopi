@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -17,7 +17,7 @@ interface CustomDrink { id: string; name: string; description: string; category_
 
 type Tab = "crowd" | "yours" | "all";
 type CartItem = { name: string; qty: number };
-type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
+type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; orderedFor: string; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
 
 // ─── Heart icon ───────────────────────────────────────────────
@@ -464,6 +464,10 @@ function OrderContent() {
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
+  const [orderingFor, setOrderingFor] = useState(name);
+  const [members, setMembers] = useState<string[]>([]);
+  const [forOpen, setForOpen] = useState(false);
+  const forDropdownRef = useRef<HTMLDivElement>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -473,11 +477,22 @@ function OrderContent() {
   }, [customDrinks]);
 
   useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (forDropdownRef.current && !forDropdownRef.current.contains(e.target as Node)) setForOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
     if (!isConfigured) {
       setLoadingCrowd(false);
       setLoadingFavs(false);
       return;
     }
+    supabase.from("members").select("name, sort_order").order("sort_order").then(({ data }) => {
+      if (data) setMembers(data.map((m: { name: string }) => m.name));
+    });
     supabase.from("orders").select("items").then(({ data }) => {
       if (data) {
         const counts = new Map<string, number>();
@@ -584,7 +599,7 @@ function OrderContent() {
     try {
       const { error } = await supabase.from("orders").insert({
         order_ref: generateOrderRef(),
-        person_name: name,
+        person_name: orderingFor,
         items,
       });
       if (error) throw error;
@@ -598,14 +613,14 @@ function OrderContent() {
         .limit(1);
       const sessionStart = sessionData?.[0] ? new Date(sessionData[0].created_at) : orderedAt;
       const cartItems: CartItem[] = [...cart.entries()].map(([drinkName, qty]) => ({ name: drinkName, qty }));
-      setOrderState({ orderedAt, sessionStart, items: cartItems });
+      setOrderState({ orderedAt, sessionStart, orderedFor: orderingFor, items: cartItems });
     } catch {
       setOrderState("error");
     }
   }
 
   if (typeof orderState === "object") {
-    return <ConfirmedState name={name} orderedAt={orderState.orderedAt} sessionStart={orderState.sessionStart} items={orderState.items} />;
+    return <ConfirmedState loggedInName={name} orderedFor={orderState.orderedFor} orderedAt={orderState.orderedAt} sessionStart={orderState.sessionStart} items={orderState.items} />;
   }
 
   const TABS: { id: Tab; label: string }[] = [
@@ -634,9 +649,51 @@ function OrderContent() {
             <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
               Hello, {name}
             </h1>
-            <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
-              What would you like today?
-            </p>
+            <div className="flex items-center justify-between mt-1.5 gap-3">
+              <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500">
+                What would you like today?
+              </p>
+              {/* Ordering-for selector */}
+              <div className="relative flex-shrink-0" ref={forDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setForOpen(o => !o)}
+                  className={`flex items-center gap-1.5 text-[11px] font-sans touch-manipulation transition-all duration-200 active:scale-[0.95] ${
+                    orderingFor !== name
+                      ? "px-2.5 py-1 rounded-full bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 shadow-sm font-medium"
+                      : "text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400"
+                  }`}
+                >
+                  {orderingFor !== name ? `For: ${orderingFor}` : "For myself"}
+                  <svg className={`w-2.5 h-2.5 transition-transform duration-150 ${forOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {forOpen && (
+                  <div className="absolute top-full right-0 z-50 mt-1.5 w-44 bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 rounded-xl shadow-lg overflow-hidden">
+                    <div className="max-h-[40vh] overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800">
+                      <button
+                        type="button"
+                        onClick={() => { setOrderingFor(name); setForOpen(false); }}
+                        className={`w-full px-4 py-3 text-left text-sm font-sans transition-colors ${orderingFor === name ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900" : "text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#3a3a3a]"}`}
+                      >
+                        Myself
+                      </button>
+                      {members.filter(m => m !== name).map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => { setOrderingFor(m); setForOpen(false); }}
+                          className={`w-full px-4 py-3 text-left text-sm font-sans transition-colors ${orderingFor === m ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900" : "text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#3a3a3a]"}`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -784,7 +841,14 @@ function OrderContent() {
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
           <div className="max-w-lg mx-auto flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">Your order</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">
+                  {orderingFor !== name ? `For: ${orderingFor}` : "Your order"}
+                </p>
+                {orderingFor !== name && (
+                  <span className="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600" />
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setCart(new Map())}
@@ -858,14 +922,16 @@ function OrderContent() {
 const SGT = "Asia/Singapore";
 const CONFIRM_SESSION_MS = 15 * 60 * 1000;
 
-function ConfirmedState({ name, orderedAt, sessionStart, items }: {
-  name: string;
+function ConfirmedState({ loggedInName, orderedFor, orderedAt, sessionStart, items }: {
+  loggedInName: string;
+  orderedFor: string;
   orderedAt: Date;
   sessionStart: Date;
   items: CartItem[];
 }) {
   const sessionEnd = new Date(sessionStart.getTime() + CONFIRM_SESSION_MS);
   const fmt = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
+  const isProxy = orderedFor !== loggedInName;
 
   return (
     <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
@@ -876,7 +942,10 @@ function ConfirmedState({ name, orderedAt, sessionStart, items }: {
         </div>
         <div className="flex flex-col items-center gap-3 w-full">
           <p className="text-[11px] uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500 font-sans">Order placed</p>
-          <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">{name}</h1>
+          <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">{orderedFor}</h1>
+          {isProxy && (
+            <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 -mt-1">via {loggedInName}</p>
+          )}
           <div className="flex flex-col items-center gap-1 mt-1">
             {items.map(({ name: drinkName, qty }) => (
               <p key={drinkName} className="font-serif text-xl font-light italic text-stone-500 dark:text-stone-400">
@@ -906,8 +975,11 @@ function ConfirmedState({ name, orderedAt, sessionStart, items }: {
           <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
             View Orders
           </Link>
-          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
-            Back
+          <Link
+            href={`/order?name=${encodeURIComponent(loggedInName)}`}
+            className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none"
+          >
+            {isProxy ? "Order for next" : "Order again"}
           </Link>
         </div>
       </div>
