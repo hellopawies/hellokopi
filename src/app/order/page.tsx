@@ -580,20 +580,29 @@ function OrderContent() {
     if (cart.size === 0) return;
     setOrderState("loading");
     const orderedAt = new Date();
-    const items = [...cart.entries()].flatMap(([drinkName, qty]) => {
+    const newItems = [...cart.entries()].flatMap(([drinkName, qty]) => {
       const drink = DRINKS_MAP.get(drinkName) ?? { name: drinkName, description: "" };
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
+    // If not editing (Edit button not clicked) and there's an existing active order,
+    // merge the new items on top of the existing ones rather than replacing.
+    const existingItems = !isEditing && existingOrder
+      ? existingOrder.items.flatMap(({ name: n, qty }) => {
+          const drink = DRINKS_MAP.get(n) ?? { name: n, description: "" };
+          return Array(qty).fill({ name: drink.name, description: drink.description });
+        })
+      : [];
+    const finalItems = [...existingItems, ...newItems];
     try {
-      // Always clear all of this user's orders in the current session window before inserting,
-      // so editing or re-ordering never creates duplicate rows.
+      // Delete all of this user's orders in the current session window before inserting,
+      // so there's always exactly one order row per user per session.
       const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
       await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
       editingOrderId.current = null;
       const { error } = await supabase.from("orders").insert({
         order_ref: generateOrderRef(),
         person_name: name,
-        items,
+        items: finalItems,
       });
       if (error) throw error;
       // Find session start: earliest order placed in the last 15 minutes
@@ -605,7 +614,9 @@ function OrderContent() {
         .order("created_at", { ascending: true })
         .limit(1);
       const sessionStart = sessionData?.[0] ? new Date(sessionData[0].created_at) : orderedAt;
-      const cartItems: CartItem[] = [...cart.entries()].map(([drinkName, qty]) => ({ name: drinkName, qty }));
+      const mergedCounts = new Map<string, number>();
+      for (const item of finalItems) mergedCounts.set(item.name, (mergedCounts.get(item.name) ?? 0) + 1);
+      const cartItems: CartItem[] = [...mergedCounts.entries()].map(([n, qty]) => ({ name: n, qty }));
       setOrderState({ orderedAt, sessionStart, items: cartItems });
     } catch {
       setOrderState("error");
