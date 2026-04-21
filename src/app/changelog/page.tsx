@@ -167,7 +167,7 @@ export default function ChangelogPage() {
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
             <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
