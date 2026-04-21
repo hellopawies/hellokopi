@@ -132,6 +132,9 @@ export default function OrdersPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
         silentRefresh();
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () => {
+        silentRefresh();
+      })
       .subscribe();
     return () => { clearInterval(interval); supabase.removeChannel(channel); };
   }, [silentRefresh]);

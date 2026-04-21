@@ -464,6 +464,8 @@ function OrderContent() {
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
+  const [existingOrderId, setExistingOrderId] = useState<string | null>(null);
+  const [existingOrderRef, setExistingOrderRef] = useState<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -497,18 +499,29 @@ function OrderContent() {
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
     });
+    const sessionCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     supabase
       .from("orders")
-      .select("items")
+      .select("id, order_ref, items, created_at")
       .eq("person_name", name)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          const items = data[0].items as { name: string }[];
+          const order = data[0] as { id: string; order_ref: string; items: { name: string }[]; created_at: string };
+          const items = order.items;
           const counts = new Map<string, number>();
           for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
+          const cartItems = [...counts.entries()].map(([n, qty]) => ({ name: n, qty }));
+          if (order.created_at >= sessionCutoff) {
+            // Active session order — pre-populate cart for editing
+            setExistingOrderId(order.id);
+            setExistingOrderRef(order.order_ref);
+            setCart(counts);
+          } else {
+            // Older order — show as "Last order" suggestion only
+            setLastOrder(cartItems);
+          }
         }
       });
   }, [name]);
@@ -564,19 +577,29 @@ function OrderContent() {
   async function placeOrder() {
     if (cart.size === 0) return;
     setOrderState("loading");
-    const orderRef = generateOrderRef();
     // Expand cart: qty > 1 = repeated item entries (backward-compatible with orders display)
     const items = [...cart.entries()].flatMap(([drinkName, qty]) => {
       const drink = DRINKS_MAP.get(drinkName) ?? { name: drinkName, description: "" };
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
     try {
-      const { error } = await supabase.from("orders").insert({
-        order_ref: orderRef,
-        person_name: name,
-        items,
-      });
-      if (error) throw error;
+      let orderRef: string;
+      if (existingOrderId) {
+        orderRef = existingOrderRef!;
+        const { error } = await supabase
+          .from("orders")
+          .update({ items })
+          .eq("id", existingOrderId);
+        if (error) throw error;
+      } else {
+        orderRef = generateOrderRef();
+        const { error } = await supabase.from("orders").insert({
+          order_ref: orderRef,
+          person_name: name,
+          items,
+        });
+        if (error) throw error;
+      }
       const cartItems: CartItem[] = [...cart.entries()].map(([drinkName, qty]) => ({ name: drinkName, qty }));
       setOrderState({ orderRef, items: cartItems });
     } catch {
@@ -818,8 +841,10 @@ function OrderContent() {
               "
             >
               {orderState === "loading"
-                ? "Placing…"
-                : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
+                ? (existingOrderId ? "Updating…" : "Placing…")
+                : existingOrderId
+                  ? `Update Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`
+                  : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
             </button>
             {orderState === "error" && (
               <p className="text-center text-xs text-red-400 font-sans">
