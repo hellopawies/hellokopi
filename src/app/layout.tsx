@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Header } from "./components/Header";
+import { PullToRefresh } from "./components/PullToRefresh";
 
 export const metadata: Metadata = {
   title: "Hello Kopi",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>
+        <PullToRefresh />
         <Header />
         {children}
         <script dangerouslySetInnerHTML={{ __html: `

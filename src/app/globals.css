@@ -23,6 +23,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -76,5 +77,38 @@ main {
     box-shadow:
       0 -8px 32px rgba(0, 0, 0, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+}
+
+/* ── Pull-to-refresh ── */
+@keyframes kopi-steam {
+  from { transform: translateY(0) scaleX(1);   opacity: 1; }
+  to   { transform: translateY(-6px) scaleX(0.6); opacity: 0.15; }
+}
+
+@keyframes kopi-spin {
+  to { transform: rotate(360deg); }
+}
+
+.kopi-steam-1 { animation: kopi-steam 0.85s ease-in-out infinite alternate; }
+.kopi-steam-2 { animation: kopi-steam 0.85s 0.17s ease-in-out infinite alternate; }
+.kopi-steam-3 { animation: kopi-steam 0.85s 0.34s ease-in-out infinite alternate; }
+.kopi-cup-spin { animation: kopi-spin 0.85s linear infinite; transform-origin: center; }
+
+.kopi-cup-body        { fill: #1c1917; }
+.kopi-cup-handle-stroke { stroke: #1c1917; }
+
+.ptr-indicator {
+  background: rgba(250, 250, 248, 0.93);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kopi-cup-body          { fill: #FAFAF8; }
+  .kopi-cup-handle-stroke { stroke: #FAFAF8; }
+
+  .ptr-indicator {
+    background: rgba(20, 18, 16, 0.93);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.07);
   }
 }
