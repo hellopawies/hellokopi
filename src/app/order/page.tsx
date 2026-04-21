@@ -492,35 +492,31 @@ function OrderContent() {
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
     });
-    supabase
-      .from("orders")
-      .select("items")
-      .eq("person_name", name)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          const items = data[0].items as { name: string }[];
-          const counts = new Map<string, number>();
-          for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
-        }
-      });
     const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    // Fetch all of this user's orders — split into active session vs previous
     supabase
       .from("orders")
-      .select("id, items")
+      .select("id, items, created_at")
       .eq("person_name", name)
-      .gte("created_at", sessionWindowStart)
       .order("created_at", { ascending: false })
-      .limit(1)
       .then(({ data }) => {
-        if (data && data.length > 0) {
-          const order = data[0];
-          const items = order.items as { name: string }[];
+        if (!data || data.length === 0) return;
+        type Row = { id: string; items: { name: string }[]; created_at: string };
+        const sessionOrders = (data as Row[]).filter((o) => o.created_at >= sessionWindowStart);
+        if (sessionOrders.length > 0) {
+          // Aggregate all session orders into one active-order view
           const counts = new Map<string, number>();
-          for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          setExistingOrder({ id: order.id, items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
+          for (const order of sessionOrders)
+            for (const item of order.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          // Use the oldest session order id as the canonical one for cancel/edit
+          const canonicalId = sessionOrders[sessionOrders.length - 1].id;
+          setExistingOrder({ id: canonicalId, items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
+        } else {
+          // No active order — show most recent as "last order" suggestion
+          const prev = data[0] as Row;
+          const counts = new Map<string, number>();
+          for (const item of prev.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
         }
       });
   }, [name]);
@@ -575,7 +571,8 @@ function OrderContent() {
 
   async function cancelOrder() {
     if (!existingOrder) return;
-    await supabase.from("orders").delete().eq("id", existingOrder.id);
+    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
     setExistingOrder(null);
   }
 
@@ -588,10 +585,11 @@ function OrderContent() {
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
     try {
-      if (editingOrderId.current) {
-        await supabase.from("orders").delete().eq("id", editingOrderId.current);
-        editingOrderId.current = null;
-      }
+      // Always clear all of this user's orders in the current session window before inserting,
+      // so editing or re-ordering never creates duplicate rows.
+      const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
+      editingOrderId.current = null;
       const { error } = await supabase.from("orders").insert({
         order_ref: generateOrderRef(),
         person_name: name,
