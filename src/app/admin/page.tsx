@@ -547,7 +547,7 @@ function AdminContent({ onLock }: { onLock: () => void }) {
 
   return (
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4">
           <div className="max-w-lg mx-auto flex items-start justify-between">
             <div>
