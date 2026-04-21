@@ -470,6 +470,7 @@ function OrderContent() {
   const [builderDrink, setBuilderDrink] = useState("");
   const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
@@ -478,6 +479,24 @@ function OrderContent() {
     for (const d of customDrinks) map.set(d.name, { name: d.name, description: d.description });
     return map;
   }, [customDrinks]);
+
+  // Full drink pool for Surprise Me (all drinks minus hidden)
+  const allDrinksPool = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { name: string; description: string }[] = [];
+    for (const cat of CATEGORIES) {
+      for (const d of cat.drinks) {
+        if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
+      }
+    }
+    for (const d of OTHERS_DRINKS) {
+      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
+    }
+    for (const d of customDrinks) {
+      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push({ name: d.name, description: d.description }); }
+    }
+    return out;
+  }, [customDrinks, hiddenDrinks]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -591,6 +610,21 @@ function OrderContent() {
     } else {
       await supabase.from("user_favourites").insert({ person_name: name, drink_name: drinkName });
     }
+  }
+
+  function handleSurprise() {
+    if (allDrinksPool.length === 0 || surprise === "picking") return;
+    setSurprise("picking");
+    setTimeout(() => {
+      const pick = allDrinksPool[Math.floor(Math.random() * allDrinksPool.length)];
+      setCart((prev) => {
+        const next = new Map(prev);
+        next.set(pick.name, (next.get(pick.name) ?? 0) + 1);
+        return next;
+      });
+      setSurprise(pick.name);
+      setTimeout(() => setSurprise("idle"), 2500);
+    }, 500);
   }
 
   async function cancelOrder() {
@@ -789,7 +823,7 @@ function OrderContent() {
                 </div>
               )}
               {!loadingFavs && userFavs.size > 0 && (
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2.5 mb-5">
                   {[...userFavs].map((drinkName) => {
                     const drink = DRINKS_MAP.get(drinkName);
                     return (
@@ -805,6 +839,51 @@ function OrderContent() {
                       />
                     );
                   })}
+                </div>
+              )}
+
+              {/* Surprise Me */}
+              {!loadingFavs && (
+                <div className={userFavs.size > 0 || (lastOrder && lastOrder.length > 0) ? "border-t border-stone-100 dark:border-stone-800 pt-4" : ""}>
+                  <button
+                    type="button"
+                    onClick={handleSurprise}
+                    disabled={surprise === "picking"}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed transition-all duration-200 touch-manipulation active:scale-[0.98] ${
+                      surprise !== "idle" && surprise !== "picking"
+                        ? "border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-900"
+                        : "border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5"
+                      className={`flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform ${surprise === "picking" ? "animate-spin" : ""}`}
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="3.5" strokeLinejoin="round" />
+                      <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
+                      <circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none" />
+                      <circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none" />
+                      <circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none" />
+                      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+                    </svg>
+                    <div className="flex-1 min-w-0 text-left">
+                      {surprise === "idle" && (
+                        <p className="text-sm font-sans text-stone-500 dark:text-stone-400">Surprise me</p>
+                      )}
+                      {surprise === "picking" && (
+                        <p className="text-sm font-sans text-stone-400 dark:text-stone-500 animate-pulse">Picking…</p>
+                      )}
+                      {surprise !== "idle" && surprise !== "picking" && (
+                        <>
+                          <p className="text-sm font-sans font-medium text-stone-700 dark:text-stone-200 truncate">{surprise}</p>
+                          <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500">Added to cart</p>
+                        </>
+                      )}
+                    </div>
+                    {surprise === "idle" && (
+                      <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-300 dark:text-stone-600 flex-shrink-0">Try it</span>
+                    )}
+                  </button>
                 </div>
               )}
             </>
