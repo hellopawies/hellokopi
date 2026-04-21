@@ -427,7 +427,61 @@ function DrinkBuilder({
   );
 }
 
-// ─── Wheel builder (radial buy-menu style) ────────────────────
+// ─── Wheel builder (radial buy-menu style, two-level drill-down) ─
+const WHEEL_OPTIONS: Record<string, { id: string; label: string; fullName: string }[]> = {
+  kopi: [
+    { id: "normal",  label: "Normal",   fullName: "Kopi" },
+    { id: "o",       label: "O",        fullName: "Kopi O" },
+    { id: "c",       label: "C Evap",   fullName: "Kopi C" },
+    { id: "peng",    label: "Peng",     fullName: "Kopi Peng" },
+    { id: "gao",     label: "Gao",      fullName: "Kopi Gao" },
+    { id: "siewdai", label: "Siew Dai", fullName: "Kopi Siew Dai" },
+    { id: "tarik",   label: "Tarik",    fullName: "Kopi Tarik" },
+  ],
+  teh: [
+    { id: "normal",  label: "Normal",   fullName: "Teh" },
+    { id: "o",       label: "O",        fullName: "Teh O" },
+    { id: "c",       label: "C Evap",   fullName: "Teh C" },
+    { id: "peng",    label: "Peng",     fullName: "Teh Peng" },
+    { id: "gao",     label: "Gao",      fullName: "Teh Gao" },
+    { id: "siewdai", label: "Siew Dai", fullName: "Teh Siew Dai" },
+    { id: "tarik",   label: "Tarik",    fullName: "Teh Tarik" },
+  ],
+  "teh-halia": [
+    { id: "normal",  label: "Normal",   fullName: "Teh Halia" },
+    { id: "o",       label: "O",        fullName: "Teh Halia O" },
+    { id: "peng",    label: "Peng",     fullName: "Teh Halia Peng" },
+    { id: "gao",     label: "Gao",      fullName: "Teh Halia Gao" },
+    { id: "siewdai", label: "Siew Dai", fullName: "Teh Halia Siew Dai" },
+    { id: "tarik",   label: "Tarik",    fullName: "Teh Halia Tarik" },
+  ],
+  "yuan-yang": [
+    { id: "normal",  label: "Normal",   fullName: "Yuan Yang" },
+    { id: "o",       label: "O",        fullName: "Yuan Yang O" },
+    { id: "peng",    label: "Peng",     fullName: "Yuan Yang Peng" },
+    { id: "gao",     label: "Gao",      fullName: "Yuan Yang Gao" },
+    { id: "siewdai", label: "Siew Dai", fullName: "Yuan Yang Siew Dai" },
+    { id: "cham",    label: "Kopi Cham",fullName: "Kopi Cham" },
+  ],
+  milo: [
+    { id: "normal",   label: "Normal",   fullName: "Milo" },
+    { id: "c",        label: "C Evap",   fullName: "Milo C" },
+    { id: "peng",     label: "Peng",     fullName: "Milo Peng" },
+    { id: "gao",      label: "Gao",      fullName: "Milo Gao" },
+    { id: "dino",     label: "Dinosaur", fullName: "Milo Dinosaur" },
+    { id: "godzilla", label: "Godzilla", fullName: "Milo Godzilla" },
+    { id: "neslo",    label: "Neslo",    fullName: "Neslo" },
+  ],
+  horlicks: [
+    { id: "normal",   label: "Normal",   fullName: "Horlicks" },
+    { id: "c",        label: "C Evap",   fullName: "Horlicks C" },
+    { id: "peng",     label: "Peng",     fullName: "Horlicks Peng" },
+    { id: "gao",      label: "Gao",      fullName: "Horlicks Gao" },
+    { id: "dino",     label: "Dinosaur", fullName: "Horlicks Dinosaur" },
+    { id: "godzilla", label: "Godzilla", fullName: "Horlicks Godzilla" },
+  ],
+};
+
 function WheelBuilder({
   cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks, onComposedNameChange,
 }: {
@@ -439,45 +493,12 @@ function WheelBuilder({
   hiddenDrinks: Set<string>;
   onComposedNameChange: (name: string) => void;
 }) {
-  const [baseId, setBaseId] = useState<string | null>(null);
-  const [milk, setMilk] = useState("");
-  const [strength, setStrength] = useState("");
-  const [sweetness, setSweetness] = useState("");
-  const [temp, setTemp] = useState("");
-  const [special, setSpecial] = useState("");
+  const [level, setLevel] = useState<1 | 2>(1);
+  const [selectedBase, setSelectedBase] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [showOthers, setShowOthers] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-  const base = DRINK_BASES.find((b) => b.id === baseId) ?? null;
-
-  useEffect(() => {
-    setMilk(""); setStrength(""); setSweetness(""); setTemp(""); setSpecial("");
-  }, [baseId]);
-
-  const allSpecials = useMemo(() => {
-    if (!base) return [];
-    const custom = customDrinks
-      .filter((cd) => cd.category_id === base.id && !hiddenDrinks.has(cd.name))
-      .map<DrinkSpecial>((cd) => ({ label: cd.name, fullName: cd.name }));
-    return [...base.specials, ...custom];
-  }, [base, customDrinks, hiddenDrinks]);
-
-  const composedName = useMemo(() => {
-    if (!base) return "";
-    if (special) {
-      const sp = allSpecials.find((s) => s.label === special);
-      return sp?.fullName ?? `${base.label} ${special}`;
-    }
-    const parts = [base.label];
-    if (milk) parts.push(milk);
-    if (strength) parts.push(strength);
-    if (sweetness) parts.push(sweetness);
-    if (temp) parts.push(temp);
-    return parts.join(" ");
-  }, [base, milk, strength, sweetness, temp, special, allSpecials]);
-
-  useEffect(() => {
-    onComposedNameChange(composedName);
-  }, [composedName, onComposedNameChange]);
+  const [visible, setVisible] = useState(true);
 
   const othersAll = useMemo(() => {
     const custom = customDrinks
@@ -486,12 +507,51 @@ function WheelBuilder({
     return [...OTHERS_DRINKS.filter((d) => !hiddenDrinks.has(d.name)), ...custom];
   }, [customDrinks, hiddenDrinks]);
 
-  const wheelSegs = useMemo(() => [
-    ...DRINK_BASES.map((b) => ({ id: b.id, label: b.label })),
-    { id: "others", label: "Others" },
+  const rootSegs = useMemo(() => [
+    ...DRINK_BASES.map((b) => ({ id: b.id, label: b.label, fullName: "" })),
+    { id: "others", label: "Others", fullName: "" },
   ], []);
 
-  const N = wheelSegs.length;
+  function transition(fn: () => void) {
+    setVisible(false);
+    setHoveredId(null);
+    setTimeout(() => { fn(); setVisible(true); }, 160);
+  }
+
+  function handleRootClick(id: string) {
+    if (id === "others") {
+      setShowOthers((v) => !v);
+      return;
+    }
+    transition(() => {
+      setSelectedBase(id);
+      setLevel(2);
+      setSelectedOption(null);
+      setShowOthers(false);
+      onComposedNameChange("");
+    });
+  }
+
+  function handleOptionClick(opt: { fullName: string }) {
+    const next = selectedOption === opt.fullName ? null : opt.fullName;
+    setSelectedOption(next);
+    onComposedNameChange(next ?? "");
+  }
+
+  function handleBack() {
+    transition(() => {
+      setLevel(1);
+      setSelectedBase(null);
+      setSelectedOption(null);
+      onComposedNameChange("");
+    });
+  }
+
+  const currentSegs = level === 1
+    ? rootSegs
+    : (WHEEL_OPTIONS[selectedBase!] ?? []).map((o) => ({ id: o.id, label: o.label, fullName: o.fullName }));
+
+  const N = currentSegs.length;
   const CX = 200, CY = 200, OR = 175, IR = 60, GAP = 0.048;
 
   const sector = (i: number) => {
@@ -514,6 +574,7 @@ function WheelBuilder({
   };
 
   const LR = (OR + IR) / 2 + 4;
+  const baseLabel = selectedBase ? (DRINK_BASES.find((b) => b.id === selectedBase)?.label ?? "") : "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -524,149 +585,106 @@ function WheelBuilder({
           style={{ filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.45))" }}
         >
           <circle cx={CX} cy={CY} r={OR + 8} fill="#111109" />
-          {wheelSegs.map((seg, i) => {
-            const sel = baseId === seg.id;
-            const hov = hoveredId === seg.id && !sel;
-            const lp = mid(i, LR);
-            const np = mid(i, IR + 16);
-            const lines = seg.label.toUpperCase().split(" ");
-            const lineH = 14;
-            const yStart = lp.y - ((lines.length - 1) * lineH) / 2;
-            return (
-              <g
-                key={seg.id}
-                style={{ cursor: "pointer" }}
-                onPointerEnter={() => setHoveredId(seg.id)}
-                onPointerLeave={() => setHoveredId(null)}
-                onClick={() => setBaseId(baseId === seg.id ? null : seg.id)}
-              >
-                <path
-                  d={sector(i)}
-                  fill={sel ? "#363624" : hov ? "#282818" : "#1c1c12"}
-                  stroke="#111109"
-                  strokeWidth={3}
-                  style={{ transition: "fill 0.12s ease" }}
-                />
-                {lines.map((line, li) => (
+
+          {/* Segments — fades out/in during level transition */}
+          <g style={{ opacity: visible ? 1 : 0, transition: "opacity 0.15s ease" }}>
+            {currentSegs.map((seg, i) => {
+              const isSelected = level === 2
+                ? selectedOption === seg.fullName
+                : (seg.id === "others" && showOthers);
+              const isHovered = hoveredId === seg.id && !isSelected;
+              const lp = mid(i, LR);
+              const np = mid(i, IR + 16);
+              const lines = seg.label.toUpperCase().split(" ");
+              const lineH = 14;
+              const yStart = lp.y - ((lines.length - 1) * lineH) / 2;
+              return (
+                <g
+                  key={seg.id}
+                  style={{ cursor: "pointer" }}
+                  onPointerEnter={() => setHoveredId(seg.id)}
+                  onPointerLeave={() => setHoveredId(null)}
+                  onClick={() => level === 1 ? handleRootClick(seg.id) : handleOptionClick(seg as { fullName: string })}
+                >
+                  <path
+                    d={sector(i)}
+                    fill={isSelected ? "#363624" : isHovered ? "#282818" : "#1c1c12"}
+                    stroke="#111109"
+                    strokeWidth={3}
+                    style={{ transition: "fill 0.12s ease" }}
+                  />
+                  {lines.map((line, li) => (
+                    <text
+                      key={li}
+                      x={lp.x}
+                      y={yStart + li * lineH}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize={11}
+                      fontFamily="ui-sans-serif, system-ui, sans-serif"
+                      fontWeight="700"
+                      letterSpacing="0.12em"
+                      fill={isSelected ? "#e2d49a" : isHovered ? "#b0a660" : "#6b6440"}
+                      style={{ transition: "fill 0.12s ease", userSelect: "none" }}
+                    >
+                      {line}
+                    </text>
+                  ))}
                   <text
-                    key={li}
-                    x={lp.x}
-                    y={yStart + li * lineH}
+                    x={np.x}
+                    y={np.y}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize={11}
+                    fontSize={9}
                     fontFamily="ui-sans-serif, system-ui, sans-serif"
                     fontWeight="700"
-                    letterSpacing="0.12em"
-                    fill={sel ? "#e2d49a" : hov ? "#b0a660" : "#6b6440"}
+                    fill={isSelected ? "#9a8a40" : "#383620"}
                     style={{ transition: "fill 0.12s ease", userSelect: "none" }}
                   >
-                    {line}
+                    {i + 1}
                   </text>
-                ))}
-                <text
-                  x={np.x}
-                  y={np.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={9}
-                  fontFamily="ui-sans-serif, system-ui, sans-serif"
-                  fontWeight="700"
-                  fill={sel ? "#9a8a40" : "#383620"}
-                  style={{ transition: "fill 0.12s ease", userSelect: "none" }}
-                >
-                  {i + 1}
-                </text>
-              </g>
-            );
-          })}
-          <circle cx={CX} cy={CY} r={IR - 4} fill="#6b4e18" />
-          <circle cx={CX} cy={CY} r={IR - 14} fill="#b8893a" />
-          {["HELLO", "KOPI"].map((word, i) => (
-            <text
-              key={word}
-              x={CX}
-              y={CY + (i === 0 ? -6 : 6)}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={8}
-              fontFamily="ui-sans-serif, system-ui, sans-serif"
-              fontWeight="800"
-              letterSpacing="0.14em"
-              fill="#3a2808"
-              style={{ userSelect: "none" }}
-            >
-              {word}
-            </text>
-          ))}
+                </g>
+              );
+            })}
+          </g>
+
+          {/* Centre — emblem at level 1, back button at level 2 */}
+          {level === 1 ? (
+            <g>
+              <circle cx={CX} cy={CY} r={IR - 4} fill="#6b4e18" />
+              <circle cx={CX} cy={CY} r={IR - 14} fill="#b8893a" />
+              {["HELLO", "KOPI"].map((word, i) => (
+                <text key={word} x={CX} y={CY + (i === 0 ? -6 : 6)}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={8} fontFamily="ui-sans-serif, system-ui, sans-serif"
+                  fontWeight="800" letterSpacing="0.14em" fill="#3a2808"
+                  style={{ userSelect: "none" }}
+                >{word}</text>
+              ))}
+            </g>
+          ) : (
+            <g style={{ cursor: "pointer" }} onClick={handleBack}>
+              <circle cx={CX} cy={CY} r={IR - 4} fill="#3a2a0e" />
+              <circle cx={CX} cy={CY} r={IR - 14} fill="#7a5a20" />
+              <text x={CX} y={CY - 7}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize={16} fill="#c8a84a" style={{ userSelect: "none" }}
+              >←</text>
+              {baseLabel.toUpperCase().split(" ").map((w, i, arr) => (
+                <text key={w} x={CX} y={CY + 6 + i * 10 - ((arr.length - 1) * 5)}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={7} fontFamily="ui-sans-serif, system-ui, sans-serif"
+                  fontWeight="700" letterSpacing="0.12em" fill="#8a6a30"
+                  style={{ userSelect: "none" }}
+                >{w}</text>
+              ))}
+            </g>
+          )}
         </svg>
       </div>
 
-      {base && (
-        <div className="flex flex-col gap-5" style={{ animation: "fadeUp 0.2s ease-out both" }}>
-          {base.milk.length > 0 && (
-            <ModifierRow
-              label="Milk"
-              defaultLabel="Condensed"
-              options={base.milk.map((m) => ({ id: m, label: m === "O" ? "O · Black" : "C · Evap" }))}
-              selected={milk}
-              onChange={setMilk}
-              disabled={!!special}
-            />
-          )}
-          <ModifierRow
-            label="Sweetness"
-            defaultLabel="Normal"
-            options={base.sweetness.map((s) => ({ id: s, label: s }))}
-            selected={sweetness}
-            onChange={setSweetness}
-            disabled={!!special}
-          />
-          {base.strength.length > 0 && (
-            <ModifierRow
-              label="Strength"
-              defaultLabel="Normal"
-              options={base.strength.map((s) => ({ id: s, label: s }))}
-              selected={strength}
-              onChange={setStrength}
-              disabled={!!special}
-            />
-          )}
-          {base.temp.length > 0 && (
-            <ModifierRow
-              label="Temp"
-              defaultLabel="Hot"
-              options={base.temp.map((t) => ({ id: t, label: t }))}
-              selected={temp}
-              onChange={setTemp}
-              disabled={!!special}
-            />
-          )}
-          {allSpecials.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Specials</p>
-              <div className="flex flex-wrap gap-1.5">
-                {allSpecials.map((sp) => (
-                  <button
-                    key={sp.label}
-                    type="button"
-                    onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
-                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
-                      special === sp.label
-                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
-                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
-                    }`}
-                  >
-                    {sp.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {baseId === "others" && (
+      {/* Others flat list */}
+      {showOthers && (
         <div className="border-t border-stone-100 dark:border-stone-800" style={{ animation: "fadeUp 0.2s ease-out both" }}>
           {othersAll.length === 0 ? (
             <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">Nothing here.</p>
