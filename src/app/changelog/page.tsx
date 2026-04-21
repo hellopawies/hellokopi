@@ -1,7 +1,19 @@
 const VERSIONS = [
   {
+    version: "v2.6.0",
+    date: "22 Apr 2026, 2:00 am",
+    title: "Order session fixes",
+    changes: [
+      "Qty badge now appears inline next to the drink name in the orders list",
+      "Fixed: editing or re-ordering no longer creates duplicate rows — only one order row per person per session",
+      "Fixed: placing a new order while an active one exists now adds to it instead of replacing it",
+      "Fixed: active order banner now shows the correct aggregated total across all items in the session",
+      "Active order banner shows a live countdown timer — turns amber under 5 minutes, red under 2 minutes",
+    ],
+  },
+  {
     version: "v2.5.0",
-    date: "21 Apr 2026, 11:00 am",
+    date: "22 Apr 2026, 1:00 am",
     title: "Active order controls",
     changes: [
       "Cancel your own active order — tap Cancel next to Edit to remove just your order from the current session",
@@ -11,7 +23,7 @@ const VERSIONS = [
   },
   {
     version: "v2.4.0",
-    date: "21 Apr 2026, 10:00 am",
+    date: "22 Apr 2026, 12:00 am",
     title: "Floating cart & liquid glass",
     changes: [
       "Cart bar lifts off the screen edge — rounded corners, backdrop blur, and a soft drop shadow",
