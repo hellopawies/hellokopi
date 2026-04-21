@@ -189,7 +189,7 @@ function ModifierRow({
 
 // ─── Drink builder (replaces "All Drinks" flat list) ──────────
 function DrinkBuilder({
-  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks,
+  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks, onComposedNameChange,
 }: {
   cart: Map<string, number>;
   onToggleCart: (name: string) => void;
@@ -197,6 +197,7 @@ function DrinkBuilder({
   onToggleFavourite: (name: string) => void;
   customDrinks: CustomDrink[];
   hiddenDrinks: Set<string>;
+  onComposedNameChange: (name: string) => void;
 }) {
   const [baseId, setBaseId] = useState<string | null>(null);
   const [milk, setMilk] = useState("");
@@ -233,6 +234,10 @@ function DrinkBuilder({
     if (temp) parts.push(temp);
     return parts.join(" ");
   }, [base, milk, strength, sweetness, temp, special, allSpecials]);
+
+  useEffect(() => {
+    onComposedNameChange(composedName);
+  }, [composedName, onComposedNameChange]);
 
   const othersAll = useMemo(() => {
     const custom = customDrinks
@@ -413,33 +418,6 @@ function DrinkBuilder({
             </div>
           )}
 
-          {/* Preview + actions */}
-          <div className="border-t border-stone-100 dark:border-stone-800 pt-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug truncate">
-                {composedName}
-              </p>
-              <button
-                type="button"
-                onClick={() => onToggleFavourite(composedName)}
-                className="group/heart flex-shrink-0 p-1 touch-manipulation"
-                aria-label="Favourite"
-              >
-                <Heart filled={userFavs.has(composedName)} />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => onToggleCart(composedName)}
-              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation active:scale-[0.95] ${
-                cart.has(composedName)
-                  ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-                  : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
-              }`}
-            >
-              {cart.has(composedName) ? `In cart · ${cart.get(composedName)}` : "+ Add"}
-            </button>
-          </div>
         </div>
       )}
 
@@ -464,6 +442,7 @@ function OrderContent() {
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
+  const [builderDrink, setBuilderDrink] = useState("");
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -657,7 +636,7 @@ function OrderContent() {
               {TABS.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setTab(t.id)}
+                  onClick={() => { setTab(t.id); if (t.id !== "all") setBuilderDrink(""); }}
                   className={`
                     relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
                     font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
@@ -675,7 +654,7 @@ function OrderContent() {
       </div>
 
       {/* Content */}
-      <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 ? "pb-64" : "pb-12"}`}>
+      <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 || builderDrink ? "pb-64" : "pb-12"}`}>
         <div className="max-w-lg mx-auto">
 
           {/* MY PICKS */}
@@ -775,16 +754,44 @@ function OrderContent() {
               onToggleFavourite={toggleFavourite}
               customDrinks={customDrinks}
               hiddenDrinks={hiddenDrinks}
+              onComposedNameChange={setBuilderDrink}
             />
           )}
 
         </div>
       </div>
 
-      {/* Sticky cart + place-order bar */}
-      {cart.size > 0 && (
+      {/* Fixed bottom bar — builder preview and/or cart */}
+      {(cart.size > 0 || builderDrink) && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
           <div className="max-w-lg mx-auto flex flex-col gap-2.5">
+
+            {/* Builder preview row */}
+            {builderDrink && (
+              <div className={`flex items-center justify-between gap-3 ${cart.size > 0 ? "pb-2.5 border-b border-stone-100 dark:border-stone-800" : ""}`}>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
+                    {builderDrink}
+                  </p>
+                  <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-1 touch-manipulation">
+                    <Heart filled={userFavs.has(builderDrink)} />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleCart(builderDrink)}
+                  className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] shadow-sm hover:shadow-md ${
+                    cart.has(builderDrink)
+                      ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
+                      : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
+                  }`}
+                >
+                  {cart.has(builderDrink) ? `In cart · ${cart.get(builderDrink)}` : "+ Add"}
+                </button>
+              </div>
+            )}
+
+            {cart.size > 0 && (<>
             <div className="flex items-center justify-between">
               <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">Your order</p>
               <button
@@ -849,6 +856,7 @@ function OrderContent() {
                 Something went wrong. Please try again.
               </p>
             )}
+            </>)}
           </div>
         </div>
       )}
