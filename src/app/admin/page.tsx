@@ -124,6 +124,35 @@ function OrdersTab() {
     await supabase.from("orders").delete().eq("id", id);
   }
 
+  function downloadCSV() {
+    const groups = groupOrders(orders);
+    const rows: string[][] = [["Date", "Session", "Person", "Drink", "Qty"]];
+    for (const group of groups) {
+      for (const session of group.sessions) {
+        const start = session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
+        const end = new Date(session.sessionStart.getTime() + 15 * 60 * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
+        const sessionLabel = `${start} – ${end}`;
+        for (const order of session.orders) {
+          const itemMap = new Map<string, number>();
+          for (const item of order.items) itemMap.set(item.name, (itemMap.get(item.name) ?? 0) + 1);
+          for (const [drink, qty] of itemMap.entries()) {
+            rows.push([group.dateLabel, sessionLabel, order.person_name, drink, String(qty)]);
+          }
+        }
+      }
+    }
+    const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hellokopi-${new Date().toLocaleDateString("en-CA", { timeZone: SGT })}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function removeItem(order: Order, itemName: string) {
     const newItems = [...order.items];
     const idx = newItems.findIndex(i => i.name === itemName);
@@ -156,6 +185,18 @@ function OrdersTab() {
 
   return (
     <div className="flex flex-col gap-10">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500">{orders.length} orders</p>
+        <button
+          onClick={downloadCSV}
+          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export CSV
+        </button>
+      </div>
       {groups.map(group => (
         <div key={group.dateKey}>
           <p className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans mb-4">{group.dateLabel}</p>

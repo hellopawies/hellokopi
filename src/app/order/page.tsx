@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -443,6 +443,9 @@ function OrderContent() {
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
   const [builderDrink, setBuilderDrink] = useState("");
+  const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[] } | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -500,6 +503,23 @@ function OrderContent() {
           const counts = new Map<string, number>();
           for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
           setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
+        }
+      });
+    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    supabase
+      .from("orders")
+      .select("id, items")
+      .eq("person_name", name)
+      .gte("created_at", sessionWindowStart)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const order = data[0];
+          const items = order.items as { name: string }[];
+          const counts = new Map<string, number>();
+          for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          setExistingOrder({ id: order.id, items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
         }
       });
   }, [name]);
@@ -561,6 +581,10 @@ function OrderContent() {
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
     try {
+      if (editingOrderId.current) {
+        await supabase.from("orders").delete().eq("id", editingOrderId.current);
+        editingOrderId.current = null;
+      }
       const { error } = await supabase.from("orders").insert({
         order_ref: generateOrderRef(),
         person_name: name,
@@ -656,6 +680,30 @@ function OrderContent() {
       {/* Content */}
       <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 || builderDrink ? "pb-64" : "pb-12"}`}>
         <div className="max-w-lg mx-auto">
+
+          {/* Active order banner */}
+          {existingOrder && !isEditing && (
+            <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-1">Active order</p>
+                <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
+                  {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  editingOrderId.current = existingOrder.id;
+                  setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
+                  setIsEditing(true);
+                  setExistingOrder(null);
+                }}
+                className="flex-shrink-0 text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
+              >
+                Edit
+              </button>
+            </div>
+          )}
 
           {/* MY PICKS */}
           {tab === "yours" && (
@@ -848,8 +896,10 @@ function OrderContent() {
               "
             >
               {orderState === "loading"
-                ? "Placing…"
-                : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
+                ? (isEditing ? "Updating…" : "Placing…")
+                : isEditing
+                  ? `Update Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`
+                  : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
             </button>
             {orderState === "error" && (
               <p className="text-center text-xs text-red-400 font-sans">
