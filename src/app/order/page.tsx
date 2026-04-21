@@ -15,7 +15,7 @@ const BASE_DRINKS_MAP = new Map(
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
-type Tab = "crowd" | "yours" | "all" | "wheel";
+type Tab = "crowd" | "yours" | "all";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
@@ -427,284 +427,6 @@ function DrinkBuilder({
   );
 }
 
-// ─── Wheel builder (radial buy-menu style, two-level drill-down) ─
-const WHEEL_OPTIONS: Record<string, { id: string; label: string; fullName: string }[]> = {
-  kopi: [
-    { id: "normal",  label: "Normal",   fullName: "Kopi" },
-    { id: "o",       label: "O",        fullName: "Kopi O" },
-    { id: "c",       label: "C Evap",   fullName: "Kopi C" },
-    { id: "peng",    label: "Peng",     fullName: "Kopi Peng" },
-    { id: "gao",     label: "Gao",      fullName: "Kopi Gao" },
-    { id: "siewdai", label: "Siew Dai", fullName: "Kopi Siew Dai" },
-    { id: "tarik",   label: "Tarik",    fullName: "Kopi Tarik" },
-  ],
-  teh: [
-    { id: "normal",  label: "Normal",   fullName: "Teh" },
-    { id: "o",       label: "O",        fullName: "Teh O" },
-    { id: "c",       label: "C Evap",   fullName: "Teh C" },
-    { id: "peng",    label: "Peng",     fullName: "Teh Peng" },
-    { id: "gao",     label: "Gao",      fullName: "Teh Gao" },
-    { id: "siewdai", label: "Siew Dai", fullName: "Teh Siew Dai" },
-    { id: "tarik",   label: "Tarik",    fullName: "Teh Tarik" },
-  ],
-  "teh-halia": [
-    { id: "normal",  label: "Normal",   fullName: "Teh Halia" },
-    { id: "o",       label: "O",        fullName: "Teh Halia O" },
-    { id: "peng",    label: "Peng",     fullName: "Teh Halia Peng" },
-    { id: "gao",     label: "Gao",      fullName: "Teh Halia Gao" },
-    { id: "siewdai", label: "Siew Dai", fullName: "Teh Halia Siew Dai" },
-    { id: "tarik",   label: "Tarik",    fullName: "Teh Halia Tarik" },
-  ],
-  "yuan-yang": [
-    { id: "normal",  label: "Normal",   fullName: "Yuan Yang" },
-    { id: "o",       label: "O",        fullName: "Yuan Yang O" },
-    { id: "peng",    label: "Peng",     fullName: "Yuan Yang Peng" },
-    { id: "gao",     label: "Gao",      fullName: "Yuan Yang Gao" },
-    { id: "siewdai", label: "Siew Dai", fullName: "Yuan Yang Siew Dai" },
-    { id: "cham",    label: "Kopi Cham",fullName: "Kopi Cham" },
-  ],
-  milo: [
-    { id: "normal",   label: "Normal",   fullName: "Milo" },
-    { id: "c",        label: "C Evap",   fullName: "Milo C" },
-    { id: "peng",     label: "Peng",     fullName: "Milo Peng" },
-    { id: "gao",      label: "Gao",      fullName: "Milo Gao" },
-    { id: "dino",     label: "Dinosaur", fullName: "Milo Dinosaur" },
-    { id: "godzilla", label: "Godzilla", fullName: "Milo Godzilla" },
-    { id: "neslo",    label: "Neslo",    fullName: "Neslo" },
-  ],
-  horlicks: [
-    { id: "normal",   label: "Normal",   fullName: "Horlicks" },
-    { id: "c",        label: "C Evap",   fullName: "Horlicks C" },
-    { id: "peng",     label: "Peng",     fullName: "Horlicks Peng" },
-    { id: "gao",      label: "Gao",      fullName: "Horlicks Gao" },
-    { id: "dino",     label: "Dinosaur", fullName: "Horlicks Dinosaur" },
-    { id: "godzilla", label: "Godzilla", fullName: "Horlicks Godzilla" },
-  ],
-};
-
-function WheelBuilder({
-  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks, onComposedNameChange,
-}: {
-  cart: Map<string, number>;
-  onToggleCart: (name: string) => void;
-  userFavs: Set<string>;
-  onToggleFavourite: (name: string) => void;
-  customDrinks: CustomDrink[];
-  hiddenDrinks: Set<string>;
-  onComposedNameChange: (name: string) => void;
-}) {
-  const [level, setLevel] = useState<1 | 2>(1);
-  const [selectedBase, setSelectedBase] = useState<string | null>(null);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [showOthers, setShowOthers] = useState(false);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [visible, setVisible] = useState(true);
-
-  const othersAll = useMemo(() => {
-    const custom = customDrinks
-      .filter((cd) => cd.category_id === "others" && !hiddenDrinks.has(cd.name))
-      .map((cd) => ({ name: cd.name, description: cd.description }));
-    return [...OTHERS_DRINKS.filter((d) => !hiddenDrinks.has(d.name)), ...custom];
-  }, [customDrinks, hiddenDrinks]);
-
-  const rootSegs = useMemo(() => [
-    ...DRINK_BASES.map((b) => ({ id: b.id, label: b.label, fullName: "" })),
-    { id: "others", label: "Others", fullName: "" },
-  ], []);
-
-  function transition(fn: () => void) {
-    setVisible(false);
-    setHoveredId(null);
-    setTimeout(() => { fn(); setVisible(true); }, 160);
-  }
-
-  function handleRootClick(id: string) {
-    if (id === "others") {
-      setShowOthers((v) => !v);
-      return;
-    }
-    transition(() => {
-      setSelectedBase(id);
-      setLevel(2);
-      setSelectedOption(null);
-      setShowOthers(false);
-      onComposedNameChange("");
-    });
-  }
-
-  function handleOptionClick(opt: { fullName: string }) {
-    const next = selectedOption === opt.fullName ? null : opt.fullName;
-    setSelectedOption(next);
-    onComposedNameChange(next ?? "");
-  }
-
-  function handleBack() {
-    transition(() => {
-      setLevel(1);
-      setSelectedBase(null);
-      setSelectedOption(null);
-      onComposedNameChange("");
-    });
-  }
-
-  const currentSegs = level === 1
-    ? rootSegs
-    : (WHEEL_OPTIONS[selectedBase!] ?? []).map((o) => ({ id: o.id, label: o.label, fullName: o.fullName }));
-
-  const N = currentSegs.length;
-  const CX = 200, CY = 200, OR = 175, IR = 60, GAP = 0.048;
-
-  const sector = (i: number) => {
-    const a0 = (i / N) * 2 * Math.PI - Math.PI / 2 + GAP;
-    const a1 = ((i + 1) / N) * 2 * Math.PI - Math.PI / 2 - GAP;
-    const c = Math.cos, s = Math.sin, la = a1 - a0 > Math.PI ? 1 : 0;
-    return [
-      `M ${CX + IR * c(a0)} ${CY + IR * s(a0)}`,
-      `L ${CX + OR * c(a0)} ${CY + OR * s(a0)}`,
-      `A ${OR} ${OR} 0 ${la} 1 ${CX + OR * c(a1)} ${CY + OR * s(a1)}`,
-      `L ${CX + IR * c(a1)} ${CY + IR * s(a1)}`,
-      `A ${IR} ${IR} 0 ${la} 0 ${CX + IR * c(a0)} ${CY + IR * s(a0)}`,
-      "Z",
-    ].join(" ");
-  };
-
-  const mid = (i: number, r: number) => {
-    const a = ((i + 0.5) / N) * 2 * Math.PI - Math.PI / 2;
-    return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
-  };
-
-  const LR = (OR + IR) / 2 + 4;
-  const baseLabel = selectedBase ? (DRINK_BASES.find((b) => b.id === selectedBase)?.label ?? "") : "";
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex justify-center">
-        <svg
-          viewBox="0 0 400 400"
-          className="w-full max-w-[300px] sm:max-w-[340px] touch-manipulation"
-          style={{ filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.45))" }}
-        >
-          <circle cx={CX} cy={CY} r={OR + 8} fill="#111109" />
-
-          {/* Segments — fades out/in during level transition */}
-          <g style={{ opacity: visible ? 1 : 0, transition: "opacity 0.15s ease" }}>
-            {currentSegs.map((seg, i) => {
-              const isSelected = level === 2
-                ? selectedOption === seg.fullName
-                : (seg.id === "others" && showOthers);
-              const isHovered = hoveredId === seg.id && !isSelected;
-              const lp = mid(i, LR);
-              const np = mid(i, IR + 16);
-              const lines = seg.label.toUpperCase().split(" ");
-              const lineH = 14;
-              const yStart = lp.y - ((lines.length - 1) * lineH) / 2;
-              return (
-                <g
-                  key={seg.id}
-                  style={{ cursor: "pointer" }}
-                  onPointerEnter={() => setHoveredId(seg.id)}
-                  onPointerLeave={() => setHoveredId(null)}
-                  onClick={() => level === 1 ? handleRootClick(seg.id) : handleOptionClick(seg as { fullName: string })}
-                >
-                  <path
-                    d={sector(i)}
-                    fill={isSelected ? "#363624" : isHovered ? "#282818" : "#1c1c12"}
-                    stroke="#111109"
-                    strokeWidth={3}
-                    style={{ transition: "fill 0.12s ease" }}
-                  />
-                  {lines.map((line, li) => (
-                    <text
-                      key={li}
-                      x={lp.x}
-                      y={yStart + li * lineH}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize={11}
-                      fontFamily="ui-sans-serif, system-ui, sans-serif"
-                      fontWeight="700"
-                      letterSpacing="0.12em"
-                      fill={isSelected ? "#e2d49a" : isHovered ? "#b0a660" : "#6b6440"}
-                      style={{ transition: "fill 0.12s ease", userSelect: "none" }}
-                    >
-                      {line}
-                    </text>
-                  ))}
-                  <text
-                    x={np.x}
-                    y={np.y}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize={9}
-                    fontFamily="ui-sans-serif, system-ui, sans-serif"
-                    fontWeight="700"
-                    fill={isSelected ? "#9a8a40" : "#383620"}
-                    style={{ transition: "fill 0.12s ease", userSelect: "none" }}
-                  >
-                    {i + 1}
-                  </text>
-                </g>
-              );
-            })}
-          </g>
-
-          {/* Centre — emblem at level 1, back button at level 2 */}
-          {level === 1 ? (
-            <g>
-              <circle cx={CX} cy={CY} r={IR - 4} fill="#6b4e18" />
-              <circle cx={CX} cy={CY} r={IR - 14} fill="#b8893a" />
-              {["HELLO", "KOPI"].map((word, i) => (
-                <text key={word} x={CX} y={CY + (i === 0 ? -6 : 6)}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={8} fontFamily="ui-sans-serif, system-ui, sans-serif"
-                  fontWeight="800" letterSpacing="0.14em" fill="#3a2808"
-                  style={{ userSelect: "none" }}
-                >{word}</text>
-              ))}
-            </g>
-          ) : (
-            <g style={{ cursor: "pointer" }} onClick={handleBack}>
-              <circle cx={CX} cy={CY} r={IR - 4} fill="#3a2a0e" />
-              <circle cx={CX} cy={CY} r={IR - 14} fill="#7a5a20" />
-              <text x={CX} y={CY - 7}
-                textAnchor="middle" dominantBaseline="middle"
-                fontSize={16} fill="#c8a84a" style={{ userSelect: "none" }}
-              >←</text>
-              {baseLabel.toUpperCase().split(" ").map((w, i, arr) => (
-                <text key={w} x={CX} y={CY + 6 + i * 10 - ((arr.length - 1) * 5)}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={7} fontFamily="ui-sans-serif, system-ui, sans-serif"
-                  fontWeight="700" letterSpacing="0.12em" fill="#8a6a30"
-                  style={{ userSelect: "none" }}
-                >{w}</text>
-              ))}
-            </g>
-          )}
-        </svg>
-      </div>
-
-      {/* Others flat list */}
-      {showOthers && (
-        <div className="border-t border-stone-100 dark:border-stone-800" style={{ animation: "fadeUp 0.2s ease-out both" }}>
-          {othersAll.length === 0 ? (
-            <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">Nothing here.</p>
-          ) : othersAll.map((drink) => (
-            <DrinkRow
-              key={drink.name}
-              name={drink.name}
-              description={drink.description}
-              selected={cart.has(drink.name)}
-              qty={cart.get(drink.name) ?? 0}
-              onSelect={() => onToggleCart(drink.name)}
-              favourited={userFavs.has(drink.name)}
-              onToggleFavourite={() => onToggleFavourite(drink.name)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── Main order content ───────────────────────────────────────
 function OrderContent() {
@@ -894,7 +616,6 @@ function OrderContent() {
     { id: "yours", label: "My Picks" },
     { id: "crowd", label: "Top Choice" },
     { id: "all", label: "All Drinks" },
-    { id: "wheel", label: "Wheel" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
 
@@ -932,7 +653,7 @@ function OrderContent() {
                 className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
                   left: 4,
-                  width: "calc((100% - 8px) / 4)",
+                  width: "calc((100% - 8px) / 3)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
@@ -940,7 +661,7 @@ function OrderContent() {
               {TABS.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => { setTab(t.id); setBuilderDrink(""); }}
+                  onClick={() => { setTab(t.id); if (t.id !== "all") setBuilderDrink(""); }}
                   className={`
                     relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
                     font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
@@ -1086,18 +807,6 @@ function OrderContent() {
             />
           )}
 
-          {/* WHEEL */}
-          {tab === "wheel" && (
-            <WheelBuilder
-              cart={cart}
-              onToggleCart={toggleCart}
-              userFavs={userFavs}
-              onToggleFavourite={toggleFavourite}
-              customDrinks={customDrinks}
-              hiddenDrinks={hiddenDrinks}
-              onComposedNameChange={setBuilderDrink}
-            />
-          )}
 
         </div>
       </div>
