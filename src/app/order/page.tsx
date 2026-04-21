@@ -573,6 +573,12 @@ function OrderContent() {
     }
   }
 
+  async function cancelOrder() {
+    if (!existingOrder) return;
+    await supabase.from("orders").delete().eq("id", existingOrder.id);
+    setExistingOrder(null);
+  }
+
   async function placeOrder() {
     if (cart.size === 0) return;
     setOrderState("loading");
@@ -691,18 +697,27 @@ function OrderContent() {
                   {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  editingOrderId.current = existingOrder.id;
-                  setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
-                  setIsEditing(true);
-                  setExistingOrder(null);
-                }}
-                className="flex-shrink-0 text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
-              >
-                Edit
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={cancelOrder}
+                  className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-red-400 dark:text-red-500 border border-red-200 dark:border-red-900 px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    editingOrderId.current = existingOrder.id;
+                    setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
+                    setIsEditing(true);
+                    setExistingOrder(null);
+                  }}
+                  className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
           )}
 
