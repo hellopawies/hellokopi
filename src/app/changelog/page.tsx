@@ -1,17 +1,33 @@
 const VERSIONS = [
   {
+    version: "v2.5.0",
+    date: "21 Apr 2026, 11:00 am",
+    title: "Active order controls",
+    changes: [
+      "Cancel your own active order — tap Cancel next to Edit to remove just your order from the current session",
+      "Cancel and Edit buttons have a filled background in dark mode so they look like proper buttons",
+      "Drink row highlight is now rounded in both light and dark mode",
+    ],
+  },
+  {
+    version: "v2.4.0",
+    date: "21 Apr 2026, 10:00 am",
+    title: "Floating cart & liquid glass",
+    changes: [
+      "Cart bar lifts off the screen edge — rounded corners, backdrop blur, and a soft drop shadow",
+      "Sticky headers on all pages now blur content scrolling behind them — iOS-style frosted glass effect",
+    ],
+  },
+  {
     version: "v2.3.0",
     date: "20 Apr 2026, 3:00 am",
     title: "Design consistency pass",
     changes: [
       "Smooth page-in animation on every page — content fades up on arrival",
       "Order tabs use a sliding pill with a spring bounce instead of a static underline",
-      "Admin tabs match the same sliding pill animation",
       "All buttons and chips consistently rounded — pill shape for filters and modifiers, rounded-xl for CTAs",
       "All Drinks base selectors and specials chips are now pills",
       "Orders page quantity badge is now a rounded pill",
-      "Every admin action button (Enter, Add Drink, Add Member, Try again) rounded",
-      "Admin remove-item and hide/show toggles are rounded pills",
       "Greeting page name dropdown panel now has rounded corners",
       "Drink card quantity no longer overlaps the description — shown inline with the drink name",
     ],
@@ -167,7 +183,7 @@ export default function ChangelogPage() {
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
             <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">

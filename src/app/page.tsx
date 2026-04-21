@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -35,7 +35,9 @@ export default function GreetingPage() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [firstLoad] = useState(!hasMounted);
+  const [nameSearch, setNameSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -61,6 +63,21 @@ export default function GreetingPage() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      setNameSearch("");
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  const filteredColleagues = useMemo(() => {
+    const q = nameSearch.trim().toLowerCase();
+    if (!q) return colleagues;
+    const hasOthers = colleagues.includes("Others");
+    const filtered = colleagues.filter((n) => n !== "Others" && n.toLowerCase().includes(q));
+    return hasOthers ? [...filtered, "Others"] : filtered;
+  }, [nameSearch, colleagues]);
 
   const isOthers = selected === "Others";
   const canContinue = selected && (!isOthers || otherName.trim());
@@ -127,7 +144,8 @@ export default function GreetingPage() {
                   mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
                   text-[11px] uppercase tracking-[0.25em] font-sans font-medium
-                  transition-all duration-300 touch-manipulation
+                  transition-all duration-200 touch-manipulation
+                  shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                   hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900
                   active:bg-stone-800 dark:active:bg-stone-300 active:text-white dark:active:text-stone-900
                   focus:outline-none
@@ -191,27 +209,40 @@ export default function GreetingPage() {
                   <div className="
                     absolute top-full left-0 right-0 z-10 mt-1
                     bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 rounded-xl shadow-md dark:shadow-black
-                    divide-y divide-stone-100 dark:divide-[#3a3a3a]
-                    max-h-[55vh] overflow-y-auto overflow-hidden
+                    overflow-hidden
                   ">
-                    {colleagues.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        onClick={() => { setSelected(name); setOpen(false); setOtherName(""); }}
-                        className={`
-                          w-full px-4 py-3.5 text-center text-sm font-sans font-light tracking-wide
-                          transition-colors duration-150 touch-manipulation
-                          ${selected === name
-                            ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
-                            : "text-stone-600 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-[#3a3a3a] active:bg-stone-100 dark:active:bg-[#444] hover:text-stone-800 dark:hover:text-stone-100"
-                          }
-                          ${name === "Others" ? "italic" : ""}
-                        `}
-                      >
-                        {name}
-                      </button>
-                    ))}
+                    <div className="px-4 py-2.5 border-b border-stone-100 dark:border-[#3a3a3a]">
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={nameSearch}
+                        onChange={(e) => setNameSearch(e.target.value)}
+                        placeholder="Search…"
+                        className="w-full bg-transparent text-center text-sm font-sans font-light text-stone-800 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-600 focus:outline-none tracking-wide"
+                      />
+                    </div>
+                    <div className="max-h-[45vh] overflow-y-auto divide-y divide-stone-100 dark:divide-[#3a3a3a]">
+                      {filteredColleagues.length === 0 ? (
+                        <p className="px-4 py-3.5 text-center text-sm font-sans font-light italic text-stone-300 dark:text-stone-600">No match.</p>
+                      ) : filteredColleagues.map((name) => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => { setSelected(name); setOpen(false); setOtherName(""); }}
+                          className={`
+                            w-full px-4 py-3.5 text-center text-sm font-sans font-light tracking-wide
+                            transition-colors duration-150 touch-manipulation
+                            ${selected === name
+                              ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
+                              : "text-stone-600 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-[#3a3a3a] active:bg-stone-100 dark:active:bg-[#444] hover:text-stone-800 dark:hover:text-stone-100"
+                            }
+                            ${name === "Others" ? "italic" : ""}
+                          `}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -242,7 +273,8 @@ export default function GreetingPage() {
                   mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
                   text-[11px] uppercase tracking-[0.25em] font-sans font-medium
-                  transition-all duration-300 touch-manipulation
+                  transition-all duration-200 touch-manipulation
+                  shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                   hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900
                   active:bg-stone-800 dark:active:bg-stone-300 active:text-white dark:active:text-stone-900
                   disabled:opacity-25 disabled:cursor-not-allowed

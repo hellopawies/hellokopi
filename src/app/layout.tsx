@@ -11,6 +11,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAF8" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export default function RootLayout({
@@ -26,11 +30,18 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Hello Kopi" />
-        <meta name="theme-color" content="#292524" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>
         <Header />
         {children}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/hellokopi/sw.js', { scope: '/hellokopi/' });
+            });
+          }
+        `}} />
       </body>
     </html>
   );

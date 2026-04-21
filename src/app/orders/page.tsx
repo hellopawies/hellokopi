@@ -145,7 +145,7 @@ export default function OrdersPage() {
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
 
         {/* Brand + heading */}
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4">
@@ -213,7 +213,7 @@ export default function OrdersPage() {
               </p>
               <button
                 onClick={load}
-                className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 px-5 py-2.5 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-200 touch-manipulation"
+                className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 px-5 py-2.5 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
               >
                 Try again
               </button>
@@ -267,7 +267,11 @@ export default function OrdersPage() {
                             )}
                           </p>
                           <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-1 leading-relaxed">
-                            {names.join(" · ")}
+                            {(() => {
+                              const counts = new Map<string, number>();
+                              for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
+                              return [...counts.entries()].map(([n, c]) => c > 1 ? `${n} ×${c}` : n).join(" · ");
+                            })()}
                           </p>
                         </div>
                       ))}

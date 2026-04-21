@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -17,7 +17,7 @@ interface CustomDrink { id: string; name: string; description: string; category_
 
 type Tab = "crowd" | "yours" | "all";
 type CartItem = { name: string; qty: number };
-type OrderState = "idle" | "loading" | { orderRef: string; items: CartItem[] } | "error";
+type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
 
 // ─── Heart icon ───────────────────────────────────────────────
@@ -83,7 +83,7 @@ function DrinkCard({
       )}
       {count !== undefined && (
         <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-          {count} {count === 1 ? "order" : "orders"}
+          {count} {count === 1 ? "cup" : "cups"}
         </p>
       )}
     </button>
@@ -103,7 +103,7 @@ function DrinkRow({
   onToggleFavourite: () => void;
 }) {
   return (
-    <div className={`flex items-center mb-0.5 transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-[#111] active:bg-stone-100 dark:active:bg-[#1a1a1a]"}`}>
+    <div className={`flex items-center mb-0.5 rounded-xl transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-stone-900 active:bg-stone-100 dark:active:bg-stone-900"}`}>
       <button
         type="button"
         onClick={onSelect}
@@ -160,10 +160,10 @@ function ModifierRow({
   disabled?: boolean;
 }) {
   const pillCls = (active: boolean) =>
-    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation ${
+    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
       active
-        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
     }`;
   return (
     <div className={`flex flex-col gap-2 ${disabled ? "opacity-30 pointer-events-none" : ""}`}>
@@ -189,7 +189,7 @@ function ModifierRow({
 
 // ─── Drink builder (replaces "All Drinks" flat list) ──────────
 function DrinkBuilder({
-  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks,
+  cart, onToggleCart, userFavs, onToggleFavourite, customDrinks, hiddenDrinks, onComposedNameChange,
 }: {
   cart: Map<string, number>;
   onToggleCart: (name: string) => void;
@@ -197,6 +197,7 @@ function DrinkBuilder({
   onToggleFavourite: (name: string) => void;
   customDrinks: CustomDrink[];
   hiddenDrinks: Set<string>;
+  onComposedNameChange: (name: string) => void;
 }) {
   const [baseId, setBaseId] = useState<string | null>(null);
   const [milk, setMilk] = useState("");
@@ -234,6 +235,10 @@ function DrinkBuilder({
     return parts.join(" ");
   }, [base, milk, strength, sweetness, temp, special, allSpecials]);
 
+  useEffect(() => {
+    onComposedNameChange(composedName);
+  }, [composedName, onComposedNameChange]);
+
   const othersAll = useMemo(() => {
     const custom = customDrinks
       .filter((cd) => cd.category_id === "others" && !hiddenDrinks.has(cd.name))
@@ -270,10 +275,10 @@ function DrinkBuilder({
   }, [search, allDrinksFlat]);
 
   const baseChipCls = (active: boolean) =>
-    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-colors duration-100 touch-manipulation ${
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
       active
-        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-        : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+        : "text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
     }`;
 
   return (
@@ -400,10 +405,10 @@ function DrinkBuilder({
                     key={sp.label}
                     type="button"
                     onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
-                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-colors duration-100 touch-manipulation ${
+                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
                       special === sp.label
-                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500"
+                        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+                        : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
                     }`}
                   >
                     {sp.label}
@@ -413,33 +418,6 @@ function DrinkBuilder({
             </div>
           )}
 
-          {/* Preview + actions */}
-          <div className="border-t border-stone-100 dark:border-stone-800 pt-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug truncate">
-                {composedName}
-              </p>
-              <button
-                type="button"
-                onClick={() => onToggleFavourite(composedName)}
-                className="group/heart flex-shrink-0 p-1 touch-manipulation"
-                aria-label="Favourite"
-              >
-                <Heart filled={userFavs.has(composedName)} />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => onToggleCart(composedName)}
-              className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation ${
-                cart.has(composedName)
-                  ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
-                  : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
-              }`}
-            >
-              {cart.has(composedName) ? `In cart · ${cart.get(composedName)}` : "+ Add"}
-            </button>
-          </div>
         </div>
       )}
 
@@ -448,6 +426,7 @@ function DrinkBuilder({
     </div>
   );
 }
+
 
 // ─── Main order content ───────────────────────────────────────
 function OrderContent() {
@@ -464,8 +443,10 @@ function OrderContent() {
   const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
-  const [existingOrderId, setExistingOrderId] = useState<string | null>(null);
-  const [existingOrderRef, setExistingOrderRef] = useState<string | null>(null);
+  const [builderDrink, setBuilderDrink] = useState("");
+  const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[] } | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -480,8 +461,20 @@ function OrderContent() {
       setLoadingFavs(false);
       return;
     }
-    supabase.rpc("get_crowd_favourites").then(({ data }) => {
-      if (data) setCrowdData(data as CrowdItem[]);
+    supabase.from("orders").select("items").then(({ data }) => {
+      if (data) {
+        const counts = new Map<string, number>();
+        for (const order of data) {
+          for (const item of order.items ?? []) {
+            if (item?.name) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          }
+        }
+        setCrowdData(
+          [...counts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([drink_name, order_count]) => ({ drink_name, order_count }))
+        );
+      }
       setLoadingCrowd(false);
     });
     supabase
@@ -499,29 +492,31 @@ function OrderContent() {
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
     });
-    const sessionCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    // Fetch all of this user's orders — split into active session vs previous
     supabase
       .from("orders")
-      .select("id, order_ref, items, created_at")
+      .select("id, items, created_at")
       .eq("person_name", name)
       .order("created_at", { ascending: false })
-      .limit(1)
       .then(({ data }) => {
-        if (data && data.length > 0) {
-          const order = data[0] as { id: string; order_ref: string; items: { name: string }[]; created_at: string };
-          const items = order.items;
+        if (!data || data.length === 0) return;
+        type Row = { id: string; items: { name: string }[]; created_at: string };
+        const sessionOrders = (data as Row[]).filter((o) => o.created_at >= sessionWindowStart);
+        if (sessionOrders.length > 0) {
+          // Aggregate all session orders into one active-order view
           const counts = new Map<string, number>();
-          for (const item of items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          const cartItems = [...counts.entries()].map(([n, qty]) => ({ name: n, qty }));
-          if (order.created_at >= sessionCutoff) {
-            // Active session order — pre-populate cart for editing
-            setExistingOrderId(order.id);
-            setExistingOrderRef(order.order_ref);
-            setCart(counts);
-          } else {
-            // Older order — show as "Last order" suggestion only
-            setLastOrder(cartItems);
-          }
+          for (const order of sessionOrders)
+            for (const item of order.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          // Use the oldest session order id as the canonical one for cancel/edit
+          const canonicalId = sessionOrders[sessionOrders.length - 1].id;
+          setExistingOrder({ id: canonicalId, items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
+        } else {
+          // No active order — show most recent as "last order" suggestion
+          const prev = data[0] as Row;
+          const counts = new Map<string, number>();
+          for (const item of prev.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+          setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
         }
       });
   }, [name]);
@@ -574,46 +569,56 @@ function OrderContent() {
     }
   }
 
+  async function cancelOrder() {
+    if (!existingOrder) return;
+    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
+    setExistingOrder(null);
+  }
+
   async function placeOrder() {
     if (cart.size === 0) return;
     setOrderState("loading");
-    // Expand cart: qty > 1 = repeated item entries (backward-compatible with orders display)
+    const orderedAt = new Date();
     const items = [...cart.entries()].flatMap(([drinkName, qty]) => {
       const drink = DRINKS_MAP.get(drinkName) ?? { name: drinkName, description: "" };
       return Array(qty).fill({ name: drink.name, description: drink.description });
     });
     try {
-      let orderRef: string;
-      if (existingOrderId) {
-        orderRef = existingOrderRef!;
-        const { error } = await supabase
-          .from("orders")
-          .update({ items })
-          .eq("id", existingOrderId);
-        if (error) throw error;
-      } else {
-        orderRef = generateOrderRef();
-        const { error } = await supabase.from("orders").insert({
-          order_ref: orderRef,
-          person_name: name,
-          items,
-        });
-        if (error) throw error;
-      }
+      // Always clear all of this user's orders in the current session window before inserting,
+      // so editing or re-ordering never creates duplicate rows.
+      const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
+      editingOrderId.current = null;
+      const { error } = await supabase.from("orders").insert({
+        order_ref: generateOrderRef(),
+        person_name: name,
+        items,
+      });
+      if (error) throw error;
+      // Find session start: earliest order placed in the last 15 minutes
+      const windowStart = new Date(orderedAt.getTime() - 15 * 60 * 1000).toISOString();
+      const { data: sessionData } = await supabase
+        .from("orders")
+        .select("created_at")
+        .gte("created_at", windowStart)
+        .order("created_at", { ascending: true })
+        .limit(1);
+      const sessionStart = sessionData?.[0] ? new Date(sessionData[0].created_at) : orderedAt;
       const cartItems: CartItem[] = [...cart.entries()].map(([drinkName, qty]) => ({ name: drinkName, qty }));
-      setOrderState({ orderRef, items: cartItems });
+      setOrderState({ orderedAt, sessionStart, items: cartItems });
     } catch {
       setOrderState("error");
     }
   }
 
   if (typeof orderState === "object") {
-    return <ConfirmedState name={name} orderRef={orderState.orderRef} items={orderState.items} />;
+    return <ConfirmedState name={name} orderedAt={orderState.orderedAt} sessionStart={orderState.sessionStart} items={orderState.items} />;
   }
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
-    { id: "crowd", label: "Top Orders" },
+    { id: "crowd", label: "Top Choice" },
     { id: "all", label: "All Drinks" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
@@ -626,7 +631,7 @@ function OrderContent() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
 
       {/* Sticky header + tabs block */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] dark:bg-black">
+      <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
         {/* Brand + greeting */}
         <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4">
           <div className="max-w-lg mx-auto">
@@ -649,8 +654,10 @@ function OrderContent() {
             <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
               {/* Sliding pill */}
               <div
-                className="absolute top-1 bottom-1 w-1/3 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
+                  left: 4,
+                  width: "calc((100% - 8px) / 3)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
@@ -658,7 +665,7 @@ function OrderContent() {
               {TABS.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setTab(t.id)}
+                  onClick={() => { setTab(t.id); if (t.id !== "all") setBuilderDrink(""); }}
                   className={`
                     relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
                     font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
@@ -676,8 +683,41 @@ function OrderContent() {
       </div>
 
       {/* Content */}
-      <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 ? "pb-64" : "pb-12"}`}>
+      <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 || builderDrink ? "pb-64" : "pb-12"}`}>
         <div className="max-w-lg mx-auto">
+
+          {/* Active order banner */}
+          {existingOrder && !isEditing && (
+            <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-1">Active order</p>
+                <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
+                  {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={cancelOrder}
+                  className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-red-400 dark:text-red-300 border border-red-200 dark:border-red-800 dark:bg-red-950 px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900 transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    editingOrderId.current = existingOrder.id;
+                    setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
+                    setIsEditing(true);
+                    setExistingOrder(null);
+                  }}
+                  className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* MY PICKS */}
           {tab === "yours" && (
@@ -696,7 +736,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => setCart(new Map(lastOrder.map(({ name: n, qty }) => [n, qty])))}
-                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-150 touch-manipulation"
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
                   >
                     Re-order
                   </button>
@@ -776,16 +816,45 @@ function OrderContent() {
               onToggleFavourite={toggleFavourite}
               customDrinks={customDrinks}
               hiddenDrinks={hiddenDrinks}
+              onComposedNameChange={setBuilderDrink}
             />
           )}
+
 
         </div>
       </div>
 
-      {/* Sticky cart + place-order bar */}
-      {cart.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
-          <div className="max-w-lg mx-auto flex flex-col gap-2.5">
+      {/* Fixed bottom bar — builder preview and/or cart */}
+      {(cart.size > 0 || builderDrink) && (
+        <div className="fixed bottom-8 left-0 right-0 z-40 px-4 sm:px-6">
+          <div className="max-w-lg mx-auto rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 pt-3.5 pb-4 flex flex-col gap-2.5">
+
+            {/* Builder preview row */}
+            {builderDrink && (
+              <div className={`flex items-center justify-between gap-3 ${cart.size > 0 ? "pb-2.5 border-b border-stone-100 dark:border-stone-800" : ""}`}>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
+                    {builderDrink}
+                  </p>
+                  <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-1 touch-manipulation">
+                    <Heart filled={userFavs.has(builderDrink)} />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleCart(builderDrink)}
+                  className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] shadow-sm hover:shadow-md ${
+                    cart.has(builderDrink)
+                      ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
+                      : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
+                  }`}
+                >
+                  {cart.has(builderDrink) ? `In cart · ${cart.get(builderDrink)}` : "+ Add"}
+                </button>
+              </div>
+            )}
+
+            {cart.size > 0 && (<>
             <div className="flex items-center justify-between">
               <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">Your order</p>
               <button
@@ -805,7 +874,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => decrementCart(drinkName)}
-                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full"
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full active:scale-[0.95]"
                     aria-label="Decrease quantity"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -818,7 +887,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={() => incrementCart(drinkName)}
-                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full"
+                    className="w-7 h-7 flex items-center justify-center border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 transition-colors touch-manipulation rounded-full active:scale-[0.95]"
                     aria-label="Increase quantity"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -836,13 +905,14 @@ function OrderContent() {
                 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
                 text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                 transition-all duration-200 touch-manipulation
+                shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                 hover:bg-stone-700 dark:hover:bg-stone-300 active:bg-stone-900 dark:active:bg-stone-100
                 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none
               "
             >
               {orderState === "loading"
-                ? (existingOrderId ? "Updating…" : "Placing…")
-                : existingOrderId
+                ? (isEditing ? "Updating…" : "Placing…")
+                : isEditing
                   ? `Update Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`
                   : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
             </button>
@@ -851,6 +921,7 @@ function OrderContent() {
                 Something went wrong. Please try again.
               </p>
             )}
+            </>)}
           </div>
         </div>
       )}
@@ -859,16 +930,26 @@ function OrderContent() {
 }
 
 // ─── Confirmation screen ──────────────────────────────────────
-function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: string; items: CartItem[] }) {
+const SGT = "Asia/Singapore";
+const CONFIRM_SESSION_MS = 15 * 60 * 1000;
+
+function ConfirmedState({ name, orderedAt, sessionStart, items }: {
+  name: string;
+  orderedAt: Date;
+  sessionStart: Date;
+  items: CartItem[];
+}) {
+  const sessionEnd = new Date(sessionStart.getTime() + CONFIRM_SESSION_MS);
+  const fmt = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
+
   return (
-    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
+    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8">
         <div className="flex flex-col items-center gap-1">
           <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">hello kopi</span>
           <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1" />
         </div>
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 w-full">
           <p className="text-[11px] uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500 font-sans">Order placed</p>
           <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">{name}</h1>
           <div className="flex flex-col items-center gap-1 mt-1">
@@ -878,21 +959,33 @@ function ConfirmedState({ name, orderRef, items }: { name: string; orderRef: str
               </p>
             ))}
           </div>
-          <div className="flex flex-col items-center gap-1.5 mt-3 pt-3 border-t border-stone-100 dark:border-stone-800 w-full">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Order reference</p>
-            <p className="font-serif text-3xl sm:text-4xl font-light tracking-[0.2em] text-stone-700 dark:text-stone-200">{orderRef}</p>
+          <div className="w-full mt-3 pt-4 border-t border-stone-100 dark:border-stone-800 flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Ordered at</p>
+              <p className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">
+                {fmt(orderedAt)}
+              </p>
+              <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-0.5">
+                {orderedAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: SGT })}
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Session window</p>
+              <p className="font-serif text-lg font-light tracking-wide text-stone-600 dark:text-stone-300">
+                {fmt(sessionStart)} – {fmt(sessionEnd)}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
-          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
+          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
             View Orders
           </Link>
-          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-300 touch-manipulation hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
+          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
             Back
           </Link>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent" />
     </main>
   );
 }
