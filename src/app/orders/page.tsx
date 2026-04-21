@@ -21,14 +21,8 @@ function groupByDrink(session: Session): { drink: string; names: string[] }[] {
 
 const SGT = "Asia/Singapore";
 
-function shortLabel(dateKey: string): string {
-  const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: SGT });
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = yesterday.toLocaleDateString("en-CA", { timeZone: SGT });
-  if (dateKey === todayKey) return "Today";
-  if (dateKey === yesterdayKey) return "Yesterday";
-  const d = new Date(dateKey + "T00:00:00+08:00");
+function dateLabel(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00+08:00");
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: SGT });
 }
 
@@ -139,6 +133,8 @@ export default function OrdersPage() {
     return () => { clearInterval(interval); supabase.removeChannel(channel); };
   }, [silentRefresh]);
 
+  const visibleGroups = groups.slice(0, 3);
+  const tabIndex = Math.max(visibleGroups.findIndex((g) => g.dateKey === selectedDate), 0);
   const activeGroup = groups.find((g) => g.dateKey === selectedDate) ?? null;
 
   return (
@@ -174,24 +170,37 @@ export default function OrdersPage() {
         </div>
 
         {/* Day tabs */}
-        <div className="px-5 sm:px-8 border-b border-stone-100 dark:border-stone-800">
-          <div className="max-w-lg mx-auto flex gap-5 sm:gap-7 overflow-x-auto scrollbar-hide">
-            {groups.length > 0 ? groups.map(({ dateKey }) => (
-              <button
-                key={dateKey}
-                onClick={() => setSelectedDate(dateKey)}
-                className={`
-                  flex-shrink-0 pb-3 text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.25em]
-                  font-sans font-medium border-b-2 transition-colors duration-150 touch-manipulation whitespace-nowrap
-                  ${selectedDate === dateKey
-                    ? "text-stone-800 dark:text-stone-100 border-stone-800 dark:border-stone-100"
-                    : "text-stone-400 dark:text-stone-500 border-transparent hover:text-stone-600 dark:hover:text-stone-300"}
-                `}
-              >
-                {shortLabel(dateKey)}
-              </button>
-            )) : (
-              <div className="pb-3 h-[34px]" />
+        <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
+          <div className="max-w-lg mx-auto">
+            {visibleGroups.length > 0 ? (
+              <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
+                <div
+                  className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                  style={{
+                    left: 4,
+                    width: `calc((100% - 8px) / ${visibleGroups.length})`,
+                    transform: `translateX(${tabIndex * 100}%)`,
+                    transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }}
+                />
+                {visibleGroups.map(({ dateKey }) => (
+                  <button
+                    key={dateKey}
+                    onClick={() => setSelectedDate(dateKey)}
+                    className={`
+                      relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
+                      font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
+                      ${selectedDate === dateKey
+                        ? "text-stone-800 dark:text-stone-100"
+                        : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-400"}
+                    `}
+                  >
+                    {dateLabel(dateKey)}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="h-[34px]" />
             )}
           </div>
         </div>
