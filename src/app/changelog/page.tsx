@@ -6,6 +6,7 @@ const VERSIONS = [
     changes: [
       "Cancel your own active order — tap Cancel next to Edit to remove just your order from the current session",
       "Cancel and Edit buttons have a filled background in dark mode so they look like proper buttons",
+      "Drink row highlight is now rounded in both light and dark mode",
     ],
   },
   {
