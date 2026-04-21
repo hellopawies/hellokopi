@@ -813,7 +813,7 @@ function OrderContent() {
 
       {/* Fixed bottom bar — builder preview and/or cart */}
       {(cart.size > 0 || builderDrink) && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8] dark:bg-black border-t border-stone-200 dark:border-stone-700 px-5 sm:px-8 pt-3.5 pb-5">
+        <div className="liquid-glass fixed bottom-0 left-0 right-0 z-40 bg-[#FAFAF8]/80 dark:bg-black/75 px-5 sm:px-8 pt-3.5 pb-5">
           <div className="max-w-lg mx-auto flex flex-col gap-2.5">
 
             {/* Builder preview row */}
