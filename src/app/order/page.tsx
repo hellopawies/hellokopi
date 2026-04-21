@@ -721,9 +721,9 @@ function OrderContent() {
       <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 || builderDrink ? "pb-64" : "pb-12"}`}>
         <div className="max-w-lg mx-auto">
 
-          {/* Active order banner */}
+          {/* Active order card */}
           {existingOrder && !isEditing && (
-            <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between gap-3">
+            <div className="mb-5 rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Active order</p>
