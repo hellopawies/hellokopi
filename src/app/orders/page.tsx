@@ -54,14 +54,16 @@ function Countdown({ sessionStart }: { sessionStart: Date }) {
   const mins = Math.floor(remaining / 60000);
   const secs = Math.floor((remaining % 60000) / 1000);
   const label = mins > 0 ? `${mins}m ${secs}s left` : `${secs}s left`;
-  const colour = remaining < 2 * 60000
-    ? "text-red-400 dark:text-red-500"
-    : remaining < 5 * 60000
-    ? "text-amber-400 dark:text-amber-500"
-    : "text-stone-300 dark:text-stone-600";
+  const urgent = remaining < 2 * 60000;
+  const warning = remaining < 5 * 60000;
+  const bgColour = urgent
+    ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-500 dark:text-red-400"
+    : warning
+    ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400"
+    : "bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400";
 
   return (
-    <span className={`text-[10px] uppercase tracking-[0.2em] font-sans tabular-nums ${colour}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-sans font-medium tabular-nums tracking-wide ${bgColour}`}>
       {label}
     </span>
   );
@@ -124,6 +126,7 @@ export default function OrdersPage() {
     const channel = supabase
       .channel("orders-live")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
+        try { navigator.vibrate?.(12); } catch {}
         silentRefresh();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () => {
@@ -250,13 +253,13 @@ export default function OrdersPage() {
                 const cups = drinkGroups.reduce((sum, g) => sum + g.names.length, 0);
                 return (
                   <div key={si}>
-                    <div className="flex items-baseline gap-3 mb-3">
-                      <span className="text-[11px] uppercase tracking-[0.25em] text-stone-600 dark:text-stone-300 font-sans font-medium">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className="text-[12px] uppercase tracking-[0.2em] text-stone-700 dark:text-stone-200 font-sans font-semibold">
                         {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
                         {" – "}
                         {new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
                       </span>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-semibold tracking-wide">
                         {cups} {cups === 1 ? "cup" : "cups"}
                       </span>
                       <Countdown sessionStart={session.sessionStart} />
