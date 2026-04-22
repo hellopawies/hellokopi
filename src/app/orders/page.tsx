@@ -126,7 +126,6 @@ export default function OrdersPage() {
     const channel = supabase
       .channel("orders-live")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
-        try { navigator.vibrate?.(12); } catch {}
         silentRefresh();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () => {
