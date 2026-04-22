@@ -28,30 +28,22 @@ type CrowdItem = { drink_name: string; order_count: number };
 // ─── Heart icon ───────────────────────────────────────────────
 function Heart({ filled, bursting }: { filled: boolean; bursting?: boolean }) {
   return (
-    <span className="relative inline-flex items-center justify-center">
-      {bursting && (
-        <span
-          aria-hidden
-          className="absolute inset-[-3px] rounded-full bg-rose-200 dark:bg-rose-800/60 pointer-events-none"
-          style={{ animation: "heartBurstRing 0.5s ease-out forwards" }}
-        />
-      )}
-      <svg
-        className={`w-[15px] h-[15px] transition-colors duration-150 flex-shrink-0 ${
-          filled ? "text-rose-400" : "text-stone-250 group-hover/heart:text-stone-400"
-        }`}
-        fill={filled ? "currentColor" : "none"}
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={filled ? 0 : 1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-        />
-      </svg>
-    </span>
+    <svg
+      className={`w-[15px] h-[15px] transition-colors duration-150 flex-shrink-0 ${
+        filled ? "text-rose-400" : "text-stone-250 group-hover/heart:text-stone-400"
+      }`}
+      fill={filled ? "currentColor" : "none"}
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={filled ? 0 : 1.5}
+      style={bursting ? { animation: "heartPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards" } : {}}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+      />
+    </svg>
   );
 }
 
@@ -180,24 +172,6 @@ function SkeletonCard() {
     </div>
   );
 }
-
-// ─── Confetti pieces (warm stone palette) ─────────────────────
-const CONFETTI_PIECES = [
-  { tx:  0,   ty: -95, rot: 120, delay:  0, color: "#d6d3d1" },
-  { tx:  42,  ty: -85, rot: -60, delay: 30, color: "#a8a29e" },
-  { tx:  82,  ty: -55, rot: 180, delay:  0, color: "#e7e5e4" },
-  { tx:  95,  ty: -10, rot:  90, delay: 50, color: "#d6d3d1" },
-  { tx:  78,  ty:  35, rot:-120, delay: 20, color: "#a8a29e" },
-  { tx:  42,  ty:  78, rot:  45, delay:  0, color: "#c8c5c2" },
-  { tx:   0,  ty:  95, rot: -45, delay: 40, color: "#78716c" },
-  { tx: -42,  ty:  78, rot: 150, delay: 10, color: "#e7e5e4" },
-  { tx: -78,  ty:  35, rot: -90, delay: 30, color: "#d6d3d1" },
-  { tx: -95,  ty: -10, rot:  60, delay:  0, color: "#a8a29e" },
-  { tx: -82,  ty: -55, rot: -30, delay: 50, color: "#e7e5e4" },
-  { tx: -42,  ty: -85, rot: 200, delay: 20, color: "#d6d3d1" },
-  { tx:  28,  ty: -50, rot: -75, delay: 10, color: "#a8a29e" },
-  { tx: -28,  ty:  55, rot: 110, delay: 40, color: "#c8c5c2" },
-] as const;
 
 // ─── Modifier row (pill buttons, one selected at a time) ─────
 function ModifierRow({
@@ -602,7 +576,6 @@ function OrderContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const [sessionExpired, setSessionExpired] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
@@ -803,8 +776,6 @@ function OrderContent() {
       for (const item of finalItems) mergedCounts.set(item.name, (mergedCounts.get(item.name) ?? 0) + 1);
       const cartItems: CartItem[] = [...mergedCounts.entries()].map(([n, qty]) => ({ name: n, qty }));
       haptic([10, 40, 10]);
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 1300);
       setCart(new Map());
       setBuilderDrink("");
       setIsEditing(false);
@@ -1220,24 +1191,6 @@ function OrderContent() {
         <SuccessToast items={orderState.items} orderedAt={orderState.orderedAt} onDismiss={handleToastDismiss} />
       )}
 
-      {/* Confetti burst */}
-      {showConfetti && (
-        <div aria-hidden className="fixed inset-0 z-[150] flex items-center justify-center pointer-events-none overflow-hidden">
-          {CONFETTI_PIECES.map((p, i) => (
-            <div
-              key={i}
-              className="absolute w-1.5 h-1.5 rounded-[1px]"
-              style={{
-                backgroundColor: p.color,
-                "--tx": `${p.tx}px`,
-                "--ty": `${p.ty}px`,
-                "--rot": `${p.rot}deg`,
-                animation: `confettiFloat 1.1s ease-out ${p.delay}ms forwards`,
-              } as React.CSSProperties}
-            />
-          ))}
-        </div>
-      )}
     </main>
   );
 }
