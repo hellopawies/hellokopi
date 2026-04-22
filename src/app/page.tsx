@@ -101,7 +101,17 @@ export default function GreetingPage() {
   };
 
   return (
-    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
+    <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
+      {/* Ambient gradient drift */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden dark:opacity-0">
+        <div
+          className="absolute w-[130%] h-[130%] -top-[15%] -left-[15%]"
+          style={{
+            background: "radial-gradient(ellipse 55% 45% at 35% 42%, rgba(214,211,209,0.55) 0%, transparent 65%)",
+            animation: "gradientDrift 18s ease-in-out infinite",
+          }}
+        />
+      </div>
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
       >

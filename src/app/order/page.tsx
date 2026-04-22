@@ -26,23 +26,32 @@ type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; it
 type CrowdItem = { drink_name: string; order_count: number };
 
 // ─── Heart icon ───────────────────────────────────────────────
-function Heart({ filled }: { filled: boolean }) {
+function Heart({ filled, bursting }: { filled: boolean; bursting?: boolean }) {
   return (
-    <svg
-      className={`w-[15px] h-[15px] transition-colors duration-150 flex-shrink-0 ${
-        filled ? "text-rose-400" : "text-stone-250 group-hover/heart:text-stone-400"
-      }`}
-      fill={filled ? "currentColor" : "none"}
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={filled ? 0 : 1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-      />
-    </svg>
+    <span className="relative inline-flex items-center justify-center">
+      {bursting && (
+        <span
+          aria-hidden
+          className="absolute inset-[-3px] rounded-full bg-rose-200 dark:bg-rose-800/60 pointer-events-none"
+          style={{ animation: "heartBurstRing 0.5s ease-out forwards" }}
+        />
+      )}
+      <svg
+        className={`w-[15px] h-[15px] transition-colors duration-150 flex-shrink-0 ${
+          filled ? "text-rose-400" : "text-stone-250 group-hover/heart:text-stone-400"
+        }`}
+        fill={filled ? "currentColor" : "none"}
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={filled ? 0 : 1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -59,6 +68,7 @@ function DrinkCard({
   onToggleFavourite: () => void;
   count?: number;
 }) {
+  const [bursting, setBursting] = useState(false);
   return (
     <button
       type="button"
@@ -73,9 +83,13 @@ function DrinkCard({
       <span
         role="button"
         className="group/heart absolute top-2.5 right-2.5 p-1 touch-manipulation"
-        onClick={(e) => { e.stopPropagation(); onToggleFavourite(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!favourited) { setBursting(true); setTimeout(() => setBursting(false), 520); }
+          onToggleFavourite();
+        }}
       >
-        <Heart filled={favourited} />
+        <Heart filled={favourited} bursting={bursting} />
       </span>
 
       <p className={`text-sm font-sans font-medium leading-snug pr-5 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
@@ -107,6 +121,7 @@ function DrinkRow({
   favourited: boolean;
   onToggleFavourite: () => void;
 }) {
+  const [bursting, setBursting] = useState(false);
   return (
     <div className={`flex items-center mb-0.5 rounded-xl transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-stone-900 active:bg-stone-100 dark:active:bg-stone-900"}`}>
       <button
@@ -135,10 +150,13 @@ function DrinkRow({
       </button>
       <button
         type="button"
-        onClick={onToggleFavourite}
+        onClick={() => {
+          if (!favourited) { setBursting(true); setTimeout(() => setBursting(false), 520); }
+          onToggleFavourite();
+        }}
         className="group/heart px-3 py-3 touch-manipulation flex-shrink-0"
       >
-        <Heart filled={favourited} />
+        <Heart filled={favourited} bursting={bursting} />
       </button>
     </div>
   );
@@ -152,6 +170,34 @@ function TabLoading() {
     </p>
   );
 }
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-[#111] p-3.5 shadow-sm">
+      <div className="h-3 w-3/4 rounded-full skeleton-shimmer mb-2.5" />
+      <div className="h-2.5 w-1/2 rounded-full skeleton-shimmer mb-4" />
+      <div className="h-2 w-1/3 rounded-full skeleton-shimmer" />
+    </div>
+  );
+}
+
+// ─── Confetti pieces (warm stone palette) ─────────────────────
+const CONFETTI_PIECES = [
+  { tx:  0,   ty: -95, rot: 120, delay:  0, color: "#d6d3d1" },
+  { tx:  42,  ty: -85, rot: -60, delay: 30, color: "#a8a29e" },
+  { tx:  82,  ty: -55, rot: 180, delay:  0, color: "#e7e5e4" },
+  { tx:  95,  ty: -10, rot:  90, delay: 50, color: "#d6d3d1" },
+  { tx:  78,  ty:  35, rot:-120, delay: 20, color: "#a8a29e" },
+  { tx:  42,  ty:  78, rot:  45, delay:  0, color: "#c8c5c2" },
+  { tx:   0,  ty:  95, rot: -45, delay: 40, color: "#78716c" },
+  { tx: -42,  ty:  78, rot: 150, delay: 10, color: "#e7e5e4" },
+  { tx: -78,  ty:  35, rot: -90, delay: 30, color: "#d6d3d1" },
+  { tx: -95,  ty: -10, rot:  60, delay:  0, color: "#a8a29e" },
+  { tx: -82,  ty: -55, rot: -30, delay: 50, color: "#e7e5e4" },
+  { tx: -42,  ty: -85, rot: 200, delay: 20, color: "#d6d3d1" },
+  { tx:  28,  ty: -50, rot: -75, delay: 10, color: "#a8a29e" },
+  { tx: -28,  ty:  55, rot: 110, delay: 40, color: "#c8c5c2" },
+] as const;
 
 // ─── Modifier row (pill buttons, one selected at a time) ─────
 function ModifierRow({
@@ -255,6 +301,13 @@ function DrinkBuilder({
   }, [customDrinks, hiddenDrinks]);
 
   const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchSelect = useCallback((drinkName: string) => {
+    onToggleCart(drinkName);
+    setSearch("");
+    requestAnimationFrame(() => searchRef.current?.focus());
+  }, [onToggleCart]);
 
   const allDrinksFlat = useMemo(() => {
     const seen = new Set<string>();
@@ -290,6 +343,7 @@ function DrinkBuilder({
     <div className="flex flex-col gap-6">
       {/* Search */}
       <input
+        ref={searchRef}
         type="text"
         value={search}
         onChange={(e) => { setSearch(e.target.value); if (e.target.value) setBaseId(null); }}
@@ -309,7 +363,7 @@ function DrinkBuilder({
               description={drink.description}
               selected={cart.has(drink.name)}
               qty={cart.get(drink.name) ?? 0}
-              onSelect={() => onToggleCart(drink.name)}
+              onSelect={() => handleSearchSelect(drink.name)}
               favourited={userFavs.has(drink.name)}
               onToggleFavourite={() => onToggleFavourite(drink.name)}
             />
@@ -548,6 +602,7 @@ function OrderContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
@@ -581,64 +636,43 @@ function OrderContent() {
       setLoadingFavs(false);
       return;
     }
-    supabase.from("orders").select("items").then(({ data }) => {
-      if (data) {
-        const counts = new Map<string, number>();
-        for (const order of data) {
-          for (const item of order.items ?? []) {
-            if (item?.name) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          }
-        }
-        setCrowdData(
-          [...counts.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .map(([drink_name, order_count]) => ({ drink_name, order_count }))
-        );
-      }
-      setLoadingCrowd(false);
-    });
-    supabase
-      .from("user_favourites")
-      .select("drink_name")
-      .eq("person_name", name)
-      .then(({ data }) => {
-        if (data) setUserFavs(new Set(data.map((d: { drink_name: string }) => d.drink_name)));
-        setLoadingFavs(false);
-      });
+    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     Promise.all([
+      supabase.from("orders").select("items"),
+      supabase.from("user_favourites").select("drink_name").eq("person_name", name),
       supabase.from("custom_drinks").select("*"),
       supabase.from("hidden_drinks").select("drink_name"),
-    ]).then(([custom, hidden]) => {
+      supabase.from("orders").select("id, items, created_at").eq("person_name", name).order("created_at", { ascending: false }),
+    ]).then(([allOrders, favs, custom, hidden, userOrders]) => {
+      if (allOrders.data) {
+        const counts = new Map<string, number>();
+        for (const order of allOrders.data)
+          for (const item of order.items ?? [])
+            if (item?.name) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+        setCrowdData([...counts.entries()].sort((a, b) => b[1] - a[1]).map(([drink_name, order_count]) => ({ drink_name, order_count })));
+      }
+      if (favs.data) setUserFavs(new Set(favs.data.map((d: { drink_name: string }) => d.drink_name)));
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
-    });
-    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    // Fetch all of this user's orders — split into active session vs previous
-    supabase
-      .from("orders")
-      .select("id, items, created_at")
-      .eq("person_name", name)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (!data || data.length === 0) return;
+      if (userOrders.data && userOrders.data.length > 0) {
         type Row = { id: string; items: { name: string }[]; created_at: string };
-        const sessionOrders = (data as Row[]).filter((o) => o.created_at >= sessionWindowStart);
+        const sessionOrders = (userOrders.data as Row[]).filter((o) => o.created_at >= sessionWindowStart);
         if (sessionOrders.length > 0) {
-          // Aggregate all session orders into one active-order view
           const counts = new Map<string, number>();
           for (const order of sessionOrders)
             for (const item of order.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-          // Use the oldest session order as canonical — its id and created_at define the session
           const oldest = sessionOrders[sessionOrders.length - 1];
           setExistingOrder({ id: oldest.id, sessionStart: new Date(oldest.created_at), items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })) });
         } else {
-          // No active order — show most recent as "last order" suggestion
-          const prev = data[0] as Row;
+          const prev = userOrders.data[0] as Row;
           const counts = new Map<string, number>();
           for (const item of prev.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
           setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
         }
-      });
+      }
+      setLoadingCrowd(false);
+      setLoadingFavs(false);
+    });
   }, [name]);
 
   // Detect when the active session window expires
@@ -769,6 +803,8 @@ function OrderContent() {
       for (const item of finalItems) mergedCounts.set(item.name, (mergedCounts.get(item.name) ?? 0) + 1);
       const cartItems: CartItem[] = [...mergedCounts.entries()].map(([n, qty]) => ({ name: n, qty }));
       haptic([10, 40, 10]);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 1300);
       setCart(new Map());
       setBuilderDrink("");
       setIsEditing(false);
@@ -1024,7 +1060,11 @@ function OrderContent() {
           {/* TOP ORDERS */}
           {tab === "crowd" && (
             <>
-              {loadingCrowd && <TabLoading />}
+              {loadingCrowd && (
+                <div className="grid grid-cols-2 gap-2.5">
+                  {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+                </div>
+              )}
               {!loadingCrowd && crowdData.length === 0 && (
                 <div className="flex flex-col items-center gap-3 py-16">
                   <div className="w-px h-8 bg-stone-200 dark:bg-stone-700" />
@@ -1178,6 +1218,25 @@ function OrderContent() {
       {/* Success toast */}
       {typeof orderState === "object" && (
         <SuccessToast items={orderState.items} orderedAt={orderState.orderedAt} onDismiss={handleToastDismiss} />
+      )}
+
+      {/* Confetti burst */}
+      {showConfetti && (
+        <div aria-hidden className="fixed inset-0 z-[150] flex items-center justify-center pointer-events-none overflow-hidden">
+          {CONFETTI_PIECES.map((p, i) => (
+            <div
+              key={i}
+              className="absolute w-1.5 h-1.5 rounded-[1px]"
+              style={{
+                backgroundColor: p.color,
+                "--tx": `${p.tx}px`,
+                "--ty": `${p.ty}px`,
+                "--rot": `${p.rot}deg`,
+                animation: `confettiFloat 1.1s ease-out ${p.delay}ms forwards`,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
       )}
     </main>
   );
