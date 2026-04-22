@@ -12,53 +12,6 @@ function haptic(pattern: number | number[] = 8) {
   try { navigator.vibrate?.(pattern); } catch {}
 }
 
-function playPourSound() {
-  try {
-    type AudioCtxConstructor = typeof AudioContext;
-    const Ctx: AudioCtxConstructor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext: AudioCtxConstructor }).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const duration = 1.3;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-
-    // Pink noise — warmer than white, closer to liquid
-    let b0 = 0, b1 = 0, b2 = 0;
-    for (let i = 0; i < data.length; i++) {
-      const w = Math.random() * 2 - 1;
-      b0 = 0.99765 * b0 + w * 0.099046;
-      b1 = 0.96300 * b1 + w * 0.296516;
-      b2 = 0.57000 * b2 + w * 1.052691;
-      data[i] = (b0 + b1 + b2 + w * 0.1848) * 0.11;
-    }
-
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-
-    // Low-pass sweeps 700 → 220 Hz (cup filling up = pitch drops)
-    const lp = ctx.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.setValueAtTime(700, ctx.currentTime);
-    lp.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + duration);
-    lp.Q.value = 0.4;
-
-    // Soft gain envelope: fade in → hold → fade out
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.16, ctx.currentTime + 0.85);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
-
-    src.connect(lp);
-    lp.connect(gain);
-    gain.connect(ctx.destination);
-    src.start();
-    src.stop(ctx.currentTime + duration);
-    setTimeout(() => ctx.close(), (duration + 0.2) * 1000);
-  } catch {}
-}
 
 // Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
 const BASE_DRINKS_MAP = new Map(
@@ -745,7 +698,6 @@ function OrderContent() {
       for (const item of finalItems) mergedCounts.set(item.name, (mergedCounts.get(item.name) ?? 0) + 1);
       const cartItems: CartItem[] = [...mergedCounts.entries()].map(([n, qty]) => ({ name: n, qty }));
       haptic([10, 40, 10]);
-      playPourSound();
       setOrderState({ orderedAt, sessionStart, items: cartItems });
     } catch {
       setOrderState("error");
