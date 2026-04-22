@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo, useRef } from "react";
+import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -457,6 +457,77 @@ function ActiveCountdown({ sessionStart }: { sessionStart: Date }) {
   );
 }
 
+// ─── Success toast ────────────────────────────────────────────
+const SGT_ORDER = "Asia/Singapore";
+
+function SuccessToast({ items, orderedAt, onDismiss }: {
+  items: CartItem[];
+  orderedAt: Date;
+  onDismiss: () => void;
+}) {
+  const [width, setWidth] = useState(100);
+  const cbRef = useRef(onDismiss);
+  cbRef.current = onDismiss;
+
+  useEffect(() => {
+    const DURATION = 5000;
+    const start = performance.now();
+    let raf: number;
+    const tick = (now: number) => {
+      const pct = Math.max(0, 100 * (1 - (now - start) / DURATION));
+      setWidth(pct);
+      if (pct > 0) raf = requestAnimationFrame(tick);
+      else cbRef.current();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const time = orderedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT_ORDER });
+  const drinkLine = items.map(({ name, qty }) => qty > 1 ? `${name} ×${qty}` : name).join(" · ");
+
+  return (
+    <div className="fixed bottom-8 left-0 right-0 z-50 px-4 sm:px-6 pointer-events-none">
+      <div className="max-w-lg mx-auto pointer-events-auto" style={{ animation: "toastSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+        <div className="rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 overflow-hidden">
+          <div className="px-4 pt-3.5 pb-3 flex items-center gap-3">
+            {/* Check */}
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500">Order placed</p>
+                <span className="text-[10px] font-sans text-stone-300 dark:text-stone-600 tabular-nums">{time}</span>
+              </div>
+              <p className="text-sm font-sans font-medium text-stone-700 dark:text-stone-200 truncate">{drinkLine}</p>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Link
+                href="/orders"
+                className="text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-200 touch-manipulation active:scale-[0.95]"
+              >
+                View
+              </Link>
+              <button type="button" onClick={onDismiss} className="w-7 h-7 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 touch-manipulation transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {/* Draining progress bar */}
+          <div className="h-0.5 bg-stone-100 dark:bg-stone-800">
+            <div className="h-full bg-stone-300 dark:bg-stone-600" style={{ width: `${width}%`, transition: "none" }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main order content ───────────────────────────────────────
 function OrderContent() {
   const params = useSearchParams();
@@ -698,15 +769,38 @@ function OrderContent() {
       for (const item of finalItems) mergedCounts.set(item.name, (mergedCounts.get(item.name) ?? 0) + 1);
       const cartItems: CartItem[] = [...mergedCounts.entries()].map(([n, qty]) => ({ name: n, qty }));
       haptic([10, 40, 10]);
+      setCart(new Map());
+      setBuilderDrink("");
+      setIsEditing(false);
       setOrderState({ orderedAt, sessionStart, items: cartItems });
     } catch {
       setOrderState("error");
     }
   }
 
-  if (typeof orderState === "object") {
-    return <ConfirmedState name={name} orderedAt={orderState.orderedAt} sessionStart={orderState.sessionStart} items={orderState.items} />;
-  }
+  const handleToastDismiss = useCallback(async () => {
+    setOrderState("idle");
+    if (!isConfigured) return;
+    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from("orders")
+      .select("id, items, created_at")
+      .eq("person_name", name)
+      .gte("created_at", sessionWindowStart)
+      .order("created_at", { ascending: false });
+    if (data && data.length > 0) {
+      type Row = { id: string; items: { name: string }[]; created_at: string };
+      const counts = new Map<string, number>();
+      for (const order of data as Row[])
+        for (const item of order.items) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+      const oldest = (data as Row[])[data.length - 1];
+      setExistingOrder({
+        id: oldest.id,
+        sessionStart: new Date(oldest.created_at),
+        items: [...counts.entries()].map(([n, qty]) => ({ name: n, qty })),
+      });
+    }
+  }, [name]);
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
@@ -1080,67 +1174,11 @@ function OrderContent() {
           </div>
         </div>
       )}
-    </main>
-  );
-}
 
-// ─── Confirmation screen ──────────────────────────────────────
-const SGT = "Asia/Singapore";
-const CONFIRM_SESSION_MS = 15 * 60 * 1000;
-
-function ConfirmedState({ name, orderedAt, sessionStart, items }: {
-  name: string;
-  orderedAt: Date;
-  sessionStart: Date;
-  items: CartItem[];
-}) {
-  const sessionEnd = new Date(sessionStart.getTime() + CONFIRM_SESSION_MS);
-  const fmt = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
-
-  return (
-    <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
-      <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8">
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">hello kopi</span>
-          <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1" />
-        </div>
-        <div className="flex flex-col items-center gap-3 w-full">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500 font-sans">Order placed</p>
-          <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">{name}</h1>
-          <div className="flex flex-col items-center gap-1 mt-1">
-            {items.map(({ name: drinkName, qty }) => (
-              <p key={drinkName} className="font-serif text-xl font-light italic text-stone-500 dark:text-stone-400">
-                {drinkName}{qty > 1 ? ` ×${qty}` : ""}
-              </p>
-            ))}
-          </div>
-          <div className="w-full mt-3 pt-4 border-t border-stone-100 dark:border-stone-800 flex flex-col items-center gap-4">
-            <div className="flex flex-col items-center gap-0.5">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Ordered at</p>
-              <p className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-stone-800 dark:text-stone-100">
-                {fmt(orderedAt)}
-              </p>
-              <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-0.5">
-                {orderedAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: SGT })}
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans">Session window</p>
-              <p className="font-serif text-lg font-light tracking-wide text-stone-600 dark:text-stone-300">
-                {fmt(sessionStart)} – {fmt(sessionEnd)}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
-          <Link href="/orders" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-700 dark:hover:bg-stone-300 focus:outline-none">
-            View Orders
-          </Link>
-          <Link href="/" className="w-full sm:w-auto sm:px-8 py-3.5 rounded-xl text-center border border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:border-stone-600 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 focus:outline-none">
-            Back
-          </Link>
-        </div>
-      </div>
+      {/* Success toast */}
+      {typeof orderState === "object" && (
+        <SuccessToast items={orderState.items} orderedAt={orderState.orderedAt} onDismiss={handleToastDismiss} />
+      )}
     </main>
   );
 }
