@@ -68,28 +68,19 @@ function OTHSheet({
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-end justify-center"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={onClose}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/25 dark:bg-black/50 backdrop-blur-sm"
-        style={{ animation: "pageIn 0.2s ease-out both" }}
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm" />
 
-      {/* Sheet */}
+      {/* Bubble card — same style as GlossarySheet */}
       <div
-        className="relative w-full max-w-lg bg-[#FAFAF8] dark:bg-[#111] rounded-t-2xl z-10 overflow-hidden"
-        style={{ animation: "sheetSlideUp 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}
+        className="relative w-full max-w-sm mx-4 mb-8 rounded-2xl bg-[#FAFAF8]/98 dark:bg-[#111]/98 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/15 dark:shadow-black/60 z-10 overflow-hidden"
+        style={{ animation: "toastSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-0.5">
-          <div className="w-8 h-1 rounded-full bg-stone-300 dark:bg-stone-700" />
-        </div>
-
         {/* Header */}
-        <div className="px-5 pt-3 pb-4 border-b border-stone-100 dark:border-stone-800 flex items-start justify-between gap-3">
+        <div className="px-5 pt-5 pb-4 border-b border-stone-100 dark:border-stone-800 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
             <span className="mt-0.5 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide flex-shrink-0">
               {drink.code}
@@ -174,7 +165,7 @@ function OTHSheet({
         </div>
 
         {/* Footer CTA */}
-        <div className="px-5 pt-3 pb-8 border-t border-stone-100 dark:border-stone-800">
+        <div className="px-5 pt-3 pb-5 border-t border-stone-100 dark:border-stone-800">
           <button
             type="button"
             onClick={() => { haptic([5, 30, 5]); onAdd(composedName); }}
