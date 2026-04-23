@@ -81,20 +81,15 @@ function OTHSheet({
       >
         {/* Header */}
         <div className="px-5 pt-5 pb-4 border-b border-stone-100 dark:border-stone-800 flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <span className="mt-0.5 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide flex-shrink-0">
-              {drink.code}
-            </span>
-            <div className="min-w-0">
-              <h3 className="font-serif text-xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
-                {drink.name}
-              </h3>
-              {drink.icedOnly && (
-                <span className="text-[10px] uppercase tracking-[0.15em] font-sans text-blue-400 dark:text-blue-300">
-                  Iced only
-                </span>
-              )}
-            </div>
+          <div className="min-w-0">
+            <h3 className="font-serif text-xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
+              {drink.name}
+            </h3>
+            {drink.icedOnly && (
+              <span className="text-[10px] uppercase tracking-[0.15em] font-sans text-blue-400 dark:text-blue-300">
+                Iced only
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -218,9 +213,6 @@ export default function OldTeaHutTab({
                     onClick={() => setSheetDrink(drink)}
                     className="w-full flex items-center gap-3 py-3 border-b border-stone-100 dark:border-stone-800 text-left transition-colors duration-150 hover:bg-stone-50 dark:hover:bg-stone-900/50 active:bg-stone-100 dark:active:bg-stone-900 touch-manipulation -mx-1 px-1 rounded"
                   >
-                    <span className="flex-shrink-0 px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-[9px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide min-w-[34px] text-center">
-                      {drink.code}
-                    </span>
                     <span className="flex-1 min-w-0">
                       <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
                         {drink.name}
