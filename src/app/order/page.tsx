@@ -12,6 +12,10 @@ function haptic(pattern: number | number[] = 8) {
   try { navigator.vibrate?.(pattern); } catch {}
 }
 
+function getInitials(n: string): string {
+  return n.split(" ").map((w) => w[0] ?? "").join("").toUpperCase().slice(0, 2);
+}
+
 
 // Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
 const BASE_DRINKS_MAP = new Map(
@@ -576,6 +580,7 @@ function OrderContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [presentUsers, setPresentUsers] = useState<string[]>([]);
   const editingOrderId = useRef<string | null>(null);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
@@ -657,6 +662,25 @@ function OrderContent() {
     const t = setTimeout(() => setSessionExpired(true), remaining);
     return () => clearTimeout(t);
   }, [existingOrder]);
+
+  // Realtime presence — show who else is on the order page right now
+  useEffect(() => {
+    if (!isConfigured || name === "there") return;
+    const channel = supabase.channel("ordering-presence");
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState<{ name: string }>();
+        const others = (Object.values(state) as { name: string }[][])
+          .flat()
+          .map((p) => p.name)
+          .filter((n) => n !== name);
+        setPresentUsers([...new Set(others)]);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") await channel.track({ name });
+      });
+    return () => { channel.untrack(); supabase.removeChannel(channel); };
+  }, [name]);
 
   function toggleCart(drinkName: string) {
     setCart((prev) => {
@@ -838,6 +862,31 @@ function OrderContent() {
             <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
               What would you like today?
             </p>
+            {presentUsers.length > 0 && (
+              <div className="flex items-center gap-2 mt-2.5" style={{ animation: "pageIn 0.35s ease-out both" }}>
+                <div className="flex items-center -space-x-1">
+                  {presentUsers.slice(0, 5).map((user) => (
+                    <span
+                      key={user}
+                      title={user}
+                      className="relative w-[22px] h-[22px] rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[8px] font-sans font-semibold text-stone-500 dark:text-stone-400 shadow-sm"
+                      style={{ animation: "pageIn 0.3s ease-out both" }}
+                    >
+                      {getInitials(user)}
+                      <span className="absolute bottom-[-1px] right-[-1px] w-[6px] h-[6px] rounded-full bg-green-400 border border-white dark:border-black" />
+                    </span>
+                  ))}
+                  {presentUsers.length > 5 && (
+                    <span className="w-[22px] h-[22px] rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[8px] font-sans text-stone-400 dark:text-stone-500">
+                      +{presentUsers.length - 5}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.15em] font-sans text-stone-300 dark:text-stone-600">
+                  also ordering
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
