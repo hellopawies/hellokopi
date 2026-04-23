@@ -674,6 +674,8 @@ function OrderContent() {
   const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
+  const [rouletteName, setRouletteName] = useState("");
+  const [rouletteIdx, setRouletteIdx] = useState(0);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [presentUsers, setPresentUsers] = useState<string[]>([]);
   const editingOrderId = useRef<string | null>(null);
@@ -857,17 +859,29 @@ function OrderContent() {
   function handleSurprise() {
     if (allDrinksPool.length === 0 || surprise === "picking") return;
     setSurprise("picking");
-    setTimeout(() => {
-      const pick = allDrinksPool[Math.floor(Math.random() * allDrinksPool.length)];
-      setCart((prev) => {
-        const next = new Map(prev);
-        next.set(pick.name, (next.get(pick.name) ?? 0) + 1);
-        return next;
-      });
-      haptic([5, 30, 5, 30, 10]);
-      setSurprise(pick.name);
-      setTimeout(() => setSurprise("idle"), 2500);
-    }, 500);
+    // Staggered delays that ease out — gives a slot-machine deceleration feel
+    const DELAYS = [70, 90, 120, 160, 220, 300];
+    let elapsed = 0;
+    DELAYS.forEach((delay, i) => {
+      elapsed += delay;
+      const isFinal = i === DELAYS.length - 1;
+      const at = elapsed;
+      setTimeout(() => {
+        const pick = allDrinksPool[Math.floor(Math.random() * allDrinksPool.length)];
+        setRouletteName(pick.name);
+        setRouletteIdx((n) => n + 1);
+        if (isFinal) {
+          setCart((prev) => {
+            const next = new Map(prev);
+            next.set(pick.name, (next.get(pick.name) ?? 0) + 1);
+            return next;
+          });
+          haptic([5, 30, 5, 30, 10]);
+          setSurprise(pick.name);
+          setTimeout(() => setSurprise("idle"), 2500);
+        }
+      }, at);
+    });
   }
 
   async function cancelOrder() {
@@ -1181,7 +1195,13 @@ function OrderContent() {
                         <p className="text-sm font-sans text-stone-500 dark:text-stone-400">Surprise me</p>
                       )}
                       {surprise === "picking" && (
-                        <p className="text-sm font-sans text-stone-400 dark:text-stone-500 animate-pulse">Picking…</p>
+                        <p
+                          key={rouletteIdx}
+                          className="text-sm font-sans font-medium text-stone-700 dark:text-stone-200 truncate"
+                          style={{ animation: "pageIn 0.07s ease-out both" }}
+                        >
+                          {rouletteName || "…"}
+                        </p>
                       )}
                       {surprise !== "idle" && surprise !== "picking" && (
                         <>
