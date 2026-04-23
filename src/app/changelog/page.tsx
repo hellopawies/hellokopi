@@ -1,5 +1,17 @@
 const VERSIONS = [
   {
+    version: "v3.1.0",
+    date: "23 Apr 2026",
+    title: "Tea Hut polish",
+    changes: [
+      "Tea Hut categories now live behind All-Drinks-style pills — tap to expand, tap again to collapse",
+      "Drinks render as 2-column cards, each with a brown heart to save favourites",
+      "Replaced the tab header with a Search drinks… input that filters across every category",
+      "Customisation bubble matches the All Drinks floating bar (same width, opacity, shadow)",
+      "Removed the JS/HJS short codes from drink names",
+    ],
+  },
+  {
     version: "v3.0.0",
     date: "23 Apr 2026",
     title: "Old Tea Hut menu",
