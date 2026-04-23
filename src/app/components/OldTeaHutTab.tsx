@@ -264,8 +264,21 @@ export default function OldTeaHutTab({
         value={search}
         onChange={(e) => { setSearch(e.target.value); if (e.target.value) setSelectedCat(null); }}
         placeholder="Search drinks…"
-        className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 mb-5 tracking-wide transition-colors duration-200"
+        className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 mb-3 tracking-wide transition-colors duration-200"
       />
+
+      {/* Order direct link */}
+      <a
+        href="https://autopos.cloud/h5/qr?c=2DbtNuxweLMuE2mgLR8vWMJyBtoE4LrFE6QKymyrjLKpvfHYTVGrZAnpR6PKz1&h=1L5Clg&t=S"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-1.5 mb-5 text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-amber-800 dark:hover:text-amber-700 transition-colors duration-150 touch-manipulation py-2"
+      >
+        Order direct from Old Tea Hut
+        <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
 
       {searchResults ? (
         searchResults.length === 0 ? (
