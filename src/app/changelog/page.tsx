@@ -1,5 +1,17 @@
 const VERSIONS = [
   {
+    version: "v3.0.0",
+    date: "23 Apr 2026",
+    title: "Old Tea Hut menu",
+    changes: [
+      "New Tea Hut tab — full Old Tea Hut menu with 57 drinks across 6 categories",
+      "Tap any drink to open a customisation sheet: Intensity (Regular / Light / Extra Light / Strong / Extra Strong), Eva Milk level, and Add Ons",
+      "Live order preview updates as you pick options — shows exactly what goes into the cart",
+      "Cart count badge on each drink row so you can see what you've already added",
+      "Iced-only drinks are clearly labelled",
+    ],
+  },
+  {
     version: "v2.9.0",
     date: "23 Apr 2026",
     title: "Brewing loader",

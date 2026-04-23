@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from "rea
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import BrewingCup from "@/app/components/BrewingCup";
+import OldTeaHutTab from "@/app/components/OldTeaHutTab";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
@@ -118,7 +119,7 @@ const BASE_DRINKS_MAP = new Map(
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
-type Tab = "crowd" | "yours" | "all";
+type Tab = "crowd" | "yours" | "all" | "oth";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 type CrowdItem = { drink_name: string; order_count: number };
@@ -966,7 +967,8 @@ function OrderContent() {
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
     { id: "crowd", label: "Top Choice" },
-    { id: "all", label: "All Drinks" },
+    { id: "all",   label: "All Drinks" },
+    { id: "oth",   label: "Tea Hut" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
 
@@ -1029,7 +1031,7 @@ function OrderContent() {
                 className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
                   left: 4,
-                  width: "calc((100% - 8px) / 3)",
+                  width: "calc((100% - 8px) / 4)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
@@ -1276,6 +1278,14 @@ function OrderContent() {
                 onComposedNameChange={setBuilderDrink}
               />
             </div>
+          )}
+
+          {/* OLD TEA HUT */}
+          {tab === "oth" && (
+            <OldTeaHutTab
+              cart={cart}
+              onAddToCart={incrementCart}
+            />
           )}
 
 
