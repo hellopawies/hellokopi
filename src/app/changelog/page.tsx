@@ -1,5 +1,36 @@
 const VERSIONS = [
   {
+    version: "v2.9.0",
+    date: "23 Apr 2026",
+    title: "Brewing loader",
+    changes: [
+      "All loading states now show the same coffee cup brewing animation as the pull-to-refresh — no more plain \"Loading…\" text",
+    ],
+  },
+  {
+    version: "v2.8.0",
+    date: "23 Apr 2026",
+    title: "Breathing animations",
+    changes: [
+      "Active order card breathes — a soft border pulses in and out while the session window is open",
+      "Place Order button has a gentle ambient glow when idle",
+      "Tab content fades up each time you switch between My Picks, Top Orders, and All Drinks",
+    ],
+  },
+  {
+    version: "v2.7.0",
+    date: "23 Apr 2026",
+    title: "Motion & microinteractions",
+    changes: [
+      "Surprise Me button flashes through drinks with a slot-machine deceleration before landing on one",
+      "Cart count badge springs with a bounce when a drink is added",
+      "Header compresses as you scroll down — title shrinks, tagline hides to reclaim space",
+      "My Picks cards stagger in with a small delay between each on first load",
+      "Cart panel border briefly brightens when your total increases",
+      "Hawker glossary — underlined terms in drink descriptions open a bottom sheet with plain-English explanations",
+    ],
+  },
+  {
     version: "v2.6.0",
     date: "22 Apr 2026, 2:00 am",
     title: "Order session fixes",
