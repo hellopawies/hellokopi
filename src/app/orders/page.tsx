@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import BrewingCup from "@/app/components/BrewingCup";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import type { Order, DateGroup, Session } from "@/types/order";
@@ -212,11 +213,7 @@ export default function OrdersPage() {
       <div className="px-5 sm:px-8 pt-6 pb-16">
         <div className="max-w-lg mx-auto">
 
-          {loading && (
-            <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-20">
-              Loading…
-            </p>
-          )}
+          {loading && <BrewingCup />}
           {!loading && error && (
             <div className="flex flex-col items-center gap-4 py-20">
               <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">

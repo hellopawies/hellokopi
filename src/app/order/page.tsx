@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
+import BrewingCup from "@/app/components/BrewingCup";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
@@ -253,13 +254,8 @@ function DrinkRow({
   );
 }
 
-// ─── Inline loading placeholder ───────────────────────────────
 function TabLoading() {
-  return (
-    <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-16">
-      Loading…
-    </p>
-  );
+  return <BrewingCup className="py-16" />;
 }
 
 function SkeletonCard() {

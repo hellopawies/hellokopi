@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
+import BrewingCup from "@/app/components/BrewingCup";
 import { OTHERS_DRINKS } from "@/data/menu";
 import type { Order } from "@/types/order";
 
@@ -167,7 +168,7 @@ function OrdersTab() {
     }
   }
 
-  if (loading) return <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-20">Loading…</p>;
+  if (loading) return <BrewingCup />;
   if (error) return (
     <div className="flex flex-col items-center gap-4 py-20">
       <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">Could not load orders.</p>
@@ -312,7 +313,7 @@ function MenuTab() {
     }
   }
 
-  if (loading) return <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-20">Loading…</p>;
+  if (loading) return <BrewingCup />;
 
   return (
     <div className="flex flex-col gap-8 pb-8">
@@ -462,7 +463,7 @@ function MembersTab() {
     ]);
   }
 
-  if (loading) return <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-300 dark:text-stone-600 text-center py-20">Loading…</p>;
+  if (loading) return <BrewingCup />;
 
   return (
     <div className="flex flex-col gap-8 pb-8">
