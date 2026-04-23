@@ -226,7 +226,7 @@ export default function OldTeaHutTab({
 
       {/* Drinks for selected category */}
       {activeCategory && (
-        <div className="mt-6 flex flex-col gap-2.5">
+        <div className="mt-6 grid grid-cols-2 gap-2.5">
           {activeCategory.drinks.map((drink) => {
             const count = drinkCartCount(drink);
             const fav = userFavs.has(drink.name);
