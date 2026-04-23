@@ -70,7 +70,13 @@ export const DRINK_BASES: DrinkBase[] = [
   },
 ];
 
-export const OTHERS_DRINKS = [
+export interface OtherDrink {
+  name: string;
+  description: string;
+  href?: string; // when set, row is an external link (opens in new tab) instead of an orderable drink
+}
+
+export const OTHERS_DRINKS: OtherDrink[] = [
   { name: "Bandung Peng", description: "Iced rose syrup milk" },
   { name: "Michael Jackson", description: "Soya milk + black grass jelly" },
   { name: "Tiao He", description: "Chinese tea, teabag-style" },
@@ -79,4 +85,9 @@ export const OTHERS_DRINKS = [
   { name: "Soya Cincau", description: "Soya milk + grass jelly" },
   { name: "Lime Juice", description: "Fresh lime juice" },
   { name: "Sng Bao", description: "Frozen drink in plastic bag" },
+  {
+    name: "Tea Hut",
+    description: "View full tea hut menu",
+    href: "https://autopos.cloud/h5/qr?c=2DbtNuxweLMuE2mgLR8vWMJyBtoE4LrFE6QKymyrjLKpvfHYTVGrZAnpR6PKz1&h=1L5Clg&t=S",
+  },
 ];

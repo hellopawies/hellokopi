@@ -6,7 +6,7 @@ import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
 import { CATEGORIES } from "@/data/drinks";
-import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
+import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial, type OtherDrink } from "@/data/menu";
 
 // Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
 const BASE_DRINKS_MAP = new Map(
@@ -139,6 +139,30 @@ function DrinkRow({
   );
 }
 
+// ─── External link row (for non-orderable entries like Tea Hut) ─
+function DrinkLinkRow({ name, description, href }: { name: string; description: string; href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center mb-0.5 px-3 py-3 transition-colors duration-150 hover:bg-stone-50 dark:hover:bg-[#111] active:bg-stone-100 dark:active:bg-[#1a1a1a] touch-manipulation"
+    >
+      <div className="flex flex-col gap-0.5 min-w-0 mr-2 flex-1">
+        <span className="text-sm font-sans font-medium truncate text-stone-800 dark:text-stone-100">
+          {name}
+        </span>
+        <span className="text-[11px] font-sans truncate text-stone-400 dark:text-stone-500">
+          {description}
+        </span>
+      </div>
+      <svg className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500 flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+      </svg>
+    </a>
+  );
+}
+
 // ─── Inline loading placeholder ───────────────────────────────
 function TabLoading() {
   return (
@@ -234,10 +258,10 @@ function DrinkBuilder({
     return parts.join(" ");
   }, [base, milk, strength, sweetness, temp, special, allSpecials]);
 
-  const othersAll = useMemo(() => {
+  const othersAll = useMemo<OtherDrink[]>(() => {
     const custom = customDrinks
       .filter((cd) => cd.category_id === "others" && !hiddenDrinks.has(cd.name))
-      .map((cd) => ({ name: cd.name, description: cd.description }));
+      .map<OtherDrink>((cd) => ({ name: cd.name, description: cd.description }));
     return [
       ...OTHERS_DRINKS.filter((d) => !hiddenDrinks.has(d.name)),
       ...custom,
@@ -248,7 +272,7 @@ function DrinkBuilder({
 
   const allDrinksFlat = useMemo(() => {
     const seen = new Set<string>();
-    const out: { name: string; description: string }[] = [];
+    const out: { name: string; description: string; href?: string }[] = [];
     for (const cat of CATEGORIES) {
       for (const d of cat.drinks) {
         if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
@@ -293,16 +317,25 @@ function DrinkBuilder({
           {searchResults.length === 0 ? (
             <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">No results.</p>
           ) : searchResults.map((drink) => (
-            <DrinkRow
-              key={drink.name}
-              name={drink.name}
-              description={drink.description}
-              selected={cart.has(drink.name)}
-              qty={cart.get(drink.name) ?? 0}
-              onSelect={() => onToggleCart(drink.name)}
-              favourited={userFavs.has(drink.name)}
-              onToggleFavourite={() => onToggleFavourite(drink.name)}
-            />
+            drink.href ? (
+              <DrinkLinkRow
+                key={drink.name}
+                name={drink.name}
+                description={drink.description}
+                href={drink.href}
+              />
+            ) : (
+              <DrinkRow
+                key={drink.name}
+                name={drink.name}
+                description={drink.description}
+                selected={cart.has(drink.name)}
+                qty={cart.get(drink.name) ?? 0}
+                onSelect={() => onToggleCart(drink.name)}
+                favourited={userFavs.has(drink.name)}
+                onToggleFavourite={() => onToggleFavourite(drink.name)}
+              />
+            )
           ))}
         </div>
       ) : (
@@ -335,16 +368,25 @@ function DrinkBuilder({
           {othersAll.length === 0 ? (
             <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">Nothing here.</p>
           ) : othersAll.map((drink) => (
-            <DrinkRow
-              key={drink.name}
-              name={drink.name}
-              description={drink.description}
-              selected={cart.has(drink.name)}
-              qty={cart.get(drink.name) ?? 0}
-              onSelect={() => onToggleCart(drink.name)}
-              favourited={userFavs.has(drink.name)}
-              onToggleFavourite={() => onToggleFavourite(drink.name)}
-            />
+            drink.href ? (
+              <DrinkLinkRow
+                key={drink.name}
+                name={drink.name}
+                description={drink.description}
+                href={drink.href}
+              />
+            ) : (
+              <DrinkRow
+                key={drink.name}
+                name={drink.name}
+                description={drink.description}
+                selected={cart.has(drink.name)}
+                qty={cart.get(drink.name) ?? 0}
+                onSelect={() => onToggleCart(drink.name)}
+                favourited={userFavs.has(drink.name)}
+                onToggleFavourite={() => onToggleFavourite(drink.name)}
+              />
+            )
           ))}
         </div>
       )}
