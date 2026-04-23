@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -16,6 +17,98 @@ function getInitials(n: string): string {
   return n.split(" ").map((w) => w[0] ?? "").join("").toUpperCase().slice(0, 2);
 }
 
+
+const GLOSSARY: Record<string, string> = {
+  "Siew Dai": "Less sweet — reduced condensed milk or sugar.",
+  "Gah Dai": "Extra sweet — more condensed milk or sugar than usual.",
+  "Di Lo": "Extra strong, no water — the most concentrated drippings from the brew.",
+  "Pua Sio": "Lukewarm — not hot, not cold.",
+  "Gu You": "Butter kopi — a pat of butter added, giving a rich, silky texture.",
+  "Kopi": "Singaporean coffee made from Robusta beans roasted with butter and sugar.",
+  "Teh": "Tea — usually a strong Ceylon or local blend, served with milk.",
+  "Gao": "Strong or thick — extra-concentrated brew, about 1.5× strength.",
+  "Peng": "Iced — served cold over ice.",
+  "Tarik": "Pulled — frothed by pouring between cups at height to aerate.",
+  "Halia": "Ginger — brewed or blended with fresh ginger root.",
+  "Kosong": "Zero / none — no sugar or sweetener added at all.",
+  "Cham": "Mixed — half coffee, half tea.",
+  "Dinosaur": "Extra Milo powder heaped on top.",
+  "Godzilla": "Double Milo powder on top — even messier than Dinosaur.",
+};
+
+const GLOSSARY_TERMS = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
+
+function tokenize(text: string): { text: string; term?: string }[] {
+  const tokens: { text: string; term?: string }[] = [];
+  let remaining = text;
+  while (remaining.length > 0) {
+    let bestIdx = remaining.length;
+    let bestTerm = "";
+    for (const term of GLOSSARY_TERMS) {
+      const idx = remaining.toLowerCase().indexOf(term.toLowerCase());
+      if (idx !== -1 && idx < bestIdx) { bestIdx = idx; bestTerm = term; }
+    }
+    if (bestTerm) {
+      if (bestIdx > 0) tokens.push({ text: remaining.slice(0, bestIdx) });
+      tokens.push({ text: remaining.slice(bestIdx, bestIdx + bestTerm.length), term: bestTerm });
+      remaining = remaining.slice(bestIdx + bestTerm.length);
+    } else {
+      tokens.push({ text: remaining });
+      remaining = "";
+    }
+  }
+  return tokens;
+}
+
+function GlossarySheet({ term, onClose }: { term: string; onClose: () => void }) {
+  const def = GLOSSARY[term];
+  if (!def || typeof document === "undefined") return null;
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-sm mx-4 mb-8 sm:mb-0 rounded-2xl bg-[#FAFAF8]/98 dark:bg-[#111]/98 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/15 dark:shadow-black/60 px-5 py-5"
+        style={{ animation: "toastSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-[10px] uppercase tracking-[0.25em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-1">Glossary</p>
+        <p className="font-serif text-2xl font-light tracking-wide text-stone-800 dark:text-stone-100 mb-2">{term}</p>
+        <p className="text-sm font-sans font-light text-stone-500 dark:text-stone-400 leading-relaxed">{def}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-4 text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors touch-manipulation"
+        >
+          Got it
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function AnnotatedText({ text, selected }: { text: string; selected?: boolean }) {
+  const [activeTerm, setActiveTerm] = useState<string | null>(null);
+  const tokens = useMemo(() => tokenize(text), [text]);
+  return (
+    <>
+      {tokens.map((tok, i) =>
+        tok.term ? (
+          <span
+            key={i}
+            className={`border-b border-dotted cursor-pointer ${selected ? "border-stone-400 dark:border-stone-500" : "border-stone-300 dark:border-stone-600"}`}
+            onClick={(e) => { e.stopPropagation(); setActiveTerm(tok.term ?? null); }}
+          >
+            {tok.text}
+          </span>
+        ) : (
+          <span key={i}>{tok.text}</span>
+        )
+      )}
+      {activeTerm && <GlossarySheet term={activeTerm} onClose={() => setActiveTerm(null)} />}
+    </>
+  );
+}
 
 // Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
 const BASE_DRINKS_MAP = new Map(
@@ -53,7 +146,7 @@ function Heart({ filled, bursting }: { filled: boolean; bursting?: boolean }) {
 
 // ─── Drink card (grid view) ───────────────────────────────────
 function DrinkCard({
-  name, description, selected, qty, onSelect, favourited, onToggleFavourite, count,
+  name, description, selected, qty, onSelect, favourited, onToggleFavourite, count, enterDelay,
 }: {
   name: string;
   description?: string;
@@ -63,12 +156,14 @@ function DrinkCard({
   favourited: boolean;
   onToggleFavourite: () => void;
   count?: number;
+  enterDelay?: number;
 }) {
   const [bursting, setBursting] = useState(false);
   return (
     <button
       type="button"
       onClick={onSelect}
+      style={enterDelay !== undefined ? { animation: `pageIn 0.3s ease-out ${enterDelay}ms both` } : undefined}
       className={`
         relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
         ${selected
@@ -93,7 +188,7 @@ function DrinkCard({
       </p>
       {description && (
         <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-          {description}
+          <AnnotatedText text={description} selected={selected} />
         </p>
       )}
       {count !== undefined && (
@@ -582,6 +677,10 @@ function OrderContent() {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [presentUsers, setPresentUsers] = useState<string[]>([]);
   const editingOrderId = useRef<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [headerCompact, setHeaderCompact] = useState(false);
+  const prevTotalRef = useRef(0);
+  const [cartJustGrew, setCartJustGrew] = useState(false);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -681,6 +780,27 @@ function OrderContent() {
       });
     return () => { channel.untrack(); supabase.removeChannel(channel); };
   }, [name]);
+
+  // Header compression via IntersectionObserver on a sentinel at top of content
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => setHeaderCompact(!entry.isIntersecting), { threshold: 0 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Cart depth pulse — highlight border when cart grows
+  useEffect(() => {
+    const total = [...cart.values()].reduce((s, q) => s + q, 0);
+    if (total > prevTotalRef.current) {
+      setCartJustGrew(true);
+      const t = setTimeout(() => setCartJustGrew(false), 600);
+      prevTotalRef.current = total;
+      return () => clearTimeout(t);
+    }
+    prevTotalRef.current = total;
+  }, [cart]);
 
   function toggleCart(drinkName: string) {
     setCart((prev) => {
@@ -856,10 +976,10 @@ function OrderContent() {
               hello kopi
             </span>
             <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
-            <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
+            <h1 className={`font-serif font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight transition-all duration-300 ${headerCompact ? "text-lg sm:text-xl" : "text-3xl sm:text-4xl"}`}>
               Hello, {name}
             </h1>
-            <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
+            <p className={`font-serif font-light italic text-stone-400 dark:text-stone-500 overflow-hidden transition-all duration-300 ${headerCompact ? "opacity-0 max-h-0 mt-0" : "text-base sm:text-lg opacity-100 max-h-16 mt-1.5"}`}>
               What would you like today?
             </p>
             {presentUsers.length > 0 && (
@@ -927,6 +1047,7 @@ function OrderContent() {
       {/* Content */}
       <div className={`px-5 sm:px-8 pt-5 ${cart.size > 0 || builderDrink ? "pb-64" : "pb-12"}`}>
         <div className="max-w-lg mx-auto">
+          <div ref={sentinelRef} className="h-px" aria-hidden />
 
           {/* Active order card */}
           {existingOrder && !isEditing && (
@@ -1012,7 +1133,7 @@ function OrderContent() {
               )}
               {!loadingFavs && userFavs.size > 0 && (
                 <div className="grid grid-cols-2 gap-2.5 mb-5">
-                  {[...userFavs].map((drinkName) => {
+                  {[...userFavs].map((drinkName, index) => {
                     const drink = DRINKS_MAP.get(drinkName);
                     return (
                       <DrinkCard
@@ -1024,6 +1145,7 @@ function OrderContent() {
                         onSelect={() => toggleCart(drinkName)}
                         favourited={true}
                         onToggleFavourite={() => toggleFavourite(drinkName)}
+                        enterDelay={index * 35}
                       />
                     );
                   })}
@@ -1095,7 +1217,7 @@ function OrderContent() {
               )}
               {!loadingCrowd && crowdData.length > 0 && (
                 <div className="grid grid-cols-2 gap-2.5">
-                  {crowdData.map(({ drink_name, order_count }) => {
+                  {crowdData.map(({ drink_name, order_count }, index) => {
                     const drink = DRINKS_MAP.get(drink_name);
                     return (
                       <DrinkCard
@@ -1108,6 +1230,7 @@ function OrderContent() {
                         favourited={userFavs.has(drink_name)}
                         onToggleFavourite={() => toggleFavourite(drink_name)}
                         count={order_count}
+                        enterDelay={index * 35}
                       />
                     );
                   })}
@@ -1136,7 +1259,7 @@ function OrderContent() {
       {/* Fixed bottom bar — builder preview and/or cart */}
       {(cart.size > 0 || builderDrink) && (
         <div className="fixed bottom-8 left-0 right-0 z-40 px-4 sm:px-6">
-          <div className="max-w-lg mx-auto rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 pt-3.5 pb-4 flex flex-col gap-2.5">
+          <div className={`max-w-lg mx-auto rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 pt-3.5 pb-4 flex flex-col gap-2.5 border transition-colors duration-300 ${cartJustGrew ? "border-stone-400 dark:border-stone-400/80" : "border-stone-200 dark:border-stone-700/60"}`}>
 
             {/* Builder preview row */}
             {builderDrink && (
@@ -1221,9 +1344,13 @@ function OrderContent() {
             >
               {orderState === "loading"
                 ? (isEditing ? "Updating…" : "Placing…")
-                : isEditing
-                  ? `Update Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`
-                  : `Place Order — ${totalDrinks} ${totalDrinks === 1 ? "drink" : "drinks"}`}
+                : <>
+                    {isEditing ? "Update Order" : "Place Order"}{" — "}
+                    <span key={totalDrinks} style={{ display: "inline-block", animation: "countPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}>
+                      {totalDrinks} {totalDrinks === 1 ? "drink" : "drinks"}
+                    </span>
+                  </>
+              }
             </button>
             {orderState === "error" && (
               <p className="text-center text-xs text-red-400 font-sans">

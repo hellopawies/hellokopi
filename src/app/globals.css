@@ -110,6 +110,14 @@ main {
   100% { transform: scale(1); }
 }
 
+/* ── Cart count spring ── */
+@keyframes countPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  65%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
 /* ── Ambient gradient drift (greeting page) ── */
 @keyframes gradientDrift {
   0%   { transform: translate(0%, 0%); }
