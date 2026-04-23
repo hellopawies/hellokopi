@@ -1285,6 +1285,8 @@ function OrderContent() {
             <OldTeaHutTab
               cart={cart}
               onAddToCart={incrementCart}
+              userFavs={userFavs}
+              onToggleFavourite={toggleFavourite}
             />
           )}
 
