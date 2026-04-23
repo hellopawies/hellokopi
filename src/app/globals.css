@@ -118,6 +118,24 @@ main {
   100% { transform: scale(1); }
 }
 
+/* ── Active order card breathe ── */
+@keyframes cardBreathe {
+  0%, 100% { opacity: 0.15; }
+  50%       { opacity: 0.85; }
+}
+
+/* ── Place Order ambient pulse ── */
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(28, 25, 23, 0); }
+  50%       { box-shadow: 0 0 0 7px rgba(28, 25, 23, 0.07); }
+}
+
+/* ── Tab content fade-in ── */
+@keyframes tabIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Ambient gradient drift (greeting page) ── */
 @keyframes gradientDrift {
   0%   { transform: translate(0%, 0%); }

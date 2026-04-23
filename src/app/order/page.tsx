@@ -1065,11 +1065,18 @@ function OrderContent() {
 
           {/* Active order card */}
           {existingOrder && !isEditing && (
-            <div className={`mb-5 rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex flex-col gap-2 transition-colors duration-500 ${
-              sessionExpired
-                ? "border-amber-200 dark:border-amber-800/60"
-                : "border-stone-200 dark:border-stone-700/60"
-            }`}>
+            <div className="relative mb-5">
+              {!sessionExpired && (
+                <div
+                  className="absolute inset-0 rounded-2xl border border-stone-400 dark:border-stone-500 pointer-events-none"
+                  style={{ animation: "cardBreathe 4s ease-in-out infinite" }}
+                />
+              )}
+              <div className={`rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex flex-col gap-2 transition-colors duration-500 ${
+                sessionExpired
+                  ? "border-amber-200 dark:border-amber-800/60"
+                  : "border-stone-200 dark:border-stone-700/60"
+              }`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -1111,12 +1118,13 @@ function OrderContent() {
                   The order window has closed — the collector may have already left.
                 </p>
               )}
+              </div>
             </div>
           )}
 
           {/* MY PICKS */}
           {tab === "yours" && (
-            <>
+            <div style={{ animation: "tabIn 0.18s ease-out both" }}>
               {loadingFavs && <TabLoading />}
               {!loadingFavs && lastOrder && lastOrder.length > 0 && (
                 <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
@@ -1216,12 +1224,12 @@ function OrderContent() {
                   </button>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* TOP ORDERS */}
           {tab === "crowd" && (
-            <>
+            <div style={{ animation: "tabIn 0.18s ease-out both" }}>
               {loadingCrowd && (
                 <div className="grid grid-cols-2 gap-2.5">
                   {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -1256,20 +1264,22 @@ function OrderContent() {
                   })}
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* ALL DRINKS — builder */}
           {tab === "all" && (
-            <DrinkBuilder
-              cart={cart}
-              onToggleCart={toggleCart}
-              userFavs={userFavs}
-              onToggleFavourite={toggleFavourite}
-              customDrinks={customDrinks}
-              hiddenDrinks={hiddenDrinks}
-              onComposedNameChange={setBuilderDrink}
-            />
+            <div style={{ animation: "tabIn 0.18s ease-out both" }}>
+              <DrinkBuilder
+                cart={cart}
+                onToggleCart={toggleCart}
+                userFavs={userFavs}
+                onToggleFavourite={toggleFavourite}
+                customDrinks={customDrinks}
+                hiddenDrinks={hiddenDrinks}
+                onComposedNameChange={setBuilderDrink}
+              />
+            </div>
           )}
 
 
@@ -1349,11 +1359,15 @@ function OrderContent() {
                 </div>
               </div>
             ))}
+            <div
+              className="mt-1 rounded-xl"
+              style={orderState !== "loading" ? { animation: "btnPulse 2.5s ease-in-out infinite" } : undefined}
+            >
             <button
               onClick={placeOrder}
               disabled={orderState === "loading" || !isConfigured}
               className="
-                mt-1 w-full py-3 rounded-xl
+                w-full py-3 rounded-xl
                 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
                 text-[11px] uppercase tracking-[0.25em] font-sans font-medium
                 transition-all duration-200 touch-manipulation
@@ -1372,6 +1386,7 @@ function OrderContent() {
                   </>
               }
             </button>
+            </div>
             {orderState === "error" && (
               <p className="text-center text-xs text-red-400 font-sans">
                 Something went wrong. Please try again.
