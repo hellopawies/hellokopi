@@ -175,6 +175,16 @@ export default function OldTeaHutTab({
   onAddToCart: (name: string) => void;
 }) {
   const [sheetDrink, setSheetDrink] = useState<OTHDrink | null>(null);
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+
+  const activeCategory = OTH_CATEGORIES.find((c) => c.name === selectedCat) ?? null;
+
+  const pillCls = (active: boolean) =>
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+      active
+        ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+        : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
+    }`;
 
   function drinkCartCount(drink: OTHDrink): number {
     let total = 0;
@@ -196,48 +206,55 @@ export default function OldTeaHutTab({
         </span>
       </div>
 
-      {/* Categories */}
-      <div className="flex flex-col gap-7">
+      {/* Category pills */}
+      <div className="flex flex-wrap gap-2">
         {OTH_CATEGORIES.map((cat) => (
-          <div key={cat.name}>
-            <p className="text-[10px] uppercase tracking-[0.25em] font-sans font-semibold text-stone-400 dark:text-stone-500 mb-3">
-              {cat.name}
-            </p>
-            <div className="border-t border-stone-100 dark:border-stone-800">
-              {cat.drinks.map((drink) => {
-                const count = drinkCartCount(drink);
-                return (
-                  <button
-                    key={drink.code}
-                    type="button"
-                    onClick={() => setSheetDrink(drink)}
-                    className="w-full flex items-center gap-3 py-3 border-b border-stone-100 dark:border-stone-800 text-left transition-colors duration-150 hover:bg-stone-50 dark:hover:bg-stone-900/50 active:bg-stone-100 dark:active:bg-stone-900 touch-manipulation -mx-1 px-1 rounded"
-                  >
-                    <span className="flex-1 min-w-0">
-                      <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
-                        {drink.name}
-                      </span>
-                      {drink.icedOnly && (
-                        <span className="ml-1.5 text-[10px] uppercase tracking-[0.1em] font-sans text-blue-400 dark:text-blue-300">
-                          iced
-                        </span>
-                      )}
-                    </span>
-                    {count > 0 && (
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-sans font-medium flex items-center justify-center">
-                        {count}
-                      </span>
-                    )}
-                    <svg className="w-3 h-3 flex-shrink-0 text-stone-300 dark:text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <button
+            key={cat.name}
+            type="button"
+            onClick={() => setSelectedCat(selectedCat === cat.name ? null : cat.name)}
+            className={pillCls(selectedCat === cat.name)}
+          >
+            {cat.name}
+          </button>
         ))}
       </div>
+
+      {/* Drinks for selected category */}
+      {activeCategory && (
+        <div className="mt-6 border-t border-stone-100 dark:border-stone-800">
+          {activeCategory.drinks.map((drink) => {
+            const count = drinkCartCount(drink);
+            return (
+              <button
+                key={drink.code}
+                type="button"
+                onClick={() => setSheetDrink(drink)}
+                className="w-full flex items-center gap-3 py-3 border-b border-stone-100 dark:border-stone-800 text-left transition-colors duration-150 hover:bg-stone-50 dark:hover:bg-stone-900/50 active:bg-stone-100 dark:active:bg-stone-900 touch-manipulation -mx-1 px-1 rounded"
+              >
+                <span className="flex-1 min-w-0">
+                  <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
+                    {drink.name}
+                  </span>
+                  {drink.icedOnly && (
+                    <span className="ml-1.5 text-[10px] uppercase tracking-[0.1em] font-sans text-blue-400 dark:text-blue-300">
+                      iced
+                    </span>
+                  )}
+                </span>
+                {count > 0 && (
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-sans font-medium flex items-center justify-center">
+                    {count}
+                  </span>
+                )}
+                <svg className="w-3 h-3 flex-shrink-0 text-stone-300 dark:text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Customisation sheet */}
       {sheetDrink && (
