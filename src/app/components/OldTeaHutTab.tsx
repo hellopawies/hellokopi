@@ -67,15 +67,15 @@ function OTHSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center"
+      className="fixed inset-0 z-[200] flex items-end justify-center px-4 sm:px-6 pb-8"
       onClick={onClose}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm" />
 
-      {/* Bubble card — same style as GlossarySheet */}
+      {/* Bubble card — matches All Drinks floating bar */}
       <div
-        className="relative w-full max-w-sm mx-4 mb-8 rounded-2xl bg-[#FAFAF8]/98 dark:bg-[#111]/98 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/15 dark:shadow-black/60 z-10 overflow-hidden"
+        className="relative w-full max-w-lg rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 z-10 overflow-hidden"
         style={{ animation: "toastSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
         onClick={(e) => e.stopPropagation()}
       >
