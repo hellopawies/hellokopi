@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   OTH_CATEGORIES,
@@ -180,8 +180,21 @@ export default function OldTeaHutTab({
 }) {
   const [sheetDrink, setSheetDrink] = useState<OTHDrink | null>(null);
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const activeCategory = OTH_CATEGORIES.find((c) => c.name === selectedCat) ?? null;
+
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return null;
+    const results: OTHDrink[] = [];
+    for (const cat of OTH_CATEGORIES) {
+      for (const d of cat.drinks) {
+        if (d.name.toLowerCase().includes(q)) results.push(d);
+      }
+    }
+    return results;
+  }, [search]);
 
   const pillCls = (active: boolean) =>
     `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
@@ -198,80 +211,93 @@ export default function OldTeaHutTab({
     return total;
   }
 
+  function renderCard(drink: OTHDrink) {
+    const count = drinkCartCount(drink);
+    const fav = userFavs.has(drink.name);
+    return (
+      <button
+        key={drink.code}
+        type="button"
+        onClick={() => setSheetDrink(drink)}
+        className="relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"
+      >
+        <span
+          role="button"
+          className="group/heart absolute top-2.5 right-2.5 p-1 touch-manipulation"
+          onClick={(e) => { e.stopPropagation(); onToggleFavourite(drink.name); }}
+        >
+          <svg
+            className={`w-[15px] h-[15px] flex-shrink-0 transition-colors duration-150 ${
+              fav ? "text-amber-800 dark:text-amber-700" : "text-stone-250 group-hover/heart:text-stone-400"
+            }`}
+            fill={fav ? "currentColor" : "none"}
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={fav ? 0 : 1.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+        </span>
+
+        <p className="text-sm font-sans font-medium leading-snug pr-6 text-stone-800 dark:text-stone-100">
+          {drink.name}
+          {drink.icedOnly && (
+            <span className="ml-1.5 text-[10px] uppercase tracking-[0.1em] font-sans text-blue-400 dark:text-blue-300">
+              iced
+            </span>
+          )}
+        </p>
+        {count > 0 && (
+          <p className="text-[10px] font-sans mt-1.5 font-medium tabular-nums text-stone-400 dark:text-stone-500">
+            {count} in cart
+          </p>
+        )}
+      </button>
+    );
+  }
+
   return (
     <div style={{ animation: "tabIn 0.18s ease-out both" }}>
-      {/* Header note */}
-      <div className="mb-5 pb-4 border-b border-stone-100 dark:border-stone-800 flex items-baseline gap-2.5">
-        <span className="text-[11px] uppercase tracking-[0.25em] font-sans font-semibold text-stone-800 dark:text-stone-100">
-          Old Tea Hut
-        </span>
-        <span className="font-serif text-sm font-light italic text-stone-400 dark:text-stone-500">
-          — tap any drink to customise.
-        </span>
-      </div>
+      {/* Search */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => { setSearch(e.target.value); if (e.target.value) setSelectedCat(null); }}
+        placeholder="Search drinks…"
+        className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 mb-5 tracking-wide transition-colors duration-200"
+      />
 
-      {/* Category pills */}
-      <div className="flex flex-wrap gap-2">
-        {OTH_CATEGORIES.map((cat) => (
-          <button
-            key={cat.name}
-            type="button"
-            onClick={() => setSelectedCat(selectedCat === cat.name ? null : cat.name)}
-            className={pillCls(selectedCat === cat.name)}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Drinks for selected category */}
-      {activeCategory && (
-        <div className="mt-6 grid grid-cols-2 gap-2.5">
-          {activeCategory.drinks.map((drink) => {
-            const count = drinkCartCount(drink);
-            const fav = userFavs.has(drink.name);
-            return (
+      {searchResults ? (
+        searchResults.length === 0 ? (
+          <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">No results.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5">
+            {searchResults.map(renderCard)}
+          </div>
+        )
+      ) : (
+        <>
+          {/* Category pills */}
+          <div className="flex flex-wrap gap-2">
+            {OTH_CATEGORIES.map((cat) => (
               <button
-                key={drink.code}
+                key={cat.name}
                 type="button"
-                onClick={() => setSheetDrink(drink)}
-                className="relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"
+                onClick={() => setSelectedCat(selectedCat === cat.name ? null : cat.name)}
+                className={pillCls(selectedCat === cat.name)}
               >
-                <span
-                  role="button"
-                  className="group/heart absolute top-2.5 right-2.5 p-1 touch-manipulation"
-                  onClick={(e) => { e.stopPropagation(); onToggleFavourite(drink.name); }}
-                >
-                  <svg
-                    className={`w-[15px] h-[15px] flex-shrink-0 transition-colors duration-150 ${
-                      fav ? "text-amber-800 dark:text-amber-700" : "text-stone-250 group-hover/heart:text-stone-400"
-                    }`}
-                    fill={fav ? "currentColor" : "none"}
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={fav ? 0 : 1.5}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
-                </span>
-
-                <p className="text-sm font-sans font-medium leading-snug pr-6 text-stone-800 dark:text-stone-100">
-                  {drink.name}
-                  {drink.icedOnly && (
-                    <span className="ml-1.5 text-[10px] uppercase tracking-[0.1em] font-sans text-blue-400 dark:text-blue-300">
-                      iced
-                    </span>
-                  )}
-                </p>
-                {count > 0 && (
-                  <p className="text-[10px] font-sans mt-1.5 font-medium tabular-nums text-stone-400 dark:text-stone-500">
-                    {count} in cart
-                  </p>
-                )}
+                {cat.name}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+
+          {/* Drinks for selected category */}
+          {activeCategory && (
+            <div className="mt-6 grid grid-cols-2 gap-2.5">
+              {activeCategory.drinks.map(renderCard)}
+            </div>
+          )}
+        </>
       )}
 
       {/* Customisation sheet */}
