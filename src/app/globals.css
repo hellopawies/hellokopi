@@ -136,6 +136,10 @@ main {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Hide scrollbar (pill strips) ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* ── Bottom sheet slide-up ── */
 @keyframes sheetSlideUp {
   from { transform: translateY(100%); }

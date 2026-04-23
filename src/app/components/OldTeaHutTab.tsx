@@ -107,71 +107,62 @@ function OTHSheet({
           </button>
         </div>
 
-        {/* Options */}
-        <div className="px-5 py-4 max-h-[55vh] overflow-y-auto flex flex-col gap-5">
-
-          {/* Intensity */}
-          {intensityOpts && (
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2.5">Intensity</p>
-              <div className="flex flex-wrap gap-2">
-                {intensityOpts.map((opt) => (
-                  <button key={opt} type="button" onClick={() => setIntensity(opt)} className={PILL(intensity === opt)}>
-                    {opt}
-                  </button>
-                ))}
+        {/* Options — single-row scrollable strips per section */}
+        {hasOptions && (
+          <div className="px-5 pt-3 pb-4 flex flex-col gap-3.5">
+            {intensityOpts && (
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Intensity</p>
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                  {intensityOpts.map((opt) => (
+                    <button key={opt} type="button" onClick={() => setIntensity(opt)} className={PILL(intensity === opt) + " flex-shrink-0"}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Eva Milk */}
-          {evaMilkOpts && (
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2.5">Eva Milk</p>
-              <div className="flex flex-wrap gap-2">
-                {evaMilkOpts.map((opt) => (
-                  <button key={opt} type="button" onClick={() => setEvaMilk(opt)} className={PILL(evaMilk === opt)}>
-                    {opt}
-                  </button>
-                ))}
+            )}
+            {evaMilkOpts && (
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Eva Milk</p>
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                  {evaMilkOpts.map((opt) => (
+                    <button key={opt} type="button" onClick={() => setEvaMilk(opt)} className={PILL(evaMilk === opt) + " flex-shrink-0"}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Add Ons */}
-          {drink.addOns.length > 0 && (
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2.5">Add Ons</p>
-              <div className="flex flex-wrap gap-2">
-                {drink.addOns.map((a) => (
-                  <button key={a} type="button" onClick={() => toggleAddOn(a)} className={PILL(addOns.has(a))}>
-                    +{ADD_ON_LABELS[a]}
-                  </button>
-                ))}
+            )}
+            {drink.addOns.length > 0 && (
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Add Ons</p>
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                  {drink.addOns.map((a) => (
+                    <button key={a} type="button" onClick={() => toggleAddOn(a)} className={PILL(addOns.has(a)) + " flex-shrink-0"}>
+                      +{ADD_ON_LABELS[a]}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {/* Live preview */}
-          {hasOptions && (
-            <div className="bg-stone-50 dark:bg-stone-900 rounded-xl px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-1">Your order</p>
-              <p className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">{composedName}</p>
-              {cartQty > 0 && (
-                <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-1">{cartQty} already in cart</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer CTA */}
-        <div className="px-5 pt-3 pb-5 border-t border-stone-100 dark:border-stone-800">
+        {/* CTA — composed name lives here */}
+        <div className="px-5 pt-0 pb-5 border-t border-stone-100 dark:border-stone-800 mt-1">
+          <div className="flex items-baseline gap-2 py-3 mb-1">
+            <p className="text-[11px] font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug flex-1 min-w-0 truncate">{composedName}</p>
+            {cartQty > 0 && (
+              <span className="text-[11px] font-sans text-stone-400 dark:text-stone-500 flex-shrink-0">{cartQty} in cart</span>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => { haptic([5, 30, 5]); onAdd(composedName); }}
-            className="w-full py-3.5 rounded-xl bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation active:scale-[0.98] hover:bg-stone-700 dark:hover:bg-white shadow-sm"
+            className="w-full py-3 rounded-xl bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation active:scale-[0.98] hover:bg-stone-700 dark:hover:bg-white shadow-sm"
           >
-            {cartQty > 0 ? `Add Another · ${cartQty} in cart` : "Add to Order"}
+            {cartQty > 0 ? "Add Another" : "Add to Order"}
           </button>
         </div>
       </div>
