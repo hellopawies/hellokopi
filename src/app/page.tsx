@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { VERSIONS } from "./changelog/page";
 import { supabase, isConfigured } from "@/lib/supabase";
 
 const COLLEAGUES_FALLBACK = [
@@ -305,7 +306,7 @@ export default function GreetingPage() {
           href="/changelog"
           className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
         >
-          v3.0.0
+          {VERSIONS[0].version}
         </Link>
       </div>
 

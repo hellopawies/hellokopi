@@ -1,4 +1,4 @@
-const VERSIONS = [
+export const VERSIONS = [
   {
     version: "v3.2.2",
     date: "24 Apr 2026",
