@@ -55,13 +55,15 @@ export function composeOTHName(
   intensity: string,
   evaMilk: string,
   addOns: OTHAddOn[],
+  temp: string = "Hot",
 ): string {
+  const baseName = (!drink.icedOnly && temp === "Iced") ? `Iced ${drink.name}` : drink.name;
   const parts: string[] = [];
   if (intensity !== "Regular") parts.push(intensity);
   if (evaMilk !== "Regular") parts.push(EVA_MILK_DISPLAY[evaMilk] ?? evaMilk);
   for (const a of addOns) parts.push("+" + ADD_ON_LABELS[a]);
-  if (parts.length === 0) return drink.name;
-  return `${drink.name} (${parts.join(" · ")})`;
+  if (parts.length === 0) return baseName;
+  return `${baseName} (${parts.join(" · ")})`;
 }
 
 export const OTH_CATEGORIES: OTHCategory[] = [

@@ -27,24 +27,27 @@ function OTHExpandPanel({
   onAdd: (name: string) => void;
   onClose: () => void;
 }) {
+  const [temp, setTemp]           = useState("Hot");
   const [intensity, setIntensity] = useState("Regular");
   const [evaMilk, setEvaMilk]     = useState("Regular");
   const [addOns, setAddOns]       = useState<Set<OTHAddOn>>(new Set());
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setTemp("Hot");
     setIntensity("Regular");
     setEvaMilk("Regular");
     setAddOns(new Set());
     ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [drink.code]);
 
-  const composedName = composeOTHName(drink, intensity, evaMilk, [...addOns]);
+  const composedName = composeOTHName(drink, intensity, evaMilk, [...addOns], temp);
   const cartQty      = cart.get(composedName) ?? 0;
 
+  const showTemp      = !drink.icedOnly;
   const intensityOpts = drink.intensity ? INTENSITY_OPTIONS[drink.intensity] : null;
   const evaMilkOpts   = drink.evaMilk   ? EVA_MILK_OPTIONS[drink.evaMilk]   : null;
-  const hasOptions    = !!(intensityOpts || evaMilkOpts || drink.addOns.length > 0);
+  const hasOptions    = !!(showTemp || intensityOpts || evaMilkOpts || drink.addOns.length > 0);
 
   function toggleAddOn(a: OTHAddOn) {
     setAddOns(prev => {
@@ -94,6 +97,15 @@ function OTHExpandPanel({
       {/* Options */}
       {hasOptions && (
         <div className="px-4 pt-3 pb-4 flex flex-col gap-3.5">
+          {showTemp && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Temperature</p>
+              <div className="flex gap-1.5">
+                <button type="button" onClick={() => setTemp("Hot")} className={PILL(temp === "Hot")}>Hot</button>
+                <button type="button" onClick={() => setTemp("Iced")} className={PILL(temp === "Iced")}>Iced</button>
+              </div>
+            </div>
+          )}
           {intensityOpts && (
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Intensity</p>
