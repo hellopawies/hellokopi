@@ -1,5 +1,15 @@
 export const VERSIONS = [
   {
+    version: "v3.3.1",
+    date: "24 Apr 2026",
+    title: "Back to basics",
+    changes: [
+      "Cancel on an active order is instant again — no 5-second undo toast in the way",
+      "All Drinks tab opens directly on the drink-builder again (Kopi / Teh / Milo… base pills first)",
+      "Everything else from v3.3.0 stays — day-aware greeting, bigger taps, friendlier copy, focus rings, the lot",
+    ],
+  },
+  {
     version: "v3.3.0",
     date: "24 Apr 2026",
     title: "Humanisation pass",
