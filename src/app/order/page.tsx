@@ -329,8 +329,6 @@ function DrinkBuilder({
   onComposedNameChange: (name: string) => void;
 }) {
   const [baseId, setBaseId] = useState<string | null>(null);
-  // Default view is a flat browse list; user opts in to the builder via "Build custom →".
-  const [buildMode, setBuildMode] = useState(false);
   const [milk, setMilk] = useState("");
   const [strength, setStrength] = useState("");
   const [sweetness, setSweetness] = useState("");
@@ -449,49 +447,8 @@ function DrinkBuilder({
             />
           ))}
         </div>
-      ) : !buildMode ? (
-      <>
-      {/* Default: flat browse view — lists every drink in one scrollable column */}
-      <div className="flex items-center justify-between -mb-3">
-        <p className="text-[10px] uppercase tracking-[0.25em] font-sans font-medium text-stone-400 dark:text-stone-500">
-          All drinks
-        </p>
-        <button
-          type="button"
-          onClick={() => { setBuildMode(true); setBaseId(null); setSearch(""); }}
-          className="text-[11px] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors touch-manipulation tracking-wide"
-        >
-          Build custom →
-        </button>
-      </div>
-      <div className="border-t border-stone-100 dark:border-stone-800 -mt-2">
-        {allDrinksFlat.length === 0 ? (
-          <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">Nothing here yet.</p>
-        ) : allDrinksFlat.map((drink) => (
-          <DrinkRow
-            key={drink.name}
-            name={drink.name}
-            description={drink.description}
-            selected={cart.has(drink.name)}
-            qty={cart.get(drink.name) ?? 0}
-            onSelect={() => onToggleCart(drink.name)}
-            favourited={userFavs.has(drink.name)}
-            onToggleFavourite={() => onToggleFavourite(drink.name)}
-          />
-        ))}
-      </div>
-      </>
       ) : (
       <>
-
-      {/* Back to browse */}
-      <button
-        type="button"
-        onClick={() => { setBuildMode(false); setBaseId(null); }}
-        className="text-[11px] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors touch-manipulation tracking-wide self-start"
-      >
-        ← Back to all drinks
-      </button>
 
       {/* Base selector */}
       <div className="flex flex-wrap gap-2">
@@ -718,9 +675,6 @@ function OrderContent() {
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
   const [builderDrink, setBuilderDrink] = useState("");
   const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
-  // Holds an order the user just cancelled; the actual Supabase delete is deferred ~5s so they can Undo.
-  const [pendingCancel, setPendingCancel] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
-  const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const [rouletteName, setRouletteName] = useState("");
@@ -939,40 +893,13 @@ function OrderContent() {
     });
   }
 
-  function cancelOrder() {
+  async function cancelOrder() {
     if (!existingOrder) return;
     haptic([8, 60, 8]);
-    // Optimistically hide the card and stash the order so Undo can restore it.
-    // The actual Supabase delete fires after the undo window expires.
-    const snapshot = existingOrder;
-    setPendingCancel(snapshot);
+    const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
+    await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
     setExistingOrder(null);
-    if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-    cancelTimerRef.current = setTimeout(async () => {
-      const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
-      await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
-      setPendingCancel(null);
-      cancelTimerRef.current = null;
-    }, 5000);
   }
-
-  function undoCancel() {
-    if (!pendingCancel) return;
-    if (cancelTimerRef.current) { clearTimeout(cancelTimerRef.current); cancelTimerRef.current = null; }
-    setExistingOrder(pendingCancel);
-    setPendingCancel(null);
-  }
-
-  // If the user navigates away or unmounts during the undo window, run the delete now so we don't leak orphan rows.
-  useEffect(() => {
-    return () => {
-      if (cancelTimerRef.current) {
-        clearTimeout(cancelTimerRef.current);
-        const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
-        supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
-      }
-    };
-  }, [name]);
 
   async function placeOrder() {
     if (cart.size === 0) return;
@@ -1189,25 +1116,6 @@ function OrderContent() {
                 </div>
               </div>
               </div>
-            </div>
-          )}
-
-          {/* Undo-cancel toast — visible during the 5s deferred-delete window */}
-          {pendingCancel && (
-            <div
-              className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-stone-200 dark:border-stone-700/60 bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl px-4 py-3"
-              style={{ animation: "toastSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
-            >
-              <p className="text-sm font-sans text-stone-600 dark:text-stone-300">
-                Order cancelled.
-              </p>
-              <button
-                type="button"
-                onClick={undoCancel}
-                className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-600 dark:text-stone-200 border border-stone-300 dark:border-stone-600 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:border-stone-400 transition-all duration-200 touch-manipulation active:scale-[0.95]"
-              >
-                Undo
-              </button>
             </div>
           )}
 
