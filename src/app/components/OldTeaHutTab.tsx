@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
+import { Fragment, useState, useEffect, useMemo, useRef } from "react";
 import {
   OTH_CATEGORIES,
   ADD_ON_LABELS,
@@ -16,8 +15,8 @@ function haptic(pattern: number | number[] = 8) {
   try { navigator.vibrate?.(pattern); } catch {}
 }
 
-// ─── Customisation sheet ──────────────────────────────────────
-function OTHSheet({
+// ─── Inline customisation panel (expands in-grid under the tapped card) ───
+function OTHExpandPanel({
   drink,
   cart,
   onAdd,
@@ -31,14 +30,13 @@ function OTHSheet({
   const [intensity, setIntensity] = useState("Regular");
   const [evaMilk, setEvaMilk]     = useState("Regular");
   const [addOns, setAddOns]       = useState<Set<OTHAddOn>>(new Set());
-  const [mounted, setMounted]     = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIntensity("Regular");
     setEvaMilk("Regular");
     setAddOns(new Set());
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [drink.code]);
 
   const composedName = composeOTHName(drink, intensity, evaMilk, [...addOns]);
@@ -56,8 +54,6 @@ function OTHSheet({
     });
   }
 
-  if (!mounted) return null;
-
   const PILL = (active: boolean) =>
     `px-3 py-1.5 rounded-full text-[11px] font-sans font-medium tracking-wide transition-all duration-150 touch-manipulation border ${
       active
@@ -65,104 +61,95 @@ function OTHSheet({
         : "bg-transparent text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"
     }`;
 
-  return createPortal(
+  return (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center px-4 sm:px-6 pb-8"
-      onClick={onClose}
+      ref={ref}
+      className="rounded-2xl bg-[#FAFAF8] dark:bg-[#0b0b0b] border border-stone-200 dark:border-stone-700/60 shadow-sm overflow-hidden"
+      style={{ animation: "tabIn 0.18s ease-out both" }}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm" />
-
-      {/* Bubble card — matches All Drinks floating bar */}
-      <div
-        className="relative w-full max-w-lg rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 z-10 overflow-hidden"
-        style={{ animation: "toastSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="px-5 pt-5 pb-4 border-b border-stone-100 dark:border-stone-800 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="font-serif text-xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
-              {drink.name}
-            </h3>
-            {drink.icedOnly && (
-              <span className="text-[10px] uppercase tracking-[0.15em] font-sans text-blue-400 dark:text-blue-300">
-                Iced only
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+      {/* Header */}
+      <div className="px-4 pt-3 pb-3 border-b border-stone-100 dark:border-stone-800 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
+            {drink.name}
+          </h3>
+          {drink.icedOnly && (
+            <span className="text-[10px] uppercase tracking-[0.15em] font-sans text-blue-400 dark:text-blue-300">
+              Iced only
+            </span>
+          )}
         </div>
-
-        {/* Options — single-row scrollable strips per section */}
-        {hasOptions && (
-          <div className="px-5 pt-3 pb-4 flex flex-col gap-3.5">
-            {intensityOpts && (
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Intensity</p>
-                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                  {intensityOpts.map((opt) => (
-                    <button key={opt} type="button" onClick={() => setIntensity(opt)} className={PILL(intensity === opt) + " flex-shrink-0"}>
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {evaMilkOpts && (
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Eva Milk</p>
-                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                  {evaMilkOpts.map((opt) => (
-                    <button key={opt} type="button" onClick={() => setEvaMilk(opt)} className={PILL(evaMilk === opt) + " flex-shrink-0"}>
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {drink.addOns.length > 0 && (
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Add Ons</p>
-                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                  {drink.addOns.map((a) => (
-                    <button key={a} type="button" onClick={() => toggleAddOn(a)} className={PILL(addOns.has(a)) + " flex-shrink-0"}>
-                      +{ADD_ON_LABELS[a]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* CTA — composed name lives here */}
-        <div className="px-5 pt-0 pb-5 border-t border-stone-100 dark:border-stone-800 mt-1">
-          <div className="flex items-baseline gap-2 py-3 mb-1">
-            <p className="text-[11px] font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug flex-1 min-w-0 truncate">{composedName}</p>
-            {cartQty > 0 && (
-              <span className="text-[11px] font-sans text-stone-400 dark:text-stone-500 flex-shrink-0">{cartQty} in cart</span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => { haptic([5, 30, 5]); onAdd(composedName); }}
-            className="w-full py-3 rounded-xl bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation active:scale-[0.98] hover:bg-stone-700 dark:hover:bg-white shadow-sm"
-          >
-            {cartQty > 0 ? "Add Another" : "Add to Order"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-    </div>,
-    document.body,
+
+      {/* Options */}
+      {hasOptions && (
+        <div className="px-4 pt-3 pb-4 flex flex-col gap-3.5">
+          {intensityOpts && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Intensity</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                {intensityOpts.map((opt) => (
+                  <button key={opt} type="button" onClick={() => setIntensity(opt)} className={PILL(intensity === opt) + " flex-shrink-0"}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {evaMilkOpts && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Eva Milk</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                {evaMilkOpts.map((opt) => (
+                  <button key={opt} type="button" onClick={() => setEvaMilk(opt)} className={PILL(evaMilk === opt) + " flex-shrink-0"}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {drink.addOns.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2">Add Ons</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                {drink.addOns.map((a) => (
+                  <button key={a} type="button" onClick={() => toggleAddOn(a)} className={PILL(addOns.has(a)) + " flex-shrink-0"}>
+                    +{ADD_ON_LABELS[a]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CTA — composed name lives here */}
+      <div className={`px-4 pb-4 ${hasOptions ? "border-t border-stone-100 dark:border-stone-800 pt-0 mt-1" : "pt-3"}`}>
+        <div className="flex items-baseline gap-2 py-3 mb-1">
+          <p className="text-[11px] font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug flex-1 min-w-0 truncate">{composedName}</p>
+          {cartQty > 0 && (
+            <span className="text-[11px] font-sans text-stone-400 dark:text-stone-500 flex-shrink-0">{cartQty} in cart</span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => { haptic([5, 30, 5]); onAdd(composedName); }}
+          className="w-full py-3 rounded-xl bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation active:scale-[0.98] hover:bg-stone-700 dark:hover:bg-white shadow-sm"
+        >
+          {cartQty > 0 ? "Add Another" : "Add to Order"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -178,9 +165,13 @@ export default function OldTeaHutTab({
   userFavs: Set<string>;
   onToggleFavourite: (name: string) => void;
 }) {
-  const [sheetDrink, setSheetDrink] = useState<OTHDrink | null>(null);
+  const [selectedDrink, setSelectedDrink] = useState<OTHDrink | null>(null);
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  function toggleDrink(drink: OTHDrink) {
+    setSelectedDrink((prev) => (prev?.code === drink.code ? null : drink));
+  }
 
   const activeCategory = OTH_CATEGORIES.find((c) => c.name === selectedCat) ?? null;
 
@@ -214,12 +205,17 @@ export default function OldTeaHutTab({
   function renderCard(drink: OTHDrink) {
     const count = drinkCartCount(drink);
     const fav = userFavs.has(drink.name);
+    const selected = selectedDrink?.code === drink.code;
     return (
       <button
         key={drink.code}
         type="button"
-        onClick={() => setSheetDrink(drink)}
-        className="relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"
+        onClick={() => toggleDrink(drink)}
+        className={`relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full bg-white dark:bg-[#111] ${
+          selected
+            ? "border-stone-500 dark:border-stone-400 shadow-md"
+            : "border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"
+        }`}
       >
         <span
           role="button"
@@ -284,9 +280,7 @@ export default function OldTeaHutTab({
         searchResults.length === 0 ? (
           <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">No results.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-2.5">
-            {searchResults.map(renderCard)}
-          </div>
+          renderGrid(searchResults)
         )
       ) : (
         <>
@@ -305,23 +299,39 @@ export default function OldTeaHutTab({
           </div>
 
           {/* Drinks for selected category */}
-          {activeCategory && (
-            <div className="mt-6 grid grid-cols-2 gap-2.5">
-              {activeCategory.drinks.map(renderCard)}
-            </div>
-          )}
+          {activeCategory && <div className="mt-6">{renderGrid(activeCategory.drinks)}</div>}
         </>
-      )}
-
-      {/* Customisation sheet */}
-      {sheetDrink && (
-        <OTHSheet
-          drink={sheetDrink}
-          cart={cart}
-          onAdd={(name) => { onAddToCart(name); setSheetDrink(null); }}
-          onClose={() => setSheetDrink(null)}
-        />
       )}
     </div>
   );
+
+  function renderGrid(drinks: OTHDrink[]) {
+    const selCode = selectedDrink?.code;
+    return (
+      <div className="grid grid-cols-2 gap-2.5">
+        {drinks.map((drink, i) => {
+          const isEndOfRow = i % 2 === 1 || i === drinks.length - 1;
+          const rowStart = i - (i % 2);
+          const rowContainsSelected =
+            !!selCode && drinks.slice(rowStart, rowStart + 2).some((d) => d.code === selCode);
+          const showPanel = isEndOfRow && rowContainsSelected && selectedDrink;
+          return (
+            <Fragment key={drink.code}>
+              {renderCard(drink)}
+              {showPanel && (
+                <div className="col-span-2">
+                  <OTHExpandPanel
+                    drink={selectedDrink}
+                    cart={cart}
+                    onAdd={(name) => { onAddToCart(name); setSelectedDrink(null); }}
+                    onClose={() => setSelectedDrink(null)}
+                  />
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
+    );
+  }
 }
