@@ -1,5 +1,23 @@
 export const VERSIONS = [
   {
+    version: "v3.3.0",
+    date: "24 Apr 2026",
+    title: "Humanisation pass",
+    changes: [
+      "Home greeting now riffs on the time of day — Friday energy, Monday gentle start, late-night working vibes",
+      "Orders-page quips weight toward the day you're in — more Friday banter on Fridays, payday jokes near month-end",
+      "Cancel on an active order is now undoable for 5 seconds before it actually deletes — no more accidental wipes",
+      "All Drinks tab opens as a flat scrollable list — faster to skim; the base-and-modifier builder lives behind a \"Build custom →\" link",
+      "Presence avatars at the top of the order page now read \"Josh and 2 others deciding\" instead of a flat label",
+      "Changelog is now titled \"What's brewing\" because honestly it fits the app better",
+      "Touch targets on hearts, cart ± and X close buttons are bigger — still look the same, much easier to tap",
+      "Error copy is kinder (\"Order didn't go through — check your connection\") instead of \"Something went wrong\"",
+      "Place Order, Continue and other primary buttons use title case — less corporate, more us",
+      "Cart bar gives a gentle pulse when an item is added, so the addition actually registers visually",
+      "Keyboard users get a visible focus ring everywhere (without affecting mouse clicks)",
+    ],
+  },
+  {
     version: "v3.2.2",
     date: "24 Apr 2026",
     title: "Cleaner session expiry",

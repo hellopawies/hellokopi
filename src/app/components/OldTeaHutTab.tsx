@@ -86,7 +86,7 @@ function OTHExpandPanel({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
+          className="flex-shrink-0 w-9 h-9 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-manipulation"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -231,7 +231,7 @@ export default function OldTeaHutTab({
       >
         <span
           role="button"
-          className="group/heart absolute top-2.5 right-2.5 p-1 touch-manipulation"
+          className="group/heart absolute top-0.5 right-0.5 p-2.5 touch-manipulation"
           onClick={(e) => { e.stopPropagation(); onToggleFavourite(drink.name); }}
         >
           <svg

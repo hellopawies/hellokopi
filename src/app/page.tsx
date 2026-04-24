@@ -24,8 +24,24 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+const PICK = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+function getSubtitle(): string {
+  const sgNow = new Date(new Date().toLocaleString("en-US", { timeZone: TIMEZONE_SG }));
+  const hour = sgNow.getHours();
+  const day = sgNow.getDay(); // 0 = Sun, 5 = Fri
+  if (day === 5 && hour < 17) return PICK(["Friday energy. Treat yourself?", "TGIF kopi run incoming?", "Friday vibes only.", "Reward run?"]);
+  if (day === 1 && hour < 12)  return PICK(["Easing into Monday — kopi first?", "Monday gentle start?", "Morning. Kopi to soften the landing?"]);
+  if (hour < 11)               return PICK(["Start ordering?", "What's it gonna be?", "Pick your poison.", "Slow start, strong kopi?"]);
+  if (hour < 14)               return PICK(["Lunch run?", "Midday refuel?", "Pick your fix."]);
+  if (hour < 17)               return PICK(["The 3pm slump? We've got you.", "Afternoon push?", "One more cup till home time."]);
+  if (hour < 21)               return PICK(["Working late? Kopi's on you.", "Evening session?", "Last call?"]);
+  return PICK(["Burning the midnight oil?", "Late one tonight?", "Quiet hours kopi?"]);
+}
+
 export default function GreetingPage() {
   const [greeting, setGreeting] = useState("");
+  const [subtitle, setSubtitle] = useState("Start ordering?");
   const [colleagues, setColleagues] = useState<string[]>(COLLEAGUES_FALLBACK);
   // Read synchronously so the correct view renders on first paint — no state flip or black flash
   const [cachedName, setCachedName] = useState<string | null>(() => {
@@ -45,6 +61,7 @@ export default function GreetingPage() {
   useEffect(() => {
     hasMounted = true;
     setGreeting(getGreeting());
+    setSubtitle(getSubtitle());
     setReady(true);
     if (isConfigured) {
       supabase.from("members").select("name, sort_order").order("sort_order")
@@ -142,7 +159,7 @@ export default function GreetingPage() {
                 {cachedName}.
               </p>
               <p className="font-serif text-lg sm:text-xl font-light italic text-stone-400 dark:text-stone-500 leading-relaxed mt-1">
-                Start ordering?
+                {subtitle}
               </p>
             </div>
 
@@ -155,7 +172,7 @@ export default function GreetingPage() {
                 className="
                   mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
-                  text-[11px] uppercase tracking-[0.25em] font-sans font-medium
+                  text-sm tracking-wide font-sans font-medium
                   transition-all duration-200 touch-manipulation
                   shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                   hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900
@@ -284,7 +301,7 @@ export default function GreetingPage() {
                 className="
                   mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
-                  text-[11px] uppercase tracking-[0.25em] font-sans font-medium
+                  text-sm tracking-wide font-sans font-medium
                   transition-all duration-200 touch-manipulation
                   shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                   hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900
