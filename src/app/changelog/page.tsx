@@ -13,10 +13,10 @@ export default function ChangelogPage() {
             </span>
             <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
             <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
-              Changelog
+              What&apos;s brewing
             </h1>
             <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
-              What&apos;s new in hello kopi.
+              Every tweak, fix, and small joy added to hello kopi.
             </p>
           </div>
         </div>

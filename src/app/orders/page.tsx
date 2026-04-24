@@ -39,6 +39,35 @@ const QUIPS = [
   "One does not simply skip kopi.",
 ];
 
+// Day-aware quips — weighted in on the right day of the week.
+const FRIDAY_QUIPS = [
+  "TGIF kopi run incoming?",
+  "Friday energy is real.",
+  "Last kopi before the weekend.",
+  "Knock-off mood, kopi mood.",
+];
+const MONDAY_QUIPS = [
+  "Easing into the week, kopi-style.",
+  "Monday's a state of mind. Kopi helps.",
+  "Soft launch into the week.",
+];
+const PAYDAY_QUIPS = [
+  "Payday energy. Treat the table?",
+  "Pay just dropped — your shout?",
+  "Today's order's on the boss. (Allegedly.)",
+];
+
+function pickQuip(): string {
+  const sgNow = new Date(new Date().toLocaleString("en-US", { timeZone: TIMEZONE_SG }));
+  const day = sgNow.getDay();      // 0 = Sun, 5 = Fri
+  const date = sgNow.getDate();    // most SG salaries land late month
+  const pool = [...QUIPS];
+  if (day === 5) pool.push(...FRIDAY_QUIPS, ...FRIDAY_QUIPS); // doubled weight
+  if (day === 1) pool.push(...MONDAY_QUIPS);
+  if (date >= 25 || date <= 2) pool.push(...PAYDAY_QUIPS);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function Countdown({ sessionStart }: { sessionStart: Date }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -75,7 +104,7 @@ export default function OrdersPage() {
   const [quip, setQuip] = useState("");
 
   useEffect(() => {
-    setQuip(QUIPS[Math.floor(Math.random() * QUIPS.length)]);
+    setQuip(pickQuip());
   }, []);
 
   const silentRefresh = useCallback(async () => {
@@ -157,7 +186,7 @@ export default function OrdersPage() {
               {isConfigured && (
                 <span className="flex items-center gap-1.5 mb-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 dark:bg-green-500 animate-pulse" />
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-300 dark:text-stone-600">Live</span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">Live</span>
                 </span>
               )}
             </div>
@@ -213,8 +242,8 @@ export default function OrdersPage() {
           {loading && <BrewingCup />}
           {!loading && error && (
             <div className="flex flex-col items-center gap-4 py-20">
-              <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">
-                Could not load orders.
+              <p className="text-sm font-sans text-stone-500 dark:text-stone-400 text-center">
+                Couldn&apos;t load orders — check your connection.
               </p>
               <button
                 onClick={load}
