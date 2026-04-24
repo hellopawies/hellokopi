@@ -1,5 +1,42 @@
 const VERSIONS = [
   {
+    version: "v3.2.2",
+    date: "24 Apr 2026",
+    title: "Cleaner session expiry",
+    changes: [
+      "Active order card now disappears on its own when the 15-min session window closes — no more \"Session ended\" state with a Cancel button that deleted the order from history",
+      "Your order stays intact in history either way; it just stops being actionable once the collector's window has closed",
+    ],
+  },
+  {
+    version: "v3.2.1",
+    date: "24 Apr 2026",
+    title: "Hot or Iced on Tea Hut",
+    changes: [
+      "Tea Hut drinks now have a Hot / Iced toggle at the top of the customisation panel",
+      "Iced-only drinks (Iced Sparkling, Iced Milo Dino, etc.) keep the existing \"Iced only\" badge and skip the toggle",
+      "Hot and iced variants of the same drink track as separate cart lines",
+    ],
+  },
+  {
+    version: "v3.2.0",
+    date: "24 Apr 2026",
+    title: "Inline Tea Hut customisation",
+    changes: [
+      "Tapping a Tea Hut drink now expands options right under the tapped row instead of sliding up a bottom sheet — no modal, no backdrop",
+      "Tap the same card again to collapse it; selected cards get a darker border for feedback",
+      "Same Intensity / Eva Milk / Add-on pills and same Add to Order button — just without the context switch",
+    ],
+  },
+  {
+    version: "v3.1.1",
+    date: "24 Apr 2026",
+    title: "Order direct link restored",
+    changes: [
+      "The subtle \"Order direct from Old Tea Hut\" link under the search box is back — opens the shop's autopos.cloud order page in a new tab",
+    ],
+  },
+  {
     version: "v3.1.0",
     date: "23 Apr 2026",
     title: "Tea Hut polish",
