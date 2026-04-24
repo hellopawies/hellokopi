@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { VERSIONS } from "./changelog/page";
+import { VERSIONS } from "@/data/changelog";
 import { supabase, isConfigured } from "@/lib/supabase";
 
 const COLLEAGUES_FALLBACK = [
