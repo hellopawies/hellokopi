@@ -6,9 +6,11 @@ import { groupOrders } from "@/lib/groupOrders";
 import BrewingCup from "@/app/components/BrewingCup";
 import { OTHERS_DRINKS } from "@/data/menu";
 import type { Order } from "@/types/order";
+import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
+// Client-side hash. Anyone with the bundle can reverse this — it's just a soft
+// gate to keep casual visitors out, not a real auth boundary.
 const ADMIN_HASH = "86623b9b3871ac27c810a27912ad683c67a1525fb15b0100366ad98fa93ac93d";
-const SGT = "Asia/Singapore";
 
 interface CustomDrink {
   id: string;
@@ -130,8 +132,8 @@ function OrdersTab() {
     const rows: string[][] = [["Date", "Session", "Person", "Drink", "Qty"]];
     for (const group of groups) {
       for (const session of group.sessions) {
-        const start = session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
-        const end = new Date(session.sessionStart.getTime() + 15 * 60 * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT });
+        const start = session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
+        const end = new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
         const sessionLabel = `${start} – ${end}`;
         for (const order of session.orders) {
           const itemMap = new Map<string, number>();
@@ -147,7 +149,7 @@ function OrdersTab() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `hellokopi-${new Date().toLocaleDateString("en-CA", { timeZone: SGT })}.csv`;
+    a.download = `hellokopi-${new Date().toLocaleDateString("en-CA", { timeZone: TIMEZONE_SG })}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -203,13 +205,13 @@ function OrdersTab() {
           <p className="text-[10px] uppercase tracking-[0.2em] text-stone-300 dark:text-stone-600 font-sans mb-4">{group.dateLabel}</p>
           <div className="flex flex-col gap-6">
             {group.sessions.map((session, si) => {
-              const endTime = new Date(session.sessionStart.getTime() + 15 * 60 * 1000);
+              const endTime = new Date(session.sessionStart.getTime() + SESSION_MS);
               return (
                 <div key={si}>
                   <p className="text-[11px] uppercase tracking-[0.25em] text-stone-600 dark:text-stone-300 font-sans font-medium mb-2">
-                    {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
+                    {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
                     {" – "}
-                    {endTime.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
+                    {endTime.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
                   </p>
                   <div className="border-t border-stone-100 dark:border-stone-800">
                     {session.orders.map(order => {

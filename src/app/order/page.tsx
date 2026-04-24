@@ -8,6 +8,7 @@ import OldTeaHutTab from "@/app/components/OldTeaHutTab";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
+import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 import { CATEGORIES } from "@/data/drinks";
 import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
 
@@ -558,7 +559,6 @@ function DrinkBuilder({
 
 
 // ─── Active order countdown ───────────────────────────────────
-const SESSION_MS = 15 * 60 * 1000;
 function ActiveCountdown({ sessionStart }: { sessionStart: Date }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -582,7 +582,6 @@ function ActiveCountdown({ sessionStart }: { sessionStart: Date }) {
 }
 
 // ─── Success toast ────────────────────────────────────────────
-const SGT_ORDER = "Asia/Singapore";
 
 function SuccessToast({ items, orderedAt, onDismiss }: {
   items: CartItem[];
@@ -607,7 +606,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const time = orderedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT_ORDER });
+  const time = orderedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
   const drinkLine = items.map(({ name, qty }) => qty > 1 ? `${name} ×${qty}` : name).join(" · ");
 
   return (
@@ -711,7 +710,7 @@ function OrderContent() {
       setLoadingFavs(false);
       return;
     }
-    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
     Promise.all([
       supabase.from("orders").select("items"),
       supabase.from("user_favourites").select("drink_name").eq("person_name", name),
@@ -840,15 +839,22 @@ function OrderContent() {
   async function toggleFavourite(drinkName: string) {
     if (!isConfigured) return;
     const isFav = userFavs.has(drinkName);
+    // Optimistic update
     setUserFavs((prev) => {
       const next = new Set(prev);
       isFav ? next.delete(drinkName) : next.add(drinkName);
       return next;
     });
-    if (isFav) {
-      await supabase.from("user_favourites").delete().eq("person_name", name).eq("drink_name", drinkName);
-    } else {
-      await supabase.from("user_favourites").insert({ person_name: name, drink_name: drinkName });
+    const { error } = isFav
+      ? await supabase.from("user_favourites").delete().eq("person_name", name).eq("drink_name", drinkName)
+      : await supabase.from("user_favourites").insert({ person_name: name, drink_name: drinkName });
+    // Roll back if the write failed (offline, RLS, etc.) so the heart matches reality
+    if (error) {
+      setUserFavs((prev) => {
+        const next = new Set(prev);
+        isFav ? next.add(drinkName) : next.delete(drinkName);
+        return next;
+      });
     }
   }
 
@@ -883,7 +889,7 @@ function OrderContent() {
   async function cancelOrder() {
     if (!existingOrder) return;
     haptic([8, 60, 8]);
-    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
     await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
     setExistingOrder(null);
   }
@@ -908,7 +914,7 @@ function OrderContent() {
     try {
       // Delete all of this user's orders in the current session window before inserting,
       // so there's always exactly one order row per user per session.
-      const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
       await supabase.from("orders").delete().eq("person_name", name).gte("created_at", sessionWindowStart);
       editingOrderId.current = null;
       const { error } = await supabase.from("orders").insert({
@@ -918,7 +924,7 @@ function OrderContent() {
       });
       if (error) throw error;
       // Find session start: earliest order placed in the last 15 minutes
-      const windowStart = new Date(orderedAt.getTime() - 15 * 60 * 1000).toISOString();
+      const windowStart = new Date(orderedAt.getTime() - SESSION_MS).toISOString();
       const { data: sessionData } = await supabase
         .from("orders")
         .select("created_at")
@@ -942,7 +948,7 @@ function OrderContent() {
   const handleToastDismiss = useCallback(async () => {
     setOrderState("idle");
     if (!isConfigured) return;
-    const sessionWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
     const { data } = await supabase
       .from("orders")
       .select("id, items, created_at")
@@ -1402,7 +1408,11 @@ function OrderContent() {
 
 export default function OrderPage() {
   return (
-    <Suspense>
+    <Suspense fallback={
+      <main className="min-h-[100dvh] flex items-center justify-center bg-[#FAFAF8] dark:bg-black">
+        <BrewingCup />
+      </main>
+    }>
       <OrderContent />
     </Suspense>
   );
