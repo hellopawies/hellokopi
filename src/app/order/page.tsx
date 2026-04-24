@@ -673,7 +673,6 @@ function OrderContent() {
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const [rouletteName, setRouletteName] = useState("");
   const [rouletteIdx, setRouletteIdx] = useState(0);
-  const [sessionExpired, setSessionExpired] = useState(false);
   const [presentUsers, setPresentUsers] = useState<string[]>([]);
   const editingOrderId = useRef<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -751,13 +750,13 @@ function OrderContent() {
     });
   }, [name]);
 
-  // Detect when the active session window expires
+  // Hide the active order card when the 15-min session window closes.
+  // The order stays in history — we just stop showing it as actionable.
   useEffect(() => {
-    if (!existingOrder) { setSessionExpired(false); return; }
+    if (!existingOrder) return;
     const remaining = existingOrder.sessionStart.getTime() + SESSION_MS - Date.now();
-    if (remaining <= 0) { setSessionExpired(true); return; }
-    setSessionExpired(false);
-    const t = setTimeout(() => setSessionExpired(true), remaining);
+    if (remaining <= 0) { setExistingOrder(null); return; }
+    const t = setTimeout(() => setExistingOrder(null), remaining);
     return () => clearTimeout(t);
   }, [existingOrder]);
 
@@ -1061,27 +1060,21 @@ function OrderContent() {
         <div className="max-w-lg mx-auto">
           <div ref={sentinelRef} className="h-px" aria-hidden />
 
-          {/* Active order card */}
+          {/* Active order card — only shown while the 15-min window is open */}
           {existingOrder && !isEditing && (
             <div className="relative mb-5">
-              {!sessionExpired && (
-                <div
-                  className="absolute inset-0 rounded-2xl border border-stone-400 dark:border-stone-500 pointer-events-none"
-                  style={{ animation: "cardBreathe 4s ease-in-out infinite" }}
-                />
-              )}
-              <div className={`rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex flex-col gap-2 transition-colors duration-500 ${
-                sessionExpired
-                  ? "border-amber-200 dark:border-amber-800/60"
-                  : "border-stone-200 dark:border-stone-700/60"
-              }`}>
+              <div
+                className="absolute inset-0 rounded-2xl border border-stone-400 dark:border-stone-500 pointer-events-none"
+                style={{ animation: "cardBreathe 4s ease-in-out infinite" }}
+              />
+              <div className="rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl border border-stone-200 dark:border-stone-700/60 shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 py-3.5 flex flex-col gap-2">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">
-                      {sessionExpired ? "Session ended" : "Active order"}
+                      Active order
                     </p>
-                    {!sessionExpired && <ActiveCountdown sessionStart={existingOrder.sessionStart} />}
+                    <ActiveCountdown sessionStart={existingOrder.sessionStart} />
                   </div>
                   <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
                     {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
@@ -1095,27 +1088,20 @@ function OrderContent() {
                   >
                     Cancel
                   </button>
-                  {!sessionExpired && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editingOrderId.current = existingOrder.id;
-                        setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
-                        setIsEditing(true);
-                        setExistingOrder(null);
-                      }}
-                      className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 touch-manipulation active:scale-[0.95]"
-                    >
-                      Edit
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      editingOrderId.current = existingOrder.id;
+                      setCart(new Map(existingOrder.items.map(({ name: n, qty }) => [n, qty])));
+                      setIsEditing(true);
+                      setExistingOrder(null);
+                    }}
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                  >
+                    Edit
+                  </button>
                 </div>
               </div>
-              {sessionExpired && (
-                <p className="text-[11px] font-sans text-amber-500 dark:text-amber-400">
-                  The order window has closed — the collector may have already left.
-                </p>
-              )}
               </div>
             </div>
           )}
