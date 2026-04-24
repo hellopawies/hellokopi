@@ -6,10 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 export function Header() {
   const path = usePathname();
   const router = useRouter();
-  const onOrders = path.endsWith("/orders");
-  const onHome = path === "/" || path === "";
-  const onChangelog = path.endsWith("/changelog");
-  const onAdmin = path.endsWith("/admin");
+  // trailingSlash: true in next.config means pathnames come in as "/changelog/",
+  // so strip the trailing slash before matching.
+  const p = path.replace(/\/$/, "");
+  const onOrders = p.endsWith("/orders");
+  const onHome = p === "";
+  const onChangelog = p.endsWith("/changelog");
+  const onAdmin = p.endsWith("/admin");
 
   return (
     <>
