@@ -5,6 +5,7 @@ import BrewingCup from "@/app/components/BrewingCup";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import type { Order, DateGroup, Session } from "@/types/order";
+import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
 function groupByDrink(session: Session): { drink: string; names: string[] }[] {
   const map = new Map<string, string[]>();
@@ -20,11 +21,9 @@ function groupByDrink(session: Session): { drink: string; names: string[] }[] {
     .map(([drink, names]) => ({ drink, names }));
 }
 
-const SGT = "Asia/Singapore";
-
 function dateLabel(dateKey: string): string {
   const d = new Date(dateKey + "T12:00:00+08:00");
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: SGT });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: TIMEZONE_SG });
 }
 
 const QUIPS = [
@@ -39,8 +38,6 @@ const QUIPS = [
   "Kopi first, meetings second.",
   "One does not simply skip kopi.",
 ];
-
-const SESSION_MS = 15 * 60 * 1000;
 
 function Countdown({ sessionStart }: { sessionStart: Date }) {
   const [now, setNow] = useState(() => Date.now());
@@ -251,9 +248,9 @@ export default function OrdersPage() {
                   <div key={si}>
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <span className="text-[12px] uppercase tracking-[0.2em] text-stone-700 dark:text-stone-200 font-sans font-semibold">
-                        {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
+                        {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
                         {" – "}
-                        {new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: SGT })}
+                        {new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
                       </span>
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-semibold tracking-wide">
                         {cups} {cups === 1 ? "cup" : "cups"}

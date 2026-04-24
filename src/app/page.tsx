@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { VERSIONS } from "@/data/changelog";
+import { TIMEZONE_SG } from "@/lib/constants";
 import { supabase, isConfigured } from "@/lib/supabase";
 
 const COLLEAGUES_FALLBACK = [
@@ -16,7 +17,7 @@ let hasMounted = false;
 
 function getGreeting(): string {
   const hour = parseInt(
-    new Date().toLocaleString("en-GB", { timeZone: "Asia/Singapore", hour: "2-digit", hour12: false })
+    new Date().toLocaleString("en-GB", { timeZone: TIMEZONE_SG, hour: "2-digit", hour12: false })
   );
   if (hour >= 5 && hour < 12) return "Good morning";
   if (hour >= 12 && hour < 17) return "Good afternoon";

@@ -1,6 +1,5 @@
 import type { Order, Session, DateGroup } from "@/types/order";
-
-const SESSION_WINDOW_MS = 15 * 60 * 1000;
+import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
 export function groupOrders(orders: Order[]): DateGroup[] {
   if (!orders.length) return [];
@@ -13,7 +12,7 @@ export function groupOrders(orders: Order[]): DateGroup[] {
   // Group by local date (YYYY-MM-DD)
   const dateMap = new Map<string, Order[]>();
   for (const order of sorted) {
-    const dateKey = new Date(order.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
+    const dateKey = new Date(order.created_at).toLocaleDateString("en-CA", { timeZone: TIMEZONE_SG });
     if (!dateMap.has(dateKey)) dateMap.set(dateKey, []);
     dateMap.get(dateKey)!.push(order);
   }
@@ -27,7 +26,7 @@ export function groupOrders(orders: Order[]): DateGroup[] {
       const t = new Date(order.created_at).getTime();
       const last = sessions[sessions.length - 1];
       // New session if first order, or gap from session start exceeds 1 hour
-      if (!last || t - last.sessionStart.getTime() >= SESSION_WINDOW_MS) {
+      if (!last || t - last.sessionStart.getTime() >= SESSION_MS) {
         sessions.push({ sessionStart: new Date(order.created_at), orders: [order] });
       } else {
         last.orders.push(order);
