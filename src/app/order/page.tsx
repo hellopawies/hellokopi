@@ -675,6 +675,7 @@ function OrderContent() {
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
   const [builderDrink, setBuilderDrink] = useState("");
   const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
+  const [sessionClosed, setSessionClosed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [surprise, setSurprise] = useState<"idle" | "picking" | string>("idle");
   const [rouletteName, setRouletteName] = useState("");
@@ -762,7 +763,11 @@ function OrderContent() {
     if (!existingOrder) return;
     const remaining = existingOrder.sessionStart.getTime() + SESSION_MS - Date.now();
     if (remaining <= 0) { setExistingOrder(null); return; }
-    const t = setTimeout(() => setExistingOrder(null), remaining);
+    const t = setTimeout(() => {
+      setExistingOrder(null);
+      setSessionClosed(true);
+      setTimeout(() => setSessionClosed(false), 4000);
+    }, remaining);
     return () => clearTimeout(t);
   }, [existingOrder]);
 
@@ -1116,6 +1121,18 @@ function OrderContent() {
                 </div>
               </div>
               </div>
+            </div>
+          )}
+
+          {/* Session closed notice */}
+          {sessionClosed && (
+            <div className="mb-5 flex items-center gap-2 px-4 py-3 rounded-2xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/60 animate-fade-in">
+              <svg className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <p className="text-[11px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500">
+                Session closed — your order is saved
+              </p>
             </div>
           )}
 
