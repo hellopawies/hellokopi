@@ -1,5 +1,15 @@
 export const VERSIONS = [
   {
+    version: "v3.3.2",
+    date: "27 Apr 2026",
+    title: "WhatsApp order sharing",
+    changes: [
+      "Share any order session to WhatsApp with one tap — opens WhatsApp so you can pick which group to send to",
+      "Copy button next to it lets you paste the order list anywhere else",
+      "Shared text shows drink names and quantities only — no names attached",
+    ],
+  },
+  {
     version: "v3.3.1",
     date: "24 Apr 2026",
     title: "Back to basics",

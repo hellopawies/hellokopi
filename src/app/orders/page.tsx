@@ -80,7 +80,7 @@ function buildShareText(session: Session, label: string): string {
     "",
     ...drinkGroups.map(({ drink, names }) => {
       const qty = names.length > 1 ? ` × ${names.length}` : "";
-      return `${drink}${qty} – ${names.join(", ")}`;
+      return `${drink}${qty}`;
     }),
     "",
     `${cups} ${cups === 1 ? "cup" : "cups"} total`,
