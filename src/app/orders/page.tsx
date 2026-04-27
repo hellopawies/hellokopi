@@ -68,14 +68,15 @@ function pickQuip(): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function buildShareText(session: Session, label: string): string {
+function buildShareText(session: Session, _label: string): string {
   const drinkGroups = groupByDrink(session);
   const cups = drinkGroups.reduce((sum, g) => sum + g.names.length, 0);
   const timeStart = session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
   const timeEnd = new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
+  const date = session.sessionStart.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: TIMEZONE_SG });
 
   const lines = [
-    `☕ Hello Kopi – ${label}`,
+    `☕ Drinks Order - ${date}`,
     `${timeStart}–${timeEnd}`,
     "",
     ...drinkGroups.map(({ drink, names }) => {
