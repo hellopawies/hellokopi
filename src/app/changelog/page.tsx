@@ -6,12 +6,8 @@ export default function ChangelogPage() {
 
       {/* Sticky header */}
       <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
-        <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
+        <div className="px-5 sm:px-8 pt-16 sm:pt-10 pb-4 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
-            <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
-              hello kopi
-            </span>
-            <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
             <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
               What&apos;s brewing
             </h1>

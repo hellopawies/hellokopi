@@ -59,10 +59,6 @@ function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
   return (
     <main className="min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
       <div className="w-full max-w-sm flex flex-col items-center text-center gap-8">
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">hello kopi</span>
-          <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1" />
-        </div>
         <div>
           <h1 className="font-serif text-3xl font-light tracking-wide text-stone-800 dark:text-stone-100">Admin</h1>
           <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 mt-2">
@@ -551,11 +547,9 @@ function AdminContent({ onLock }: { onLock: () => void }) {
   return (
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black pb-16">
       <div className="liquid-glass-top sticky top-0 z-30 bg-[#FAFAF8]/80 dark:bg-black/75">
-        <div className="px-5 sm:px-8 pt-12 sm:pt-6 pb-4">
+        <div className="px-5 sm:px-8 pt-16 sm:pt-10 pb-4">
           <div className="max-w-lg mx-auto flex items-start justify-between">
             <div>
-              <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">hello kopi</span>
-              <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1.5 mb-4" />
               <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">Admin</h1>
             </div>
             <button
