@@ -387,9 +387,11 @@ function DrinkBuilder({
   }, [onToggleCart]);
 
   const allDrinksFlat = useMemo(() => {
+    const validCatIds = new Set<string>([...DRINK_BASES.map((b) => b.id), "others"]);
     const seen = new Set<string>();
     const out: { name: string; description: string }[] = [];
     for (const cat of CATEGORIES) {
+      if (!validCatIds.has(cat.id)) continue;
       for (const d of cat.drinks) {
         if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
       }
@@ -691,11 +693,15 @@ function OrderContent() {
     return map;
   }, [customDrinks]);
 
-  // Full drink pool for Surprise Me (all drinks minus hidden)
+  // Full drink pool for Surprise Me — only categories that match a real
+  // builder base (DRINK_BASES) plus "others". Keeps unreachable categories
+  // (e.g. legacy "bandung" entries that aren't a base) out of the random pool.
   const allDrinksPool = useMemo(() => {
+    const validCatIds = new Set<string>([...DRINK_BASES.map((b) => b.id), "others"]);
     const seen = new Set<string>();
     const out: { name: string; description: string }[] = [];
     for (const cat of CATEGORIES) {
+      if (!validCatIds.has(cat.id)) continue;
       for (const d of cat.drinks) {
         if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
       }

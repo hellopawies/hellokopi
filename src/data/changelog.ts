@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.6",
+    date: "28 Apr 2026",
+    title: "Surprise Me stays on the menu",
+    changes: [
+      "Surprise Me and the All Drinks search now only draw from drinks you can actually order — variations of Kopi, Teh, Teh Halia, Yuan Yang, Milo, Horlicks, plus everything in Others. Stray legacy entries like Bandung Soda no longer turn up.",
+    ],
+  },
+  {
     version: "v3.3.5",
     date: "28 Apr 2026",
     title: "Tick off as you tell the cashier",
