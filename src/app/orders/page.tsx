@@ -148,6 +148,16 @@ export default function OrdersPage() {
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [quip, setQuip] = useState("");
+  // Ephemeral "told the cashier" ticks — never persisted; resets on refresh.
+  const [ticked, setTicked] = useState<Set<string>>(new Set());
+
+  function toggleTick(key: string) {
+    setTicked(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   useEffect(() => {
     setQuip(pickQuip());
@@ -347,28 +357,35 @@ export default function OrdersPage() {
                       <WhatsAppShareButton session={session} />
                     </div>
                     <div className="border-t border-stone-100 dark:border-stone-800">
-                      {drinkGroups.map(({ drink, names }) => (
-                        <div
-                          key={drink}
-                          className="py-3.5 border-b border-stone-100 dark:border-stone-800"
-                        >
-                          <p className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
-                            {drink}
-                            {names.length > 1 && (
-                              <span className="ml-1.5 px-1.5 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide align-middle">
-                                × {names.length}
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-1 leading-relaxed">
-                            {(() => {
-                              const counts = new Map<string, number>();
-                              for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
-                              return [...counts.entries()].map(([n, c]) => c > 1 ? `${n} ×${c}` : n).join(" · ");
-                            })()}
-                          </p>
-                        </div>
-                      ))}
+                      {drinkGroups.map(({ drink, names }) => {
+                        const tickKey = `${session.sessionStart.getTime()}:${drink}`;
+                        const isTicked = ticked.has(tickKey);
+                        return (
+                          <button
+                            type="button"
+                            key={drink}
+                            onClick={() => toggleTick(tickKey)}
+                            aria-pressed={isTicked}
+                            className={`w-full text-left py-3.5 px-2 -mx-2 rounded-md border-b border-stone-100 dark:border-stone-800 transition-all duration-200 touch-manipulation hover:bg-stone-100/60 dark:hover:bg-stone-900/60 ${isTicked ? "opacity-40" : ""}`}
+                          >
+                            <p className={`text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug ${isTicked ? "line-through" : ""}`}>
+                              {drink}
+                              {names.length > 1 && (
+                                <span className="ml-1.5 px-1.5 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide align-middle">
+                                  × {names.length}
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-1 leading-relaxed">
+                              {(() => {
+                                const counts = new Map<string, number>();
+                                for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
+                                return [...counts.entries()].map(([n, c]) => c > 1 ? `${n} ×${c}` : n).join(" · ");
+                              })()}
+                            </p>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );

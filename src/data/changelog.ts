@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.5",
+    date: "28 Apr 2026",
+    title: "Tick off as you tell the cashier",
+    changes: [
+      "Tap any drink line on the orders page to fade and strike it through — handy when you're at the counter calling drinks one by one and lose track of which you've said. Ticks are local to the session view and don't save anywhere; refresh resets them. Not a status field, just a memory aid.",
+    ],
+  },
+  {
     version: "v3.3.4",
     date: "28 Apr 2026",
     title: "Quieter cart",
