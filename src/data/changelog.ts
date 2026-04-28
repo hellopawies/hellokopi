@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.4",
+    date: "28 Apr 2026",
+    title: "Quieter cart",
+    changes: [
+      "Removed the bouncy slam animation when adding to the cart — a single subtle add is enough; the bounce got noisy when adding several drinks in a row",
+    ],
+  },
+  {
     version: "v3.3.3",
     date: "28 Apr 2026",
     title: "Hot or iced at a glance",
