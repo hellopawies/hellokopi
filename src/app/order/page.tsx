@@ -125,40 +125,54 @@ const BASE_DRINKS_MAP = new Map(
 );
 
 // Synthesise a description for builder-composed drink names that have no
-// literal entry in drinks.ts (e.g. "Teh C Po Kosong"). Walks tokens with a
-// simple greedy match; returns undefined if the name isn't a known base.
+// literal entry in drinks.ts (e.g. "Teh C Po Kosong"). Mirrors the literal
+// style: capitalised, " + " separators, ", no sugar" tail for Kosong.
+// Returns undefined if the name has unknown tokens.
 function synthesiseDescription(name: string): string | undefined {
   const tokens = name.split(/\s+/);
-  const parts: string[] = [];
   let i = 0;
 
-  // Base (multi-word first)
-  if (tokens[i] === "Teh" && tokens[i + 1] === "Halia") { parts.push("ginger tea"); i += 2; }
-  else if (tokens[i] === "Yuan" && tokens[i + 1] === "Yang") { parts.push("coffee + tea"); i += 2; }
-  else if (tokens[i] === "Kopi") { parts.push("coffee"); i += 1; }
-  else if (tokens[i] === "Teh") { parts.push("tea"); i += 1; }
-  else if (tokens[i] === "Milo") { parts.push("chocolate malt"); i += 1; }
-  else if (tokens[i] === "Horlicks") { parts.push("malted milk"); i += 1; }
+  // Skip the base — the card title already carries it. Just confirm the name
+  // starts with a known base, otherwise bail.
+  if (tokens[i] === "Teh" && tokens[i + 1] === "Halia") i += 2;
+  else if (tokens[i] === "Yuan" && tokens[i + 1] === "Yang") i += 2;
+  else if (tokens[i] === "Kopi" || tokens[i] === "Teh" || tokens[i] === "Milo" || tokens[i] === "Horlicks") i += 1;
   else return undefined;
 
-  const SINGLE: Record<string, string> = {
-    "O": "no milk", "C": "evap milk",
-    "Gao": "strong", "Po": "weak",
-    "Peng": "iced", "Tarik": "pulled",
-    "Kosong": "no sugar",
-  };
+  let temp: string | null = null;
+  let strength: string | null = null;
+  let style: string | null = null;
+  let milk: "O" | "C" | "default" = "default";
+  let sweetness: "Siew Dai" | "Gah Dai" | "Kosong" | null = null;
 
   while (i < tokens.length) {
     const t = tokens[i];
-    if (t === "Di" && tokens[i + 1] === "Lo") { parts.push("extra strong"); i += 2; continue; }
-    if (t === "Pua" && tokens[i + 1] === "Sio") { parts.push("lukewarm"); i += 2; continue; }
-    if (t === "Siew" && tokens[i + 1] === "Dai") { parts.push("less sweet"); i += 2; continue; }
-    if (t === "Gah" && tokens[i + 1] === "Dai") { parts.push("extra sweet"); i += 2; continue; }
-    if (SINGLE[t]) { parts.push(SINGLE[t]); i += 1; continue; }
+    if (t === "Di" && tokens[i + 1] === "Lo") { strength = "extra strong"; i += 2; continue; }
+    if (t === "Pua" && tokens[i + 1] === "Sio") { temp = "lukewarm"; i += 2; continue; }
+    if (t === "Siew" && tokens[i + 1] === "Dai") { sweetness = "Siew Dai"; i += 2; continue; }
+    if (t === "Gah" && tokens[i + 1] === "Dai") { sweetness = "Gah Dai"; i += 2; continue; }
+    if (t === "O")      { milk = "O"; i++; continue; }
+    if (t === "C")      { milk = "C"; i++; continue; }
+    if (t === "Gao")    { strength = "strong"; i++; continue; }
+    if (t === "Po")     { strength = "weak"; i++; continue; }
+    if (t === "Peng")   { temp = "iced"; i++; continue; }
+    if (t === "Tarik")  { style = "pulled"; i++; continue; }
+    if (t === "Kosong") { sweetness = "Kosong"; i++; continue; }
     return undefined;
   }
 
-  return parts.length > 1 ? parts.join(" · ") : undefined;
+  const parts: string[] = [];
+  if (temp) parts.push(temp);
+  if (strength) parts.push(strength);
+  if (style) parts.push(style);
+  parts.push(milk === "O" ? "black" : milk === "C" ? "evap milk" : "condensed milk");
+  if (sweetness === "Siew Dai") parts.push("less sweet");
+  else if (sweetness === "Gah Dai") parts.push("extra sweet");
+
+  parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+  let out = parts.join(" + ");
+  if (sweetness === "Kosong") out += ", no sugar";
+  return out;
 }
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
