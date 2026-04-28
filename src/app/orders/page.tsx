@@ -343,6 +343,9 @@ export default function OrdersPage() {
               {activeGroup.sessions.map((session, si) => {
                 const drinkGroups = groupByDrink(session);
                 const cups = drinkGroups.reduce((sum, g) => sum + g.names.length, 0);
+                // "Peng" is the kopitiam marker for iced — anything else counts as hot.
+                const icedCups = drinkGroups.reduce((sum, g) => sum + (/\bpeng\b/i.test(g.drink) ? g.names.length : 0), 0);
+                const hotCups = cups - icedCups;
                 return (
                   <div key={si}>
                     <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
@@ -355,6 +358,16 @@ export default function OrdersPage() {
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-medium tracking-wide">
                           {cups} {cups === 1 ? "cup" : "cups"}
                         </span>
+                        {hotCups > 0 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full border bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 text-[11px] font-sans font-medium tabular-nums tracking-wide">
+                            {hotCups} hot
+                          </span>
+                        )}
+                        {icedCups > 0 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full border bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-500 dark:text-blue-400 text-[11px] font-sans font-medium tabular-nums tracking-wide">
+                            {icedCups} iced
+                          </span>
+                        )}
                         <Countdown sessionStart={session.sessionStart} />
                       </div>
                       <WhatsAppShareButton session={session} dateLabel={activeGroup.dateLabel} />
