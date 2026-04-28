@@ -347,12 +347,12 @@ export default function OrdersPage() {
                   <div key={si}>
                     <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[12px] uppercase tracking-[0.2em] text-stone-700 dark:text-stone-200 font-sans font-semibold">
+                        <span className="text-[12px] uppercase tracking-[0.2em] text-stone-700 dark:text-stone-200 font-sans font-medium">
                           {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
                           {" – "}
                           {new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-semibold tracking-wide">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-medium tracking-wide">
                           {cups} {cups === 1 ? "cup" : "cups"}
                         </span>
                         <Countdown sessionStart={session.sessionStart} />
