@@ -17,7 +17,7 @@ export const DRINK_BASES: DrinkBase[] = [
     strength: ["Gao", "Po", "Di Lo"],
     sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
     temp: ["Peng", "Pua Sio"],
-    specials: [{ label: "Tarik" }, { label: "Gu You" }, { label: "Ka Dai" }],
+    specials: [{ label: "Tarik" }],
   },
   {
     id: "teh", label: "Teh",
@@ -25,10 +25,7 @@ export const DRINK_BASES: DrinkBase[] = [
     strength: ["Gao", "Po"],
     sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
     temp: ["Peng", "Pua Sio"],
-    specials: [
-      { label: "Tarik" },
-      { label: "C Peng Special", fullName: "Teh C Peng Special" },
-    ],
+    specials: [{ label: "Tarik" }],
   },
   {
     id: "teh-halia", label: "Teh Halia",
@@ -44,7 +41,7 @@ export const DRINK_BASES: DrinkBase[] = [
     strength: ["Gao"],
     sweetness: ["Siew Dai", "Gah Dai", "Kosong"],
     temp: ["Peng"],
-    specials: [{ label: "Kopi Cham", fullName: "Kopi Cham" }],
+    specials: [],
   },
   {
     id: "milo", label: "Milo",
@@ -66,7 +63,7 @@ export const DRINK_BASES: DrinkBase[] = [
     strength: ["Gao"],
     sweetness: ["Siew Dai", "Kosong"],
     temp: ["Peng"],
-    specials: [{ label: "Dinosaur" }, { label: "Godzilla" }],
+    specials: [],
   },
 ];
 
