@@ -252,7 +252,7 @@ export default function GreetingPage() {
                     </div>
                     <div className="max-h-[45vh] overflow-y-auto divide-y divide-stone-100 dark:divide-[#3a3a3a]">
                       {filteredColleagues.length === 0 ? (
-                        <p className="px-4 py-3.5 text-center text-sm font-sans font-light italic text-stone-300 dark:text-stone-600">No match.</p>
+                        <p className="px-4 py-3.5 text-center font-serif text-base font-light italic text-stone-400 dark:text-stone-500">No match.</p>
                       ) : filteredColleagues.map((name) => (
                         <button
                           key={name}

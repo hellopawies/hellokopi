@@ -401,7 +401,7 @@ function MenuTab() {
             );
           })}
         </div>
-        <p className="text-[11px] font-sans italic text-stone-300 dark:text-stone-600 mt-3 leading-relaxed">
+        <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-3 leading-relaxed">
           Kopi, Teh, Milo etc. are built from modifiers (O/C, Siew Dai, Peng…) so there are no individual drinks to hide there. Custom drinks you add above will appear in the Others list.
         </p>
       </div>
@@ -527,7 +527,7 @@ function MembersTab() {
             ))}
           </div>
         )}
-        <p className="text-[11px] font-sans italic text-stone-300 dark:text-stone-600 mt-3">"Others" always appears last.</p>
+        <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-3">&ldquo;Others&rdquo; always appears last.</p>
       </div>
     </div>
   );

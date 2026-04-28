@@ -1022,12 +1022,12 @@ function OrderContent() {
                     </span>
                   ))}
                   {presentUsers.length > 5 && (
-                    <span className="w-[22px] h-[22px] rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[8px] font-sans text-stone-400 dark:text-stone-500">
+                    <span className="w-[22px] h-[22px] rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[8px] font-sans font-semibold text-stone-400 dark:text-stone-500">
                       +{presentUsers.length - 5}
                     </span>
                   )}
                 </div>
-                <span className="text-[11px] font-sans italic text-stone-400 dark:text-stone-500">
+                <span className="text-[11px] font-sans text-stone-400 dark:text-stone-500">
                   {presenceCopy(presentUsers)}
                 </span>
               </div>
