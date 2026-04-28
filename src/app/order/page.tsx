@@ -124,6 +124,43 @@ const BASE_DRINKS_MAP = new Map(
   CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d])
 );
 
+// Synthesise a description for builder-composed drink names that have no
+// literal entry in drinks.ts (e.g. "Teh C Po Kosong"). Walks tokens with a
+// simple greedy match; returns undefined if the name isn't a known base.
+function synthesiseDescription(name: string): string | undefined {
+  const tokens = name.split(/\s+/);
+  const parts: string[] = [];
+  let i = 0;
+
+  // Base (multi-word first)
+  if (tokens[i] === "Teh" && tokens[i + 1] === "Halia") { parts.push("ginger tea"); i += 2; }
+  else if (tokens[i] === "Yuan" && tokens[i + 1] === "Yang") { parts.push("coffee + tea"); i += 2; }
+  else if (tokens[i] === "Kopi") { parts.push("coffee"); i += 1; }
+  else if (tokens[i] === "Teh") { parts.push("tea"); i += 1; }
+  else if (tokens[i] === "Milo") { parts.push("chocolate malt"); i += 1; }
+  else if (tokens[i] === "Horlicks") { parts.push("malted milk"); i += 1; }
+  else return undefined;
+
+  const SINGLE: Record<string, string> = {
+    "O": "no milk", "C": "evap milk",
+    "Gao": "strong", "Po": "weak",
+    "Peng": "iced", "Tarik": "pulled",
+    "Kosong": "no sugar",
+  };
+
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (t === "Di" && tokens[i + 1] === "Lo") { parts.push("extra strong"); i += 2; continue; }
+    if (t === "Pua" && tokens[i + 1] === "Sio") { parts.push("lukewarm"); i += 2; continue; }
+    if (t === "Siew" && tokens[i + 1] === "Dai") { parts.push("less sweet"); i += 2; continue; }
+    if (t === "Gah" && tokens[i + 1] === "Dai") { parts.push("extra sweet"); i += 2; continue; }
+    if (SINGLE[t]) { parts.push(SINGLE[t]); i += 1; continue; }
+    return undefined;
+  }
+
+  return parts.length > 1 ? parts.join(" · ") : undefined;
+}
+
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
 type Tab = "crowd" | "yours" | "all";
@@ -1161,7 +1198,7 @@ function OrderContent() {
                       <DrinkCard
                         key={drinkName}
                         name={drinkName}
-                        description={drink?.description}
+                        description={drink?.description ?? synthesiseDescription(drinkName)}
                         selected={cart.has(drinkName)}
                         qty={cart.get(drinkName) ?? 0}
                         onSelect={() => toggleCart(drinkName)}
@@ -1251,7 +1288,7 @@ function OrderContent() {
                       <DrinkCard
                         key={drink_name}
                         name={drink_name}
-                        description={drink?.description}
+                        description={drink?.description ?? synthesiseDescription(drink_name)}
                         selected={cart.has(drink_name)}
                         qty={cart.get(drink_name) ?? 0}
                         onSelect={() => toggleCart(drink_name)}

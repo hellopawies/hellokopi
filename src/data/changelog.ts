@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.7",
+    date: "28 Apr 2026",
+    title: "Descriptions for builder-composed drinks",
+    changes: [
+      "Drinks composed in the builder (e.g. Teh C Po Kosong) now get a short description on My Picks and Top Choice cards, so they don't read as a bare name with empty space underneath",
+    ],
+  },
+  {
     version: "v3.3.6",
     date: "28 Apr 2026",
     title: "Surprise Me stays on the menu",
