@@ -1,5 +1,15 @@
 export const VERSIONS = [
   {
+    version: "v3.3.3",
+    date: "28 Apr 2026",
+    title: "Hot or iced at a glance",
+    changes: [
+      "Each session row on the orders page now shows the hot/iced split next to the cup count — red for hot, blue for iced — so the runner can call the order at the counter without parsing every drink name",
+      "WhatsApp share text carries the same split at the bottom — \"5 cups · 3 hot · 2 iced\"",
+      "Removed the separate copy button — Share on WhatsApp already opens with the order text ready to paste anywhere",
+    ],
+  },
+  {
     version: "v3.3.2",
     date: "27 Apr 2026",
     title: "WhatsApp order sharing",
