@@ -53,8 +53,6 @@ export const CATEGORIES: DrinkCategory[] = [
       { name: "Kopi C Kosong Peng", description: "Iced + evap milk, no sugar" },
       { name: "Kopi C Siew Dai Peng", description: "Iced + evap milk + less sugar" },
       { name: "Kopi C Gao Peng", description: "Iced strong + evap milk" },
-      { name: "Kopi Gu You", description: "Coffee with a pat of butter" },
-      { name: "Kopi Ka Dai", description: "Coffee with raw egg — brave order!" },
     ],
   },
   {
@@ -94,7 +92,6 @@ export const CATEGORIES: DrinkCategory[] = [
       { name: "Teh C Peng", description: "Iced + evap milk + sugar" },
       { name: "Teh C Kosong Peng", description: "Iced + evap milk, no sugar" },
       { name: "Teh C Siew Dai Peng", description: "Iced + evap milk + less sugar" },
-      { name: "Teh C Peng Special", description: "3-layer iced Teh C with gula melaka" },
     ],
   },
   {
@@ -130,7 +127,6 @@ export const CATEGORIES: DrinkCategory[] = [
       { name: "Yuan Yang C Kosong", description: "Evap milk, no sugar" },
       { name: "Yuan Yang C Siew Dai", description: "Evap milk + less sugar" },
       { name: "Yuan Yang C Peng", description: "Iced + evap milk" },
-      { name: "Kopi Cham", description: "Same as Yuan Yang (alternate name)" },
     ],
   },
   {
@@ -166,8 +162,6 @@ export const CATEGORIES: DrinkCategory[] = [
       { name: "Horlicks Peng", description: "Iced malted milk" },
       { name: "Horlicks C", description: "Horlicks with evaporated milk" },
       { name: "Horlicks C Peng", description: "Iced Horlicks with evaporated milk" },
-      { name: "Horlicks Dinosaur", description: "Iced Horlicks + powder mountain" },
-      { name: "Horlicks Godzilla", description: "Horlicks Dinosaur + ice cream" },
     ],
   },
   {
