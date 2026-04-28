@@ -683,8 +683,6 @@ function OrderContent() {
   const editingOrderId = useRef<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [headerCompact, setHeaderCompact] = useState(false);
-  const prevTotalRef = useRef(0);
-  const [cartJustGrew, setCartJustGrew] = useState(false);
 
   // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
@@ -797,18 +795,6 @@ function OrderContent() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-
-  // Cart depth pulse — highlight border when cart grows
-  useEffect(() => {
-    const total = [...cart.values()].reduce((s, q) => s + q, 0);
-    if (total > prevTotalRef.current) {
-      setCartJustGrew(true);
-      const t = setTimeout(() => setCartJustGrew(false), 600);
-      prevTotalRef.current = total;
-      return () => clearTimeout(t);
-    }
-    prevTotalRef.current = total;
-  }, [cart]);
 
   function toggleCart(drinkName: string) {
     setCart((prev) => {
@@ -1316,8 +1302,7 @@ function OrderContent() {
       {(cart.size > 0 || builderDrink) && (
         <div className="fixed bottom-8 left-0 right-0 z-40 px-4 sm:px-6">
           <div
-            className={`max-w-lg mx-auto rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 pt-3.5 pb-4 flex flex-col gap-2.5 border transition-colors duration-300 ${cartJustGrew ? "border-stone-400 dark:border-stone-400/80" : "border-stone-200 dark:border-stone-700/60"}`}
-            style={cartJustGrew ? { animation: "cartPulse 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both" } : undefined}
+            className="max-w-lg mx-auto rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 pt-3.5 pb-4 flex flex-col gap-2.5 border border-stone-200 dark:border-stone-700/60"
           >
 
             {/* Builder preview row */}
