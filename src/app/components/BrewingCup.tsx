@@ -1,6 +1,19 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const VERBS = ["Brewing", "Pulling", "Steeping", "Stirring", "Frothing"];
+
 export default function BrewingCup({ className = "py-20" }: { className?: string }) {
+  const [i, setI] = useState(() => Math.floor(Math.random() * VERBS.length));
+
+  useEffect(() => {
+    const t = setInterval(() => setI((prev) => (prev + 1) % VERBS.length), 1400);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div className={`flex justify-center ${className}`} aria-label="Loading">
+    <div className={`flex flex-col items-center gap-4 ${className}`} aria-label="Loading">
       <svg viewBox="0 0 64 64" width="36" height="36" style={{ overflow: "visible" }}>
         {/* Steam */}
         <g>
@@ -21,6 +34,13 @@ export default function BrewingCup({ className = "py-20" }: { className?: string
         <path d="M12 56 Q32 61 52 56"
           fill="none" strokeWidth="1.8" strokeLinecap="round" className="ptr-cup-stroke" style={{ opacity: 0.7 }} />
       </svg>
+      <p
+        key={VERBS[i]}
+        className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-400 dark:text-stone-500"
+        style={{ animation: "tabIn 0.35s ease-out both" }}
+      >
+        {VERBS[i]}…
+      </p>
     </div>
   );
 }

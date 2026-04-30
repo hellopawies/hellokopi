@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.8",
+    date: "28 Apr 2026",
+    title: "Brewing… pulling… steeping…",
+    changes: [
+      "The loading cup now cycles through a small set of brewing verbs — Brewing, Pulling, Steeping, Stirring, Frothing — instead of sitting silently. Picks a random starting verb on each load so it's not the same word every time",
+    ],
+  },
+  {
     version: "v3.3.7",
     date: "28 Apr 2026",
     title: "Descriptions for builder-composed drinks",
