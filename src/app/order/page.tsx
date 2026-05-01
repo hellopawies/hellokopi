@@ -124,6 +124,23 @@ const BASE_DRINKS_MAP = new Map(
   CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d])
 );
 
+// Web Speech API minimal shape — declared here to avoid pulling DOM lib types
+// for a feature that's only used in one component.
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+interface SpeechRecognitionEventLike { results: { [index: number]: { [index: number]: { transcript: string } } } }
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
 // Synthesise a description for builder-composed drink names that have no
 // literal entry in drinks.ts (e.g. "Teh C Po Kosong"). Mirrors the literal
 // style: capitalised, " + " separators, ", no sugar" tail for Kosong.
@@ -431,6 +448,53 @@ function DrinkBuilder({
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // ── Voice search ─────────────────────────────────────────────
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SR = (window as unknown as { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor }).SpeechRecognition
+      ?? (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionCtor }).webkitSpeechRecognition;
+    if (!SR) return;
+    setVoiceSupported(true);
+    const r = new SR();
+    r.lang = "en-SG";
+    r.continuous = false;
+    r.interimResults = false;
+    r.maxAlternatives = 3;
+    r.onresult = (e: SpeechRecognitionEventLike) => {
+      const transcript = e.results[0]?.[0]?.transcript ?? "";
+      const cleaned = transcript
+        .toLowerCase()
+        .replace(/[.,!?;:]/g, "")
+        // Common phonetic mishears for kopitiam single-letter modifiers
+        .replace(/\b(see|sea|si)\b/g, "c")
+        .replace(/\b(oh|owe)\b/g, "o")
+        .trim();
+      setSearch(cleaned);
+      setBaseId(null);
+    };
+    r.onerror = () => setListening(false);
+    r.onend = () => setListening(false);
+    recognitionRef.current = r;
+    return () => { try { r.abort(); } catch {} };
+  }, []);
+
+  function toggleListening() {
+    const r = recognitionRef.current;
+    if (!r) return;
+    if (listening) {
+      try { r.stop(); } catch {}
+      setListening(false);
+      return;
+    }
+    haptic(8);
+    setListening(true);
+    try { r.start(); } catch { setListening(false); }
+  }
+
   const handleSearchSelect = useCallback((drinkName: string) => {
     onToggleCart(drinkName);
     setSearch("");
@@ -472,14 +536,35 @@ function DrinkBuilder({
   return (
     <div className="flex flex-col gap-6">
       {/* Search */}
-      <input
-        ref={searchRef}
-        type="text"
-        value={search}
-        onChange={(e) => { setSearch(e.target.value); if (e.target.value) setBaseId(null); }}
-        placeholder="Search drinks…"
-        className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 tracking-wide transition-colors duration-200"
-      />
+      <div className="relative">
+        <input
+          ref={searchRef}
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); if (e.target.value) setBaseId(null); }}
+          placeholder={listening ? "Listening…" : "Search drinks…"}
+          className={`w-full bg-transparent border-0 border-b focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 tracking-wide transition-colors duration-200 ${voiceSupported ? "pr-9" : ""} ${listening ? "border-red-400 dark:border-red-500" : "border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400"}`}
+        />
+        {voiceSupported && (
+          <button
+            type="button"
+            onClick={toggleListening}
+            aria-label={listening ? "Stop listening" : "Voice search"}
+            aria-pressed={listening}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 p-2 transition-colors duration-150 touch-manipulation ${listening ? "text-red-500 dark:text-red-400" : "text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"}`}
+          >
+            <svg
+              className={`w-4 h-4 ${listening ? "animate-pulse" : ""}`}
+              fill={listening ? "currentColor" : "none"}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={listening ? 0 : 1.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {/* Search results */}
       {searchResults ? (
