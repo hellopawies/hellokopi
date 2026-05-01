@@ -141,6 +141,11 @@ interface SpeechRecognitionLike {
 interface SpeechRecognitionEventLike { results: { [index: number]: { [index: number]: { transcript: string } } } }
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
+// Cart auto-save: persists the in-progress cart per user so an accidental tab
+// close or reload doesn't lose progress. Cleared the moment cart goes empty.
+const CART_DRAFT_KEY = "hellokopi_cart_draft";
+const CART_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
 // Synthesise a description for builder-composed drink names that have no
 // literal entry in drinks.ts (e.g. "Teh C Po Kosong"). Mirrors the literal
 // style: capitalised, " + " separators, ", no sugar" tail for Kosong.
@@ -928,6 +933,43 @@ function OrderContent() {
       });
     return () => { channel.untrack(); supabase.removeChannel(channel); };
   }, [name]);
+
+  // Restore in-progress cart from previous visit (same user, fresh enough)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(CART_DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { name: string; cart: [string, number][]; savedAt: number };
+      const tooOld = Date.now() - (parsed.savedAt ?? 0) > CART_DRAFT_TTL_MS;
+      const wrongUser = parsed.name !== name;
+      if (tooOld || wrongUser) {
+        if (tooOld) localStorage.removeItem(CART_DRAFT_KEY);
+        return;
+      }
+      if (Array.isArray(parsed.cart) && parsed.cart.length > 0) {
+        setCart(new Map(parsed.cart));
+      }
+    } catch {
+      try { localStorage.removeItem(CART_DRAFT_KEY); } catch {}
+    }
+  }, [name]);
+
+  // Persist cart to localStorage on every change. Empty cart clears the draft.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (cart.size === 0) {
+        localStorage.removeItem(CART_DRAFT_KEY);
+      } else {
+        localStorage.setItem(CART_DRAFT_KEY, JSON.stringify({
+          name,
+          cart: [...cart.entries()],
+          savedAt: Date.now(),
+        }));
+      }
+    } catch {}
+  }, [cart, name]);
 
   // Header compression via IntersectionObserver on a sentinel at top of content
   useEffect(() => {
