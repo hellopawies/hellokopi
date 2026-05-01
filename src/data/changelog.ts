@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.10",
+    date: "28 Apr 2026",
+    title: "Cart picks up where you left off",
+    changes: [
+      "Your in-progress cart now persists locally — close the tab, reload, or get yanked into a meeting, and the drinks you'd already added are still there when you come back. Auto-clears the moment you place the order, switch to a different name, or after 24 hours.",
+    ],
+  },
+  {
     version: "v3.3.9",
     date: "28 Apr 2026",
     title: "Voice search on All Drinks",
