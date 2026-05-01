@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.3.9",
+    date: "28 Apr 2026",
+    title: "Voice search on All Drinks",
+    changes: [
+      "Tap the mic icon next to the All Drinks search box and say what you want — \"Kopi C Siew Dai\" or \"Teh O Peng\" — and the search filters to it. Common phonetic mishears like \"see\" → C and \"oh\" → O are normalised so single-letter modifiers still match. Hidden on browsers without Web Speech support (e.g. Firefox).",
+    ],
+  },
+  {
     version: "v3.3.8",
     date: "28 Apr 2026",
     title: "Brewing… pulling… steeping…",
