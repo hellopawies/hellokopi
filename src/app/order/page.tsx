@@ -119,10 +119,14 @@ function AnnotatedText({ text, selected }: { text: string; selected?: boolean })
   );
 }
 
-// Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only)
-const BASE_DRINKS_MAP = new Map(
-  CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d])
-);
+// Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only).
+// Combines drinks.ts CATEGORIES (Kopi/Teh/Milo/etc base entries) with menu.ts
+// OTHERS_DRINKS (Bandung Peng, Barley, Michael Jackson, etc.) so every drink
+// surfaced in the UI has a resolvable description.
+const BASE_DRINKS_MAP = new Map<string, { name: string; description: string }>([
+  ...CATEGORIES.flatMap((c) => c.drinks).map((d) => [d.name, d] as const),
+  ...OTHERS_DRINKS.map((d) => [d.name, d] as const),
+]);
 
 // Web Speech API minimal shape — declared here to avoid pulling DOM lib types
 // for a feature that's only used in one component.
@@ -242,43 +246,47 @@ function DrinkCard({
 }) {
   const [bursting, setBursting] = useState(false);
   return (
-    <button
-      type="button"
-      onClick={onSelect}
+    <div
+      className="relative"
       style={enterDelay !== undefined ? { animation: `pageIn 0.3s ease-out ${enterDelay}ms both` } : undefined}
-      className={`
-        relative text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
-        ${selected
-          ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
-          : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
-      `}
     >
-      <span
-        role="button"
+      <button
+        type="button"
+        onClick={onSelect}
+        className={`
+          text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
+          ${selected
+            ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
+            : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
+        `}
+      >
+        <p className={`text-sm font-sans font-medium leading-snug pr-7 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
+          {name}{selected && qty > 1 ? <span className="ml-1 text-[11px] font-normal opacity-60">×{qty}</span> : null}
+        </p>
+        {description && (
+          <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
+            <AnnotatedText text={description} selected={selected} />
+          </p>
+        )}
+        {count !== undefined && (
+          <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
+            {count} {count === 1 ? "cup" : "cups"}
+          </p>
+        )}
+      </button>
+      <button
+        type="button"
+        aria-label={favourited ? `Remove ${name} from My Picks` : `Save ${name} to My Picks`}
+        aria-pressed={favourited}
         className="group/heart absolute top-0.5 right-0.5 p-2.5 touch-manipulation"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={() => {
           if (!favourited) { setBursting(true); setTimeout(() => setBursting(false), 520); }
           onToggleFavourite();
         }}
       >
         <Heart filled={favourited} bursting={bursting} />
-      </span>
-
-      <p className={`text-sm font-sans font-medium leading-snug pr-5 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-        {name}{selected && qty > 1 ? <span className="ml-1 text-[11px] font-normal opacity-60">×{qty}</span> : null}
-      </p>
-      {description && (
-        <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-          <AnnotatedText text={description} selected={selected} />
-        </p>
-      )}
-      {count !== undefined && (
-        <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
-          {count} {count === 1 ? "cup" : "cups"}
-        </p>
-      )}
-    </button>
+      </button>
+    </div>
   );
 }
 
@@ -862,6 +870,7 @@ function OrderContent() {
       setLoadingFavs(false);
       return;
     }
+    let cancelled = false;
     const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
     Promise.all([
       supabase.from("orders").select("items"),
@@ -870,6 +879,7 @@ function OrderContent() {
       supabase.from("hidden_drinks").select("drink_name"),
       supabase.from("orders").select("id, items, created_at").eq("person_name", name).order("created_at", { ascending: false }),
     ]).then(([allOrders, favs, custom, hidden, userOrders]) => {
+      if (cancelled) return;
       if (allOrders.data) {
         const counts = new Map<string, number>();
         for (const order of allOrders.data)
@@ -898,7 +908,14 @@ function OrderContent() {
       }
       setLoadingCrowd(false);
       setLoadingFavs(false);
+    }).catch(() => {
+      // Network/Supabase failure — clear loaders so UI doesn't freeze.
+      // Empty state renders gracefully (no favs, no crowd, no existing order).
+      if (cancelled) return;
+      setLoadingCrowd(false);
+      setLoadingFavs(false);
     });
+    return () => { cancelled = true; };
   }, [name]);
 
   // Hide the active order card when the 15-min session window closes.

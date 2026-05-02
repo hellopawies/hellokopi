@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import BrewingCup from "@/app/components/BrewingCup";
@@ -95,6 +95,11 @@ function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const load = useCallback(async () => {
     if (!isConfigured) { setLoading(false); return; }
@@ -106,13 +111,14 @@ function OrdersTab() {
         .from("orders").select("*")
         .order("created_at", { ascending: false })
         .abortSignal(controller.signal);
+      if (!mountedRef.current) return;
       if (error) throw error;
       setOrders(data as Order[]);
     } catch {
-      setError(true);
+      if (mountedRef.current) setError(true);
     } finally {
       clearTimeout(timer);
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
@@ -272,14 +278,19 @@ function MenuTab() {
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
+    let cancelled = false;
     Promise.all([
       supabase.from("custom_drinks").select("*").order("created_at"),
       supabase.from("hidden_drinks").select("drink_name"),
     ]).then(([custom, hidden]) => {
+      if (cancelled) return;
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
       setLoading(false);
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
     });
+    return () => { cancelled = true; };
   }, []);
 
   async function addDrink(e: React.FormEvent) {
@@ -418,10 +429,16 @@ function MembersTab() {
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
-    supabase.from("members").select("*").order("sort_order").then(({ data }) => {
-      if (data) setMembers(data as Member[]);
-      setLoading(false);
-    });
+    let cancelled = false;
+    supabase.from("members").select("*").order("sort_order").then(
+      ({ data }) => {
+        if (cancelled) return;
+        if (data) setMembers(data as Member[]);
+        setLoading(false);
+      },
+      () => { if (!cancelled) setLoading(false); },
+    );
+    return () => { cancelled = true; };
   }, []);
 
   async function addMember(e: React.FormEvent) {

@@ -1,5 +1,17 @@
 export const VERSIONS = [
   {
+    version: "v3.4.0",
+    date: "28 Apr 2026",
+    title: "Stability pass",
+    changes: [
+      "If a Supabase request fails or times out, the screen no longer freezes on a permanent loading spinner — loaders clear and the page renders what it can",
+      "If the page throws an unexpected error mid-render, you now get a calm \"Something cracked\" screen with a Try again button, instead of a white screen",
+      "Async fetches no longer write to a screen that's been left — fixes a class of subtle bugs where switching pages mid-load could overwrite fresh data",
+      "Heart button on drink cards is now properly accessible — screen readers announce save/unsave state correctly (was nested-button HTML before)",
+      "Cleaned up stray Bandung variants that weren't actually orderable in the menu — Bandung Peng still lives in Others, the rest are gone",
+    ],
+  },
+  {
     version: "v3.3.10",
     date: "28 Apr 2026",
     title: "Cart picks up where you left off",
