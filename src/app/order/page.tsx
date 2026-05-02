@@ -918,7 +918,7 @@ function OrderContent() {
     return () => { cancelled = true; };
   }, [name]);
 
-  // Hide the active order card when the 15-min session window closes.
+  // Hide the active order card when the session window closes.
   // The order stays in history — we just stop showing it as actionable.
   useEffect(() => {
     if (!existingOrder) return;
@@ -1121,7 +1121,7 @@ function OrderContent() {
         items: finalItems,
       });
       if (error) throw error;
-      // Find session start: earliest order placed in the last 15 minutes
+      // Find session start: earliest order placed within the current session window
       const windowStart = new Date(orderedAt.getTime() - SESSION_MS).toISOString();
       const { data: sessionData } = await supabase
         .from("orders")
@@ -1259,7 +1259,7 @@ function OrderContent() {
         <div className="max-w-lg mx-auto">
           <div ref={sentinelRef} className="h-px" aria-hidden />
 
-          {/* Active order card — only shown while the 15-min window is open */}
+          {/* Active order card — only shown while the session window is open */}
           {existingOrder && !isEditing && (
             <div className="relative mb-5">
               <div
