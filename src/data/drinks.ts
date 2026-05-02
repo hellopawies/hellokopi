@@ -165,20 +165,6 @@ export const CATEGORIES: DrinkCategory[] = [
     ],
   },
   {
-    id: "bandung",
-    label: "Bandung",
-    drinks: [
-      { name: "Bandung", description: "Rose syrup + milk (hot)" },
-      { name: "Bandung Peng", description: "Iced rose syrup milk" },
-      { name: "Bandung Siew Dai", description: "Less sweet" },
-      { name: "Bandung Kosong", description: "Rose + milk, no added sugar" },
-      { name: "Bandung Gao", description: "Stronger rose flavor" },
-      { name: "Bandung Soda", description: "Rose milk + soda water (fizzy)" },
-      { name: "Bandung Cincau", description: "Bandung + grass jelly" },
-      { name: "Bandung Dinosaur", description: "Iced Bandung + extra rose syrup" },
-    ],
-  },
-  {
     id: "others",
     label: "Others",
     drinks: [

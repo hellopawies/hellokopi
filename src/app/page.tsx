@@ -63,14 +63,20 @@ export default function GreetingPage() {
     setGreeting(getGreeting());
     setSubtitle(getSubtitle());
     setReady(true);
-    if (isConfigured) {
-      supabase.from("members").select("name, sort_order").order("sort_order")
-        .then(({ data }) => {
+    if (!isConfigured) return;
+    let cancelled = false;
+    supabase.from("members").select("name, sort_order").order("sort_order")
+      .then(
+        ({ data }) => {
+          if (cancelled) return;
           if (data && data.length > 0) {
             setColleagues([...data.map((m: { name: string }) => m.name), "Others"]);
           }
-        });
-    }
+        },
+        // Network failure is non-fatal — fall back to the hard-coded COLLEAGUES list.
+        () => { /* silent fallback */ },
+      );
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

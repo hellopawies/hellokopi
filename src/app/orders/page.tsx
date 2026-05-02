@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import BrewingCup from "@/app/components/BrewingCup";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
@@ -146,6 +146,13 @@ export default function OrdersPage() {
   const [groups, setGroups] = useState<DateGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Tracks whether the component is still mounted, so async fetches don't
+  // setState after unmount.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [quip, setQuip] = useState("");
   // Ephemeral "told the cashier" ticks — never persisted; resets on refresh.
@@ -170,6 +177,7 @@ export default function OrdersPage() {
         .from("orders")
         .select("*")
         .order("created_at", { ascending: false });
+      if (!mountedRef.current) return;
       if (data) {
         const g = groupOrders(data as Order[]);
         setGroups(g);
@@ -189,15 +197,16 @@ export default function OrdersPage() {
         .select("*")
         .order("created_at", { ascending: false })
         .abortSignal(controller.signal);
+      if (!mountedRef.current) return;
       if (error) throw error;
       const g = groupOrders(data as Order[]);
       setGroups(g);
       if (g.length > 0) setSelectedDate(g[0].dateKey);
     } catch {
-      setError(true);
+      if (mountedRef.current) setError(true);
     } finally {
       clearTimeout(timer);
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
