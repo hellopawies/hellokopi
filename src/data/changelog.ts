@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.1",
+    date: "28 Apr 2026",
+    title: "Tighter session window",
+    changes: [
+      "Session window reduced from 15 minutes to 10 — orders placed more than 10 minutes apart now start a new session, the active-order edit window closes 10 minutes after your first order, and the live countdown on /orders ticks from 10:00 down. Single source of truth: SESSION_MS in src/lib/constants.ts.",
+    ],
+  },
+  {
     version: "v3.4.0",
     date: "28 Apr 2026",
     title: "Stability pass",
