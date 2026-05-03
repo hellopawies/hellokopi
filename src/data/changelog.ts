@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.2",
+    date: "28 Apr 2026",
+    title: "Removed voice search",
+    changes: [
+      "Mic icon and Web Speech API integration on the All Drinks search are gone — voice was unreliable for kopitiam vocabulary (Hokkien terms like Siew Dai never got transcribed cleanly) and the manual search is plenty fast. Search input is back to its original simple form.",
+    ],
+  },
+  {
     version: "v3.4.1",
     date: "28 Apr 2026",
     title: "Tighter session window",
