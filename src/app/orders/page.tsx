@@ -26,6 +26,22 @@ function dateLabel(dateKey: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: TIMEZONE_SG });
 }
 
+// Colour-coded marker beside each drink on the orders list — lets the runner
+// scan the list visually instead of reading every name. Keyed off the base
+// (the first word or two), with a neutral stone fallback for unknown / custom
+// drinks. Picked to read on both cream and pure-black backgrounds.
+function drinkColor(name: string): string {
+  const n = name.toLowerCase();
+  if (n.startsWith("yuan yang")) return "#7a4e2a"; // coffee + tea blend
+  if (n.startsWith("teh halia")) return "#b06228"; // ginger tea
+  if (n.startsWith("kopi"))      return "#6f4e37"; // coffee brown
+  if (n.startsWith("teh"))       return "#a86b3a"; // tea tan
+  if (n.startsWith("milo"))      return "#2d8a3e"; // milo green
+  if (n.startsWith("horlicks"))  return "#a47d3f"; // malted honey
+  if (n.startsWith("bandung"))   return "#cb6f8a"; // rose
+  return "#a8a29e";                                // stone-400 fallback
+}
+
 const QUIPS = [
   "So who's paying today?",
   "Today's forecast: 100% chance of kopi.",
@@ -378,6 +394,11 @@ export default function OrdersPage() {
                             className={`w-full text-left py-3.5 px-2 -mx-2 rounded-md border-b border-stone-100 dark:border-stone-800 transition-all duration-200 touch-manipulation hover:bg-stone-100/60 dark:hover:bg-stone-900/60 ${isTicked ? "opacity-40" : ""}`}
                           >
                             <p className={`text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug ${isTicked ? "line-through" : ""}`}>
+                              <span
+                                aria-hidden="true"
+                                className="inline-block w-[7px] h-[7px] rounded-full mr-2 align-middle flex-shrink-0"
+                                style={{ backgroundColor: drinkColor(drink) }}
+                              />
                               {drink}
                               {names.length > 1 && (
                                 <span className="ml-1.5 px-1.5 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide align-middle">

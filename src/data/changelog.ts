@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.3",
+    date: "28 Apr 2026",
+    title: "Drink-colour dots on the orders list",
+    changes: [
+      "Each drink on /orders now has a small coloured dot beside its name — brown for kopi, tan for teh, green for milo, honey for horlicks, rose for bandung, and a few more — so the runner can scan the list visually instead of reading every line. Decorative only; screen readers ignore it.",
+    ],
+  },
+  {
     version: "v3.4.2",
     date: "28 Apr 2026",
     title: "Removed voice search",
