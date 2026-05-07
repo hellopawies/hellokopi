@@ -10,8 +10,11 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        serif: ["Cormorant Garamond", "Georgia", "Cambria", "Times New Roman", "serif"],
-        sans: ["Inter", "system-ui", "sans-serif"],
+        // CSS variables are set by next/font in app/layout.tsx — see Inter and
+        // Cormorant_Garamond imports there. Fallbacks remain so styles still
+        // resolve sensibly if the variable isn't applied.
+        serif: ["var(--font-serif)", "Georgia", "Cambria", "Times New Roman", "serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
       colors: {
         cream: "#FAFAF8",

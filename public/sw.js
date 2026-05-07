@@ -1,4 +1,4 @@
-const CACHE = "hellokopi-v1";
+const CACHE = "hellokopi-v2";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.4",
+    date: "28 Apr 2026",
+    title: "Faster first paint",
+    changes: [
+      "Cormorant Garamond and Inter are now self-hosted via next/font instead of loaded from fonts.googleapis.com — drops the render-blocking external request and shaves a noticeable chunk off first paint, especially on slower office networks. Look the same as before, just arrive faster.",
+    ],
+  },
+  {
     version: "v3.4.3",
     date: "28 Apr 2026",
     title: "Drink-colour dots on the orders list",
