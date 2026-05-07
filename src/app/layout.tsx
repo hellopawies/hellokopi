@@ -1,7 +1,26 @@
 import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "./components/Header";
 import { PullToRefresh } from "./components/PullToRefresh";
+
+// Self-hosted via next/font — replaces the previous render-blocking
+// @import from fonts.googleapis.com. Variables are exposed as
+// --font-sans / --font-serif and consumed via Tailwind's fontFamily config.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Hello Kopi",
@@ -24,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <head>
         <link rel="manifest" href="/hellokopi/manifest.json" />
         <link rel="apple-touch-icon" href="/hellokopi/icon.svg" />
