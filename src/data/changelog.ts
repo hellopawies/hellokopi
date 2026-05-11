@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.5",
+    date: "28 Apr 2026",
+    title: "Home-screen icon plays nice with iOS",
+    changes: [
+      "The home-screen icon now adapts to your iOS appearance: cream brand background by default (sits well in light + tinted modes), and a dark variant kicks in automatically when your iOS home screen is in dark mode. Existing installs need to delete-and-re-add to pick up the new icon.",
+    ],
+  },
+  {
     version: "v3.4.4",
     date: "28 Apr 2026",
     title: "Faster first paint",

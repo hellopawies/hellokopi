@@ -46,7 +46,13 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <head>
         <link rel="manifest" href="/hellokopi/manifest.json" />
+        {/* Default apple-touch-icon — cream brand background, blends with iOS
+            light home screen and tinted modes. Dark variant kicks in via
+            media query for users with dark home-screen appearance. iOS PWA
+            icons are not auto-tinted by iOS 18; this dual-icon setup is the
+            closest standard equivalent for adapting to user preference. */}
         <link rel="apple-touch-icon" href="/hellokopi/icon.svg" />
+        <link rel="apple-touch-icon" href="/hellokopi/icon-dark.svg" media="(prefers-color-scheme: dark)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Hello Kopi" />
