@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.5.8",
+    date: "28 Apr 2026",
+    title: "Check Orders link on the home page",
+    changes: [
+      "The Check Orders link now sits top-right on the greeting page too — peek at today's run without having to pick your name first.",
+    ],
+  },
+  {
     version: "v3.5.7",
     date: "28 Apr 2026",
     title: "Sticky header feels elevated in dark mode",
