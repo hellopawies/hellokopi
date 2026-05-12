@@ -230,14 +230,14 @@ function DrinkCard({
   const [bursting, setBursting] = useState(false);
   return (
     <div
-      className="relative"
+      className="relative h-full"
       style={enterDelay !== undefined ? { animation: `pageIn 0.3s ease-out ${enterDelay}ms both` } : undefined}
     >
       <button
         type="button"
         onClick={onSelect}
         className={`
-          text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97] w-full
+          h-full w-full flex flex-col text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97]
           ${selected
             ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
             : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
@@ -252,7 +252,7 @@ function DrinkCard({
           </p>
         )}
         {count !== undefined && (
-          <p className={`text-[10px] font-sans mt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
+          <p className={`text-[10px] font-sans mt-auto pt-1.5 font-medium tabular-nums ${selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
             {count} {count === 1 ? "cup" : "cups"}
           </p>
         )}
