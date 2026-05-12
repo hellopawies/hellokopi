@@ -1342,12 +1342,12 @@ function OrderContent() {
                           className="text-sm font-sans font-medium text-stone-700 dark:text-stone-200 truncate"
                           style={{ animation: "pageIn 0.07s ease-out both" }}
                         >
-                          {rouletteName || "…"}
+                          {rouletteName ? displayDrinkName(rouletteName, lang) : "…"}
                         </p>
                       )}
                       {surprise !== "idle" && surprise !== "picking" && (
                         <>
-                          <p className="text-sm font-sans font-medium text-stone-700 dark:text-stone-200 truncate">{surprise}</p>
+                          <p className="text-sm font-sans font-medium text-stone-700 dark:text-stone-200 truncate">{displayDrinkName(surprise, lang)}</p>
                           <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500">Added to cart</p>
                         </>
                       )}
