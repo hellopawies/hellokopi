@@ -40,11 +40,15 @@ create policy "favs_insert" on user_favourites for insert with check (true);
 create policy "favs_delete" on user_favourites for delete using (true);
 
 -- Members (the office name list shown on the greeting page) --
+-- default_lang sets the language each member lands in when they pick their
+-- name on /. "en" gives English ("Iced Kopi, less sweet"); "sin" gives the
+-- kopitiam terms ("Kopi Peng Siew Dai"). User can toggle during a session.
 create table if not exists members (
-  id         uuid        primary key default gen_random_uuid(),
-  name       text        not null,
-  sort_order integer     not null default 0,
-  created_at timestamptz not null default now()
+  id           uuid        primary key default gen_random_uuid(),
+  name         text        not null,
+  sort_order   integer     not null default 0,
+  default_lang text        not null default 'en' check (default_lang in ('en', 'sin')),
+  created_at   timestamptz not null default now()
 );
 
 alter table members enable row level security;
