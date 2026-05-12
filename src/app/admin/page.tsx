@@ -306,6 +306,10 @@ function MenuTab() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  // Hot/iced toggle for the new-drink form. We don't store this as a column;
+  // iced gets a " Peng" suffix on the name so the existing display + temp-icon
+  // pipeline picks it up automatically.
+  const [newTemp, setNewTemp] = useState<"hot" | "iced">("hot");
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -327,14 +331,20 @@ function MenuTab() {
 
   async function addDrink(e: React.FormEvent) {
     e.preventDefault();
-    if (!newName.trim()) return;
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    // Iced drinks get a "Peng" suffix so drinkTemp / displayDrinkName classify
+    // them correctly app-wide. Strip any trailing "Peng" the admin might
+    // already have typed to avoid "X Peng Peng".
+    const baseName = trimmed.replace(/\s+peng$/i, "").trim();
+    const finalName = newTemp === "iced" ? `${baseName} Peng` : baseName;
     setAdding(true);
     const { data, error } = await supabase.from("custom_drinks")
-      .insert({ name: newName.trim(), description: newDesc.trim(), category_id: "others" })
+      .insert({ name: finalName, description: newDesc.trim(), category_id: "others" })
       .select().single();
     if (!error && data) {
       setCustomDrinks(prev => [...prev, data as CustomDrink]);
-      setNewName(""); setNewDesc("");
+      setNewName(""); setNewDesc(""); setNewTemp("hot");
     }
     setAdding(false);
   }
@@ -376,6 +386,27 @@ function MenuTab() {
             placeholder="Description (optional)"
             className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 transition-colors duration-200"
           />
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-400 dark:text-stone-500">Temp</p>
+            {(["hot", "iced"] as const).map((t) => {
+              const active = newTemp === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setNewTemp(t)}
+                  aria-pressed={active}
+                  className={`px-3 py-1 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation active:scale-[0.95] ${
+                    active
+                      ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-sm"
+                      : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
+                  }`}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
           <button
             type="submit"
             disabled={!newName.trim() || adding}
