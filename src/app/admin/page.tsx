@@ -8,7 +8,7 @@ import { OTHERS_DRINKS } from "@/data/menu";
 import { displayDrinkName } from "@/lib/drinkName";
 import { useLanguage } from "@/lib/language";
 import type { Order } from "@/types/order";
-import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
+import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
 
 // Client-side hash. Anyone with the bundle can reverse this — it's just a soft
 // gate to keep casual visitors out, not a real auth boundary.
@@ -149,8 +149,8 @@ function OrdersTab() {
     const rows: string[][] = [["Date", "Session", "Person", "Drink", "Qty"]];
     for (const group of groups) {
       for (const session of group.sessions) {
-        const start = session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
-        const end = new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
+        const start = formatTime(session.sessionStart);
+        const end = formatTime(new Date(session.sessionStart.getTime() + SESSION_MS));
         const sessionLabel = `${start} – ${end}`;
         for (const order of session.orders) {
           const itemMap = new Map<string, number>();
@@ -246,9 +246,9 @@ function OrdersTab() {
               return (
                 <div key={si}>
                   <p className="text-[11px] uppercase tracking-[0.25em] text-stone-600 dark:text-stone-300 font-sans font-medium mb-2">
-                    {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
+                    {formatTime(session.sessionStart)}
                     {" – "}
-                    {endTime.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
+                    {formatTime(endTime)}
                   </p>
                   <div className="border-t border-stone-100 dark:border-stone-800">
                     {session.orders.map(order => {

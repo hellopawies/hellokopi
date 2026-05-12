@@ -9,7 +9,7 @@ import { displayDrinkName } from "@/lib/drinkName";
 import { useLanguage } from "@/lib/language";
 import { TempIcon } from "@/app/components/TempIcon";
 import type { Order, DateGroup, Session } from "@/types/order";
-import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
+import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
 
 function groupByDrink(session: Session): { drink: string; names: string[] }[] {
   const map = new Map<string, string[]>();
@@ -96,8 +96,8 @@ function buildShareText(session: Session, lang: "en" | "sin"): string {
   const cups = drinkGroups.reduce((sum, g) => sum + g.names.length, 0);
   const icedCups = drinkGroups.reduce((sum, g) => sum + (/\bpeng\b/i.test(g.drink) ? g.names.length : 0), 0);
   const hotCups = cups - icedCups;
-  const timeStart = session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
-  const timeEnd = new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
+  const timeStart = formatTime(session.sessionStart);
+  const timeEnd = formatTime(new Date(session.sessionStart.getTime() + SESSION_MS));
   const date = session.sessionStart.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: TIMEZONE_SG });
 
   const totalParts = [`${cups} ${cups === 1 ? "cup" : "cups"}`];
@@ -461,9 +461,9 @@ export default function OrdersPage() {
                     <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[12px] uppercase tracking-[0.2em] text-stone-700 dark:text-stone-200 font-sans font-medium">
-                          {session.sessionStart.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
+                          {formatTime(session.sessionStart)}
                           {" – "}
-                          {new Date(session.sessionStart.getTime() + SESSION_MS).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG })}
+                          {formatTime(new Date(session.sessionStart.getTime() + SESSION_MS))}
                         </span>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-medium tracking-wide">
                           {cups} {cups === 1 ? "cup" : "cups"}
@@ -482,7 +482,7 @@ export default function OrdersPage() {
                       </div>
                       <WhatsAppShareButton session={session} />
                     </div>
-                    {sessionClosed && (
+                    {sessionClosed && !(fillMs === 0 && peopleCount === 1) && (
                       <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-3 -mt-1 tabular-nums">
                         Filled in {fillLabel} · {peopleCount} {peopleCount === 1 ? "person" : "people"}
                       </p>
