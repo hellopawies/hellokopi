@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.5.4",
+    date: "28 Apr 2026",
+    title: "Surprise Me respects your language",
+    changes: [
+      "Both the spinning roulette names and the final landed drink in the Surprise Me roller now show up in your language — \"Iced Kopi C, less sweet\" in EN, \"Kopi C Siew Dai Peng\" in SIN. Was showing raw names regardless of mode.",
+    ],
+  },
+  {
     version: "v3.5.3",
     date: "28 Apr 2026",
     title: "Long composed drink names wrap gracefully",
