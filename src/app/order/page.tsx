@@ -554,6 +554,16 @@ function DrinkBuilder({
       {/* Builder modifiers */}
       {base && (
         <div className="flex flex-col gap-5">
+          {base.temp.length > 0 && (
+            <ModifierRow
+              label="Temp"
+              defaultLabel="Hot"
+              options={base.temp.map((t) => ({ id: t, label: t === "Peng" ? "Iced" : t }))}
+              selected={temp}
+              onChange={setTemp}
+              disabled={!!special}
+            />
+          )}
           {base.milk.length > 0 && (
             <ModifierRow
               label="Milk"
@@ -579,16 +589,6 @@ function DrinkBuilder({
               options={base.strength.map((s) => ({ id: s, label: s }))}
               selected={strength}
               onChange={setStrength}
-              disabled={!!special}
-            />
-          )}
-          {base.temp.length > 0 && (
-            <ModifierRow
-              label="Temp"
-              defaultLabel="Hot"
-              options={base.temp.map((t) => ({ id: t, label: t }))}
-              selected={temp}
-              onChange={setTemp}
               disabled={!!special}
             />
           )}

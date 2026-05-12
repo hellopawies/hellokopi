@@ -1,5 +1,15 @@
 export const VERSIONS = [
   {
+    version: "v3.4.15",
+    date: "28 Apr 2026",
+    title: "Iced in the builder + temp on top + admin hot/iced toggle",
+    changes: [
+      "Builder's Temp pills now read \"Iced\" and \"Pua Sio\" instead of \"Peng\" — matches the rest of the app. Underlying value is still Peng so composed names like \"Kopi Peng\" keep working.",
+      "Temp is the first modifier in the builder now (was buried after Milk / Sweetness / Strength). Most decisions start with hot or iced, so it leads.",
+      "Admin: adding a new Others drink now has a Hot / Iced toggle. Iced drinks are stored with a \"Peng\" suffix internally so the display and the hot/iced glyph just work — admin types \"Coconut\", picks Iced, and the team sees \"Iced Coconut\" with a snowflake.",
+    ],
+  },
+  {
     version: "v3.4.14",
     date: "28 Apr 2026",
     title: "Iced not Peng + hot/iced glyph beside drink names",
