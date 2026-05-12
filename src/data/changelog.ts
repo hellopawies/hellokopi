@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.5.7",
+    date: "28 Apr 2026",
+    title: "Sticky header feels elevated in dark mode",
+    changes: [
+      "On OLED dark mode the sticky header was indistinguishable from the content below it — shadows-into-pure-black are invisible. A 1px bright hairline now sits just under the header (the lit edge of a raised surface) so it reads as a layer above the scroll, matching the soft drop shadow in light mode.",
+    ],
+  },
+  {
     version: "v3.5.6",
     date: "28 Apr 2026",
     title: "Removed Old Tea Hut redirect",
