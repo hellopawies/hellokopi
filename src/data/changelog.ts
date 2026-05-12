@@ -1,5 +1,16 @@
 export const VERSIONS = [
   {
+    version: "v3.4.11",
+    date: "28 Apr 2026",
+    title: "Live pulse on the orders page",
+    changes: [
+      "Each closed session now shows a small \"Filled in 3m 22s · 4 people\" stat under its header — easy office trivia, easy comparison across runs.",
+      "Avatars at the top of /orders show who's currently on /order picking right now. The runner can glance and see how many more drinks are still coming.",
+      "A small \"Just now · Aaron ordered Kopi C × 2\" line surfaces at the top whenever someone places an order, then quietly fades after 6 seconds.",
+      "Admin Orders tab gets From and To date pickers next to Export CSV — pick a range and export just that slice. Blank dates still export everything.",
+    ],
+  },
+  {
     version: "v3.4.10",
     date: "28 Apr 2026",
     title: "Quieter drink count",
