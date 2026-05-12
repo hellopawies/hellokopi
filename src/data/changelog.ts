@@ -1,5 +1,14 @@
 export const VERSIONS = [
   {
+    version: "v3.5.2",
+    date: "28 Apr 2026",
+    title: "Admin owns the language; flame icon for hot",
+    changes: [
+      "Removed the EN / SIN toggle from the header — admin's per-member setting is now the source of truth. Cached returning users still pick up the admin's current choice: /order re-applies it on every visit.",
+      "Hot drinks now show a small flame outline instead of three steam wisps. Iced stays as the snowflake. Same red / blue colour pairing for accessibility.",
+    ],
+  },
+  {
     version: "v3.5.1",
     date: "28 Apr 2026",
     title: "Admin sets each member's default language",

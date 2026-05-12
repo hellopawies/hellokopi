@@ -730,7 +730,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
 function OrderContent() {
   const params = useSearchParams();
   const name = params.get("name") ?? "there";
-  const { lang } = useLanguage();
+  const { lang, setLang } = useLanguage();
 
   const [orderState, setOrderState] = useState<OrderState>("idle");
   const [tab, setTab] = useState<Tab>("yours");
@@ -856,6 +856,24 @@ function OrderContent() {
       });
     return () => { channel.untrack(); supabase.removeChannel(channel); };
   }, [name]);
+
+  // Apply this user's admin-set default language on every /order visit, so
+  // a cached returning user picks up admin changes without going through
+  // the name selector. Silent on failure — keeps whatever lang is current.
+  useEffect(() => {
+    if (!isConfigured || name === "there") return;
+    let cancelled = false;
+    supabase.from("members").select("default_lang").eq("name", name).maybeSingle()
+      .then(
+        ({ data }) => {
+          if (cancelled) return;
+          const v = (data as { default_lang?: string } | null)?.default_lang;
+          if (v === "en" || v === "sin") setLang(v);
+        },
+        () => { /* silent — keep existing lang */ },
+      );
+    return () => { cancelled = true; };
+  }, [name, setLang]);
 
   // Restore in-progress cart from previous visit (same user, fresh enough)
   useEffect(() => {
