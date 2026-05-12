@@ -1373,24 +1373,6 @@ function OrderContent() {
                 hiddenDrinks={hiddenDrinks}
                 onComposedNameChange={setBuilderDrink}
               />
-
-              {/* Off-menu escape hatch — for drinks the in-app menu doesn't carry */}
-              <div className="mt-12 pt-8 border-t border-stone-100 dark:border-stone-800 flex flex-col items-center gap-3 text-center">
-                <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500">
-                  Looking for something else?
-                </p>
-                <a
-                  href="https://autopos.cloud/h5/qr?c=2DbtNuxweLMuE2mgLR8vWMJyBtoE4LrFE6QKymyrjLKpvfHYTVGrZAnpR6PKz1&h=1L5Clg&t=S"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-amber-800 dark:hover:text-amber-700 transition-colors duration-150 touch-manipulation py-2"
-                >
-                  Order direct from Old Tea Hut
-                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
             </div>
           )}
 
