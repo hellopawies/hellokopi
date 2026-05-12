@@ -1393,8 +1393,11 @@ function OrderContent() {
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <p className="font-serif text-base sm:text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug line-clamp-2 break-words min-w-0">
                     {displayDrinkName(builderDrink, lang)}
-                    <TempIcon name={builderDrink} className="inline w-3.5 h-3.5 ml-2 align-middle" />
                   </p>
+                  {/* Lifted out of the <p> so the flex row's items-center
+                      keeps icon, heart, and text on the same axis instead of
+                      inline-relative-to-x-height. */}
+                  <TempIcon name={builderDrink} className="w-4 h-4 flex-shrink-0" />
                   <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-2 -mr-1 touch-manipulation">
                     <Heart filled={userFavs.has(builderDrink)} />
                   </button>
