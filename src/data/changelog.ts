@@ -1,5 +1,14 @@
 export const VERSIONS = [
   {
+    version: "v3.5.5",
+    date: "28 Apr 2026",
+    title: "AM/PM times + hide trivial fill stat",
+    changes: [
+      "Session times now show in 12-hour AM/PM format — \"2:21 PM – 2:31 PM\" instead of \"14:21 – 14:31\". Applied everywhere a session time appears: orders list, admin orders tab, CSV export, WhatsApp share, and the post-order confirmation toast.",
+      "The \"Filled in 0s · 1 person\" line is hidden when a single person ordered without measurable fill time — the stat has no useful info to convey there. Multi-person sessions and longer fills still show as before.",
+    ],
+  },
+  {
     version: "v3.5.4",
     date: "28 Apr 2026",
     title: "Surprise Me respects your language",

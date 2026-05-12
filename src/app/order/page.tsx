@@ -11,7 +11,7 @@ import { drinkColor } from "@/lib/drinkColor";
 import { displayDrinkName, translateModifier } from "@/lib/drinkName";
 import { useLanguage } from "@/lib/language";
 import { TempIcon } from "@/app/components/TempIcon";
-import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
+import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
 import { CATEGORIES } from "@/data/drinks";
 import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
 
@@ -678,7 +678,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const time = orderedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
+  const time = formatTime(orderedAt);
   const drinkLine = items.map(({ name, qty }) => {
     const display = displayDrinkName(name, lang);
     return qty > 1 ? `${display} ×${qty}` : display;
