@@ -26,6 +26,24 @@ function dateLabel(dateKey: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: TIMEZONE_SG });
 }
 
+function getInitials(n: string): string {
+  return n.split(" ").map((w) => w[0] ?? "").join("").toUpperCase().slice(0, 2);
+}
+
+// One-line summary for the live ticker — "Kopi C × 2" or "Kopi C + 1 more".
+function describeOrderItems(items: { name: string }[]): string {
+  if (items.length === 0) return "";
+  const counts = new Map<string, number>();
+  for (const i of items) counts.set(i.name, (counts.get(i.name) ?? 0) + 1);
+  const entries = [...counts.entries()];
+  if (entries.length === 1) {
+    const [n, qty] = entries[0];
+    return qty > 1 ? `${n} × ${qty}` : n;
+  }
+  const [first] = entries;
+  return `${first[0]} + ${entries.length - 1} more`;
+}
+
 // Colour-coded marker beside each drink on the orders list — lets the runner
 // scan the list visually instead of reading every name. Keyed off the base
 // (the first word or two), with a neutral stone fallback for unknown / custom
@@ -173,6 +191,13 @@ export default function OrdersPage() {
   const [quip, setQuip] = useState("");
   // Ephemeral "told the cashier" ticks — never persisted; resets on refresh.
   const [ticked, setTicked] = useState<Set<string>>(new Set());
+  // Who's currently on /order (picking right now). Listen-only — /orders
+  // doesn't track itself onto the channel.
+  const [presentPickers, setPresentPickers] = useState<string[]>([]);
+  // Last new order that came in via realtime — surfaces as a transient line
+  // at the top of the content area, auto-clears after a few seconds.
+  const [latestActivity, setLatestActivity] = useState<{ name: string; drinkLabel: string; at: number } | null>(null);
+  const activityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function toggleTick(key: string) {
     setTicked(prev => {
@@ -233,15 +258,48 @@ export default function OrdersPage() {
     const interval = setInterval(silentRefresh, 10000);
     const channel = supabase
       .channel("orders-live")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
+        const row = payload.new as { person_name?: string; items?: { name: string }[] };
+        if (mountedRef.current && row.person_name && Array.isArray(row.items)) {
+          if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+          setLatestActivity({
+            name: row.person_name,
+            drinkLabel: describeOrderItems(row.items),
+            at: Date.now(),
+          });
+          activityTimerRef.current = setTimeout(() => {
+            if (mountedRef.current) setLatestActivity(null);
+          }, 6000);
+        }
         silentRefresh();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () => {
         silentRefresh();
       })
       .subscribe();
-    return () => { clearInterval(interval); supabase.removeChannel(channel); };
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+      if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+    };
   }, [silentRefresh]);
+
+  // Listen-only presence on the ordering-presence channel — surface who's on
+  // /order right now without registering ourselves as a picker.
+  useEffect(() => {
+    if (!isConfigured) return;
+    const channel = supabase.channel("ordering-presence");
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState<{ name: string }>();
+        const all = (Object.values(state) as { name: string }[][])
+          .flat()
+          .map((p) => p.name);
+        if (mountedRef.current) setPresentPickers([...new Set(all)]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const visibleGroups = groups.slice(0, 3);
   const tabIndex = Math.max(visibleGroups.findIndex((g) => g.dateKey === selectedDate), 0);
@@ -268,6 +326,28 @@ export default function OrdersPage() {
                   </span>
                 )}
               </div>
+              {presentPickers.length > 0 && (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <div className="flex items-center -space-x-1">
+                    {presentPickers.slice(0, 4).map((user) => (
+                      <span
+                        key={user}
+                        title={`${user} is picking`}
+                        className="relative w-[20px] h-[20px] rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[7px] font-sans font-semibold text-stone-500 dark:text-stone-400 shadow-sm"
+                      >
+                        {getInitials(user)}
+                        <span className="absolute bottom-[-1px] right-[-1px] w-[5px] h-[5px] rounded-full bg-green-400 border border-white dark:border-black" />
+                      </span>
+                    ))}
+                    {presentPickers.length > 4 && (
+                      <span className="w-[20px] h-[20px] rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[7px] font-sans font-semibold text-stone-400 dark:text-stone-500">
+                        +{presentPickers.length - 4}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-sans text-stone-400 dark:text-stone-500 hidden sm:inline">picking</span>
+                </div>
+              )}
             </div>
             {quip && (
               <p className="font-serif text-base sm:text-lg font-light italic text-stone-400 dark:text-stone-500 mt-1.5">
@@ -314,6 +394,22 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* Live ticker — appears for ~6s on each new INSERT from the realtime channel */}
+      {latestActivity && (
+        <div
+          key={latestActivity.at}
+          className="px-5 sm:px-8 pt-3"
+          style={{ animation: "tabIn 0.35s ease-out both" }}
+        >
+          <p className="max-w-lg mx-auto text-[11px] font-sans text-stone-500 dark:text-stone-400 text-center">
+            <span className="font-serif italic text-stone-400 dark:text-stone-500">Just now · </span>
+            <span className="font-medium text-stone-700 dark:text-stone-200">{latestActivity.name}</span>
+            <span> ordered </span>
+            <span className="font-medium text-stone-700 dark:text-stone-200">{latestActivity.drinkLabel}</span>
+          </p>
+        </div>
+      )}
+
       {/* Content */}
       <div className="px-5 sm:px-8 pt-6 pb-16">
         <div className="max-w-lg mx-auto">
@@ -355,6 +451,15 @@ export default function OrdersPage() {
                 // "Peng" is the kopitiam marker for iced — anything else counts as hot.
                 const icedCups = drinkGroups.reduce((sum, g) => sum + (/\bpeng\b/i.test(g.drink) ? g.names.length : 0), 0);
                 const hotCups = cups - icedCups;
+                const sessionClosed = Date.now() > session.sessionStart.getTime() + SESSION_MS;
+                const lastOrderTime = session.orders.length > 0
+                  ? Math.max(...session.orders.map((o) => new Date(o.created_at).getTime()))
+                  : session.sessionStart.getTime();
+                const fillMs = Math.max(0, lastOrderTime - session.sessionStart.getTime());
+                const fillMin = Math.floor(fillMs / 60000);
+                const fillSec = Math.floor((fillMs % 60000) / 1000);
+                const fillLabel = fillMin > 0 ? `${fillMin}m ${fillSec}s` : `${fillSec}s`;
+                const peopleCount = new Set(session.orders.map((o) => o.person_name)).size;
                 return (
                   <div key={si}>
                     <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
@@ -381,6 +486,11 @@ export default function OrdersPage() {
                       </div>
                       <WhatsAppShareButton session={session} />
                     </div>
+                    {sessionClosed && (
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-3 -mt-1 tabular-nums">
+                        Filled in {fillLabel} · {peopleCount} {peopleCount === 1 ? "person" : "people"}
+                      </p>
+                    )}
                     <div className="border-t border-stone-100 dark:border-stone-800">
                       {drinkGroups.map(({ drink, names }) => {
                         const tickKey = `${session.sessionStart.getTime()}:${drink}`;

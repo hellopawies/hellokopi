@@ -95,6 +95,9 @@ function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Optional date-range filter for CSV export. Both blank = export everything.
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -130,7 +133,15 @@ function OrdersTab() {
   }
 
   function downloadCSV() {
-    const groups = groupOrders(orders);
+    // Date inputs are ISO YYYY-MM-DD in local-to-the-picker. Interpret them
+    // as SGT day boundaries so a "2026-04-28" From really means 00:00 SGT.
+    const fromMs = fromDate ? new Date(fromDate + "T00:00:00+08:00").getTime() : -Infinity;
+    const toMs = toDate ? new Date(toDate + "T23:59:59+08:00").getTime() : Infinity;
+    const filtered = orders.filter((o) => {
+      const t = new Date(o.created_at).getTime();
+      return t >= fromMs && t <= toMs;
+    });
+    const groups = groupOrders(filtered);
     const rows: string[][] = [["Date", "Session", "Person", "Drink", "Qty"]];
     for (const group of groups) {
       for (const session of group.sessions) {
@@ -151,7 +162,10 @@ function OrdersTab() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `hellokopi-${new Date().toLocaleDateString("en-CA", { timeZone: TIMEZONE_SG })}.csv`;
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: TIMEZONE_SG });
+    a.download = fromDate || toDate
+      ? `hellokopi-${fromDate || "start"}-to-${toDate || today}.csv`
+      : `hellokopi-all-${today}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -190,17 +204,34 @@ function OrdersTab() {
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500">{orders.length} orders</p>
-        <button
-          onClick={downloadCSV}
-          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
-        >
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            aria-label="Export from date"
+            className="bg-transparent border border-stone-200 dark:border-stone-700 rounded-md px-2 py-1 text-xs font-sans font-light text-stone-700 dark:text-stone-300 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none"
+          />
+          <span className="text-stone-300 dark:text-stone-600 text-xs">→</span>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            aria-label="Export to date"
+            className="bg-transparent border border-stone-200 dark:border-stone-700 rounded-md px-2 py-1 text-xs font-sans font-light text-stone-700 dark:text-stone-300 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none"
+          />
+          <button
+            onClick={downloadCSV}
+            className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export CSV
+          </button>
+        </div>
       </div>
       {groups.map(group => (
         <div key={group.dateKey}>
