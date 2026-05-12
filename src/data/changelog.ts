@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.9",
+    date: "28 Apr 2026",
+    title: "Name chips match the drink picker",
+    changes: [
+      "The name chips on the home page now use the same uppercase-tracked pill style as the Kopi / Teh / Milo base picker on the order page. Same hover lift, same selected fill, same rhythm — picks up consistently across the whole app.",
+    ],
+  },
+  {
     version: "v3.4.8",
     date: "28 Apr 2026",
     title: "Drink cards line up properly",

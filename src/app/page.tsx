@@ -187,9 +187,10 @@ export default function GreetingPage() {
               className="w-full flex flex-col items-center gap-5 sm:gap-6"
               style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.3s ease-out both" } : { opacity: 0 }) : {}}
             >
-              {/* Name chip grid — one tap, no dropdown. Others sits last and reveals
-                  a text field below. Scales to ~20 names before getting cramped. */}
-              <div className="w-full grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {/* Name chips — same shape and rhythm as the drink-builder base
+                  picker (Kopi / Teh / Milo / etc.) for app-wide consistency.
+                  Others sits last and reveals a text field below. */}
+              <div className="w-full flex flex-wrap gap-2 justify-center">
                 {colleagues.map((name) => {
                   const isSelected = selected === name;
                   return (
@@ -198,14 +199,11 @@ export default function GreetingPage() {
                       type="button"
                       onClick={() => { setSelected(name); if (name !== "Others") setOtherName(""); }}
                       aria-pressed={isSelected}
-                      className={`
-                        px-3 py-2.5 rounded-full border text-sm font-sans font-light tracking-wide truncate
-                        transition-all duration-150 touch-manipulation active:scale-[0.97]
-                        ${isSelected
-                          ? "bg-stone-800 dark:bg-stone-200 border-stone-800 dark:border-stone-200 text-white dark:text-stone-900 shadow-sm"
-                          : "bg-transparent border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 hover:bg-stone-100/50 dark:hover:bg-stone-900/40"}
-                        ${name === "Others" ? "italic" : ""}
-                      `}
+                      className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+                        isSelected
+                          ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
+                          : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
+                      }`}
                     >
                       {name}
                     </button>
