@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
+import type { Order } from "@/types/order";
 
 const COLLEAGUES_FALLBACK = [
   "Aaron", "Steve", "YK", "Kristie", "Alvin",
@@ -35,6 +36,7 @@ export default function GreetingPage() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [firstLoad] = useState(!hasMounted);
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -51,6 +53,19 @@ export default function GreetingPage() {
         });
     }
   }, []);
+
+  useEffect(() => {
+    if (!cachedName || !isConfigured) return;
+    supabase
+      .from("orders")
+      .select("*")
+      .eq("person_name", cachedName)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) setLastOrder(data[0] as Order);
+      });
+  }, [cachedName]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -142,6 +157,39 @@ export default function GreetingPage() {
                 Not {cachedName}?
               </button>
             </div>
+
+            {lastOrder && (
+              <div
+                style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.45s ease-out both" } : { opacity: 0 }) : {}}
+                className="w-full border border-stone-200 dark:border-stone-700 rounded-xl px-5 py-4 flex flex-col gap-2"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500">
+                    Last order
+                  </p>
+                  <p className="font-serif text-sm tracking-[0.15em] text-stone-500 dark:text-stone-400">
+                    {lastOrder.order_ref}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {lastOrder.items.map((item) => (
+                    <p key={item.name} className="font-serif text-base font-light italic text-stone-600 dark:text-stone-300">
+                      {item.name}
+                    </p>
+                  ))}
+                </div>
+                <p className="text-[10px] font-sans text-stone-300 dark:text-stone-600 mt-0.5">
+                  {new Date(lastOrder.created_at).toLocaleString("en-GB", {
+                    timeZone: "Asia/Singapore",
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </p>
+              </div>
+            )}
           </>
         ) : (
           /* ── First-time / selector view ── */
