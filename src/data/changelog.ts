@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.13",
+    date: "28 Apr 2026",
+    title: "Last order looks like an actual card",
+    changes: [
+      "The \"Last order\" section on My Picks used to be a bare stack of drink names with a small re-order button below — visually unfinished against the cards beneath. Now it's a proper bordered card with drink-colour dots beside each name (same dots as /orders) and the Re-order button sits in the header row as a chip. Looks like it belongs.",
+    ],
+  },
+  {
     version: "v3.4.12",
     date: "28 Apr 2026",
     title: "Removed Top Choice tab",
