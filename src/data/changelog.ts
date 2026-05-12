@@ -12,7 +12,7 @@ export const VERSIONS = [
     date: "28 Apr 2026",
     title: "AM/PM times + hide trivial fill stat",
     changes: [
-      "Session times now show in 12-hour AM/PM format — \"2:21 PM – 2:31 PM\" instead of \"14:21 – 14:31\". Applied everywhere a session time appears: orders list, admin orders tab, CSV export, WhatsApp share, and the post-order confirmation toast.",
+      "Session times now show in 12-hour AM/PM format — \"2:21 PM – 2:31 PM\" instead of \"14:21 – 14:31\". Applied everywhere a session time appears: orders list, WhatsApp share, and the post-order confirmation toast.",
       "The \"Filled in 0s · 1 person\" line is hidden when a single person ordered without measurable fill time — the stat has no useful info to convey there. Multi-person sessions and longer fills still show as before.",
     ],
   },
@@ -35,19 +35,18 @@ export const VERSIONS = [
   {
     version: "v3.5.2",
     date: "28 Apr 2026",
-    title: "Admin owns the language; flame icon for hot",
+    title: "Flame icon for hot drinks",
     changes: [
-      "Removed the EN / SIN toggle from the header — admin's per-member setting is now the source of truth. Cached returning users still pick up the admin's current choice: /order re-applies it on every visit.",
+      "Removed the EN / SIN toggle from the header — your language is set per user and re-applied on every /order visit, so no manual flipping needed.",
       "Hot drinks now show a small flame outline instead of three steam wisps. Iced stays as the snowflake. Same red / blue colour pairing for accessibility.",
     ],
   },
   {
     version: "v3.5.1",
     date: "28 Apr 2026",
-    title: "Admin sets each member's default language",
+    title: "Per-user language defaults",
     changes: [
-      "Members tab in /admin now has a per-name EN / SIN chip. Tap to flip what language that member lands in when they pick their name on the home page.",
-      "When someone picks their name (first time or after Not me), the app jumps to their default. Toggle in the header still overrides during the session.",
+      "Each name has its own default language (EN or SIN). When you pick your name, the app jumps to whichever fits you — no manual toggle needed each visit.",
     ],
   },
   {
@@ -57,17 +56,16 @@ export const VERSIONS = [
     changes: [
       "New EN / SIN toggle in the top-left next to the home icon. EN mode shows drink names in English (Iced Kopi, Kopi C, less sweet, Kopi, extra thick) and the modifier pills follow suit (Iced, Less sweet, Extra thick…). SIN mode keeps the kopitiam terms exactly as they are (Kopi Peng, Siew Dai, Gah Dai, Kosong, Gao).",
       "Your choice is remembered on the device — pick once, every screen, every visit. Defaults to EN.",
-      "Translation covers names everywhere they appear: drink cards, cart, last order card, /orders rows, the live ticker, WhatsApp share text, and the admin orders view.",
+      "Translation covers names everywhere they appear: drink cards, cart, last order card, /orders rows, the live ticker, and the WhatsApp share text.",
     ],
   },
   {
     version: "v3.4.15",
     date: "28 Apr 2026",
-    title: "Iced in the builder + temp on top + admin hot/iced toggle",
+    title: "Iced in the builder + temp on top",
     changes: [
       "Builder's Temp pills now read \"Iced\" and \"Pua Sio\" instead of \"Peng\" — matches the rest of the app. Underlying value is still Peng so composed names like \"Kopi Peng\" keep working.",
       "Temp is the first modifier in the builder now (was buried after Milk / Sweetness / Strength). Most decisions start with hot or iced, so it leads.",
-      "Admin: adding a new Others drink now has a Hot / Iced toggle. Iced drinks are stored with a \"Peng\" suffix internally so the display and the hot/iced glyph just work — admin types \"Coconut\", picks Iced, and the team sees \"Iced Coconut\" with a snowflake.",
     ],
   },
   {
@@ -103,7 +101,6 @@ export const VERSIONS = [
       "Each closed session now shows a small \"Filled in 3m 22s · 4 people\" stat under its header — easy office trivia, easy comparison across runs.",
       "Avatars at the top of /orders show who's currently on /order picking right now. The runner can glance and see how many more drinks are still coming.",
       "A small \"Just now · Aaron ordered Kopi C × 2\" line surfaces at the top whenever someone places an order, then quietly fades after 6 seconds.",
-      "Admin Orders tab gets From and To date pickers next to Export CSV — pick a range and export just that slice. Blank dates still export everything.",
     ],
   },
   {
