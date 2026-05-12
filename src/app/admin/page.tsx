@@ -6,6 +6,7 @@ import { groupOrders } from "@/lib/groupOrders";
 import BrewingCup from "@/app/components/BrewingCup";
 import { OTHERS_DRINKS } from "@/data/menu";
 import { displayDrinkName } from "@/lib/drinkName";
+import { useLanguage } from "@/lib/language";
 import type { Order } from "@/types/order";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
@@ -96,6 +97,7 @@ function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { lang } = useLanguage();
   // Optional date-range filter for CSV export. Both blank = export everything.
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -262,7 +264,7 @@ function OrdersTab() {
                                 {[...itemMap.entries()].map(([name, qty]) => (
                                   <div key={name} className="flex items-center gap-2.5">
                                     <span className="text-[11px] font-sans text-stone-500 dark:text-stone-400">
-                                      {displayDrinkName(name)}{qty > 1 ? ` ×${qty}` : ""}
+                                      {displayDrinkName(name, lang)}{qty > 1 ? ` ×${qty}` : ""}
                                     </span>
                                     <button
                                       onClick={() => removeItem(order, name)}

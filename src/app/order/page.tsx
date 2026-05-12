@@ -8,7 +8,8 @@ import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
 import { drinkColor } from "@/lib/drinkColor";
-import { displayDrinkName } from "@/lib/drinkName";
+import { displayDrinkName, translateModifier } from "@/lib/drinkName";
+import { useLanguage } from "@/lib/language";
 import { TempIcon } from "@/app/components/TempIcon";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 import { CATEGORIES } from "@/data/drinks";
@@ -230,6 +231,7 @@ function DrinkCard({
   enterDelay?: number;
 }) {
   const [bursting, setBursting] = useState(false);
+  const { lang } = useLanguage();
   return (
     <div
       className="relative h-full"
@@ -246,7 +248,7 @@ function DrinkCard({
         `}
       >
         <p className={`text-sm font-sans font-medium leading-snug pr-7 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-          {displayDrinkName(name)}
+          {displayDrinkName(name, lang)}
           <TempIcon name={name} className="inline w-3 h-3 ml-1.5 align-middle" />
           {selected && qty > 1 ? <span className="ml-1.5 text-[11px] font-normal opacity-60">×{qty}</span> : null}
         </p>
@@ -290,6 +292,7 @@ function DrinkRow({
   onToggleFavourite: () => void;
 }) {
   const [bursting, setBursting] = useState(false);
+  const { lang } = useLanguage();
   return (
     <div className={`flex items-center mb-0.5 rounded-xl transition-colors duration-150 ${selected ? "bg-stone-800 dark:bg-stone-200" : "hover:bg-stone-50 dark:hover:bg-stone-900 active:bg-stone-100 dark:active:bg-stone-900"}`}>
       <button
@@ -299,7 +302,7 @@ function DrinkRow({
       >
         <div className="flex flex-col gap-0.5 min-w-0 mr-2">
           <span className={`text-sm font-sans font-medium truncate ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-            {displayDrinkName(name)}
+            {displayDrinkName(name, lang)}
             <TempIcon name={name} className="inline w-3 h-3 ml-1.5 align-middle" />
           </span>
           <span className={`text-[11px] font-sans truncate ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
@@ -386,6 +389,7 @@ function DrinkBuilder({
   hiddenDrinks: Set<string>;
   onComposedNameChange: (name: string) => void;
 }) {
+  const { lang } = useLanguage();
   const [baseId, setBaseId] = useState<string | null>(null);
   const [milk, setMilk] = useState("");
   const [strength, setStrength] = useState("");
@@ -558,7 +562,7 @@ function DrinkBuilder({
             <ModifierRow
               label="Temp"
               defaultLabel="Hot"
-              options={base.temp.map((t) => ({ id: t, label: t === "Peng" ? "Iced" : t }))}
+              options={base.temp.map((t) => ({ id: t, label: translateModifier(t, lang) }))}
               selected={temp}
               onChange={setTemp}
               disabled={!!special}
@@ -577,7 +581,7 @@ function DrinkBuilder({
           <ModifierRow
             label="Sweetness"
             defaultLabel="Normal"
-            options={base.sweetness.map((s) => ({ id: s, label: s }))}
+            options={base.sweetness.map((s) => ({ id: s, label: translateModifier(s, lang) }))}
             selected={sweetness}
             onChange={setSweetness}
             disabled={!!special}
@@ -586,7 +590,7 @@ function DrinkBuilder({
             <ModifierRow
               label="Strength"
               defaultLabel="Normal"
-              options={base.strength.map((s) => ({ id: s, label: s }))}
+              options={base.strength.map((s) => ({ id: s, label: translateModifier(s, lang) }))}
               selected={strength}
               onChange={setStrength}
               disabled={!!special}
@@ -608,7 +612,7 @@ function DrinkBuilder({
                         : "bg-stone-100 dark:bg-stone-900 text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
                     }`}
                   >
-                    {sp.label}
+                    {translateModifier(sp.label, lang)}
                   </button>
                 ))}
               </div>
@@ -658,6 +662,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
   const [width, setWidth] = useState(100);
   const cbRef = useRef(onDismiss);
   cbRef.current = onDismiss;
+  const { lang } = useLanguage();
 
   useEffect(() => {
     const DURATION = 5000;
@@ -675,7 +680,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
 
   const time = orderedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
   const drinkLine = items.map(({ name, qty }) => {
-    const display = displayDrinkName(name);
+    const display = displayDrinkName(name, lang);
     return qty > 1 ? `${display} ×${qty}` : display;
   }).join(" · ");
 
@@ -725,6 +730,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
 function OrderContent() {
   const params = useSearchParams();
   const name = params.get("name") ?? "there";
+  const { lang } = useLanguage();
 
   const [orderState, setOrderState] = useState<OrderState>("idle");
   const [tab, setTab] = useState<Tab>("yours");
@@ -1175,7 +1181,7 @@ function OrderContent() {
                     <ActiveCountdown sessionStart={existingOrder.sessionStart} />
                   </div>
                   <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
-                    {existingOrder.items.map(({ name: n, qty }) => `${displayDrinkName(n)}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
+                    {existingOrder.items.map(({ name: n, qty }) => `${displayDrinkName(n, lang)}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -1245,7 +1251,7 @@ function OrderContent() {
                             style={{ backgroundColor: drinkColor(n) }}
                           />
                           <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
-                            {displayDrinkName(n)}
+                            {displayDrinkName(n, lang)}
                             <TempIcon name={n} className="inline w-3 h-3 ml-1.5 align-middle" />
                             {qty > 1 && <span className="ml-1.5 text-[11px] font-normal text-stone-400 dark:text-stone-500 tabular-nums">× {qty}</span>}
                           </span>
@@ -1386,7 +1392,7 @@ function OrderContent() {
               <div className={`flex items-center justify-between gap-3 ${cart.size > 0 ? "pb-2.5 border-b border-stone-100 dark:border-stone-800" : ""}`}>
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
-                    {displayDrinkName(builderDrink)}
+                    {displayDrinkName(builderDrink, lang)}
                     <TempIcon name={builderDrink} className="inline w-3.5 h-3.5 ml-2 align-middle" />
                   </p>
                   <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-2 touch-manipulation">
@@ -1421,7 +1427,7 @@ function OrderContent() {
             {cartEntries.map(([drinkName, qty]) => (
               <div key={drinkName} className="flex items-center gap-3">
                 <p className="flex-1 min-w-0 text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">
-                  {displayDrinkName(drinkName)}
+                  {displayDrinkName(drinkName, lang)}
                   <TempIcon name={drinkName} className="inline w-3 h-3 ml-1.5 align-middle" />
                 </p>
                 <div className="flex items-center gap-2 flex-shrink-0">

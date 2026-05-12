@@ -1,5 +1,15 @@
 export const VERSIONS = [
   {
+    version: "v3.5.0",
+    date: "28 Apr 2026",
+    title: "EN / SIN language toggle",
+    changes: [
+      "New EN / SIN toggle in the top-left next to the home icon. EN mode shows drink names in English (Iced Kopi, Kopi C, less sweet, Kopi, extra thick) and the modifier pills follow suit (Iced, Less sweet, Extra thick…). SIN mode keeps the kopitiam terms exactly as they are (Kopi Peng, Siew Dai, Gah Dai, Kosong, Gao).",
+      "Your choice is remembered on the device — pick once, every screen, every visit. Defaults to EN.",
+      "Translation covers names everywhere they appear: drink cards, cart, last order card, /orders rows, the live ticker, WhatsApp share text, and the admin orders view.",
+    ],
+  },
+  {
     version: "v3.4.15",
     date: "28 Apr 2026",
     title: "Iced in the builder + temp on top + admin hot/iced toggle",

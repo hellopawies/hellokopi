@@ -6,6 +6,7 @@ import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import { drinkColor } from "@/lib/drinkColor";
 import { displayDrinkName } from "@/lib/drinkName";
+import { useLanguage } from "@/lib/language";
 import { TempIcon } from "@/app/components/TempIcon";
 import type { Order, DateGroup, Session } from "@/types/order";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
@@ -34,18 +35,18 @@ function getInitials(n: string): string {
 }
 
 // One-line summary for the live ticker — "Kopi C × 2" or "Kopi C + 1 more".
-function describeOrderItems(items: { name: string }[]): string {
+function describeOrderItems(items: { name: string }[], lang: "en" | "sin"): string {
   if (items.length === 0) return "";
   const counts = new Map<string, number>();
   for (const i of items) counts.set(i.name, (counts.get(i.name) ?? 0) + 1);
   const entries = [...counts.entries()];
   if (entries.length === 1) {
     const [n, qty] = entries[0];
-    const display = displayDrinkName(n);
+    const display = displayDrinkName(n, lang);
     return qty > 1 ? `${display} × ${qty}` : display;
   }
   const [first] = entries;
-  return `${displayDrinkName(first[0])} + ${entries.length - 1} more`;
+  return `${displayDrinkName(first[0], lang)} + ${entries.length - 1} more`;
 }
 
 const QUIPS = [
@@ -90,7 +91,7 @@ function pickQuip(): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function buildShareText(session: Session): string {
+function buildShareText(session: Session, lang: "en" | "sin"): string {
   const drinkGroups = groupByDrink(session);
   const cups = drinkGroups.reduce((sum, g) => sum + g.names.length, 0);
   const icedCups = drinkGroups.reduce((sum, g) => sum + (/\bpeng\b/i.test(g.drink) ? g.names.length : 0), 0);
@@ -109,7 +110,7 @@ function buildShareText(session: Session): string {
     "",
     ...drinkGroups.map(({ drink, names }) => {
       const qty = names.length > 1 ? ` × ${names.length}` : "";
-      return `${displayDrinkName(drink)}${qty}`;
+      return `${displayDrinkName(drink, lang)}${qty}`;
     }),
     "",
     totalParts.join(" · "),
@@ -118,8 +119,9 @@ function buildShareText(session: Session): string {
 }
 
 function WhatsAppShareButton({ session }: { session: Session }) {
+  const { lang } = useLanguage();
   function handleShare() {
-    const url = `https://wa.me/?text=${encodeURIComponent(buildShareText(session))}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(buildShareText(session, lang))}`;
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
@@ -175,6 +177,12 @@ export default function OrdersPage() {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
+
+  const { lang } = useLanguage();
+  // Mirror lang into a ref so the realtime channel handler reads the latest
+  // value at INSERT time without forcing the channel to resubscribe.
+  const langRef = useRef(lang);
+  useEffect(() => { langRef.current = lang; }, [lang]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [quip, setQuip] = useState("");
   // Ephemeral "told the cashier" ticks — never persisted; resets on refresh.
@@ -252,7 +260,7 @@ export default function OrdersPage() {
           if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
           setLatestActivity({
             name: row.person_name,
-            drinkLabel: describeOrderItems(row.items),
+            drinkLabel: describeOrderItems(row.items, langRef.current),
             at: Date.now(),
           });
           activityTimerRef.current = setTimeout(() => {
@@ -497,7 +505,7 @@ export default function OrdersPage() {
                                 className="inline-block w-[7px] h-[7px] rounded-full mr-2 align-middle flex-shrink-0"
                                 style={{ backgroundColor: drinkColor(drink) }}
                               />
-                              {displayDrinkName(drink)}
+                              {displayDrinkName(drink, lang)}
                               <TempIcon name={drink} className="inline w-3 h-3 ml-1.5 align-middle" />
                               {names.length > 1 && (
                                 <span className="ml-1.5 px-1.5 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide align-middle">
