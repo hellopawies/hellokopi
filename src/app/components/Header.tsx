@@ -48,7 +48,7 @@ export function Header() {
           >
             ← Place Order
           </button>
-        ) : !onAdmin && !onHome && (
+        ) : !onAdmin && (
           <Link
             href="/orders"
             className="text-[10px] uppercase tracking-[0.25em] text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200 transition-colors duration-200 font-sans font-medium touch-manipulation"
