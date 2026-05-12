@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.10",
+    date: "28 Apr 2026",
+    title: "Quieter drink count",
+    changes: [
+      "The \"N drinks\" number on the Place Order button no longer pops every time you add or remove a drink. Number just updates. Less twitchy when you're stacking up an order.",
+    ],
+  },
+  {
     version: "v3.4.9",
     date: "28 Apr 2026",
     title: "Name chips match the drink picker",

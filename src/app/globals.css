@@ -95,14 +95,6 @@ main {
   100% { transform: scale(1); }
 }
 
-/* ── Cart count spring ── */
-@keyframes countPop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.35); }
-  65%  { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-
 /* ── Active order card breathe ── */
 @keyframes cardBreathe {
   0%, 100% { opacity: 0.15; }
