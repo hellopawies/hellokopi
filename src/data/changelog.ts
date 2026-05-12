@@ -1,5 +1,14 @@
 export const VERSIONS = [
   {
+    version: "v3.5.1",
+    date: "28 Apr 2026",
+    title: "Admin sets each member's default language",
+    changes: [
+      "Members tab in /admin now has a per-name EN / SIN chip. Tap to flip what language that member lands in when they pick their name on the home page.",
+      "When someone picks their name (first time or after Not me), the app jumps to their default. Toggle in the header still overrides during the session.",
+    ],
+  },
+  {
     version: "v3.5.0",
     date: "28 Apr 2026",
     title: "EN / SIN language toggle",

@@ -6,11 +6,21 @@ import Link from "next/link";
 import { VERSIONS } from "@/data/changelog";
 import { TIMEZONE_SG } from "@/lib/constants";
 import { supabase, isConfigured } from "@/lib/supabase";
+import { useLanguage, type Lang } from "@/lib/language";
 
-const COLLEAGUES_FALLBACK = [
+interface Colleague {
+  name: string;
+  // Admin's chosen default language for this member. Applied to the app's
+  // language toggle when this user picks their name (first-time or
+  // identity-switch flow); their session toggle still takes precedence
+  // for the rest of the visit.
+  default_lang?: Lang;
+}
+
+const COLLEAGUES_FALLBACK: Colleague[] = [
   "Aaron", "Steve", "YK", "Kristie", "Alvin",
   "Saw", "Jerwin", "Kai Mun", "Adric", "Zaki", "Rob", "Others",
-];
+].map((name) => ({ name }));
 
 // Persists across client-side navigations so animations only fire on fresh page load
 let hasMounted = false;
@@ -42,7 +52,7 @@ function getSubtitle(): string {
 export default function GreetingPage() {
   const [greeting, setGreeting] = useState("");
   const [subtitle, setSubtitle] = useState("Start ordering?");
-  const [colleagues, setColleagues] = useState<string[]>(COLLEAGUES_FALLBACK);
+  const [colleagues, setColleagues] = useState<Colleague[]>(COLLEAGUES_FALLBACK);
   // Read synchronously so the correct view renders on first paint — no state flip or black flash
   const [cachedName, setCachedName] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -52,6 +62,7 @@ export default function GreetingPage() {
   const [otherName, setOtherName] = useState("");
   const [ready, setReady] = useState(false);
   const [firstLoad] = useState(!hasMounted);
+  const { setLang } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
@@ -61,12 +72,17 @@ export default function GreetingPage() {
     setReady(true);
     if (!isConfigured) return;
     let cancelled = false;
-    supabase.from("members").select("name, sort_order").order("sort_order")
+    supabase.from("members").select("name, sort_order, default_lang").order("sort_order")
       .then(
         ({ data }) => {
           if (cancelled) return;
           if (data && data.length > 0) {
-            setColleagues([...data.map((m: { name: string }) => m.name), "Others"]);
+            type Row = { name: string; default_lang?: Lang };
+            const fetched: Colleague[] = (data as Row[]).map((m) => ({
+              name: m.name,
+              default_lang: m.default_lang === "sin" ? "sin" : "en",
+            }));
+            setColleagues([...fetched, { name: "Others" }]);
           }
         },
         // Network failure is non-fatal — fall back to the hard-coded COLLEAGUES list.
@@ -83,6 +99,12 @@ export default function GreetingPage() {
     if (!canContinue) return;
     const name = isOthers ? otherName.trim() : selected;
     try { localStorage.setItem("hellokopi_name", name); } catch {}
+    // Apply this user's admin-set default language. Others (free-text)
+    // has no member row, so keep the current toggle.
+    if (!isOthers) {
+      const colleague = colleagues.find((c) => c.name === name);
+      if (colleague?.default_lang) setLang(colleague.default_lang);
+    }
     router.push(`/order?name=${encodeURIComponent(name)}`);
   };
 
@@ -191,13 +213,13 @@ export default function GreetingPage() {
                   picker (Kopi / Teh / Milo / etc.) for app-wide consistency.
                   Others sits last and reveals a text field below. */}
               <div className="w-full flex flex-wrap gap-2 justify-center">
-                {colleagues.map((name) => {
-                  const isSelected = selected === name;
+                {colleagues.map((c) => {
+                  const isSelected = selected === c.name;
                   return (
                     <button
-                      key={name}
+                      key={c.name}
                       type="button"
-                      onClick={() => { setSelected(name); if (name !== "Others") setOtherName(""); }}
+                      onClick={() => { setSelected(c.name); if (c.name !== "Others") setOtherName(""); }}
                       aria-pressed={isSelected}
                       className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
                         isSelected
@@ -205,7 +227,7 @@ export default function GreetingPage() {
                           : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
                       }`}
                     >
-                      {name}
+                      {c.name}
                     </button>
                   );
                 })}

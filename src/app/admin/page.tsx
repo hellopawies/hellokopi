@@ -25,6 +25,7 @@ interface Member {
   id: string;
   name: string;
   sort_order: number;
+  default_lang: "en" | "sin";
 }
 
 type AdminTab = "orders" | "menu" | "members";
@@ -526,6 +527,16 @@ function MembersTab() {
     await supabase.from("members").delete().eq("id", id);
   }
 
+  async function toggleLang(id: string) {
+    setMembers(prev => prev.map(m =>
+      m.id === id ? { ...m, default_lang: m.default_lang === "en" ? "sin" : "en" } : m
+    ));
+    const target = members.find(m => m.id === id);
+    if (!target) return;
+    const next = target.default_lang === "en" ? "sin" : "en";
+    await supabase.from("members").update({ default_lang: next }).eq("id", id);
+  }
+
   async function move(index: number, direction: "up" | "down") {
     const other = direction === "up" ? index - 1 : index + 1;
     if (other < 0 || other >= members.length) return;
@@ -579,6 +590,14 @@ function MembersTab() {
             {members.map((member, i) => (
               <div key={member.id} className="flex items-center gap-1 py-2.5 border-b border-stone-100 dark:border-stone-800">
                 <p className="flex-1 text-sm font-sans text-stone-800 dark:text-stone-100">{member.name}</p>
+                <button
+                  type="button"
+                  onClick={() => toggleLang(member.id)}
+                  aria-label={`Default language for ${member.name}: ${member.default_lang.toUpperCase()}. Tap to switch.`}
+                  className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 px-2 py-1 mr-1 rounded-full border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-150 touch-manipulation active:scale-[0.95] tabular-nums"
+                >
+                  {member.default_lang.toUpperCase()}
+                </button>
                 <button
                   onClick={() => move(i, "up")}
                   disabled={i === 0}
