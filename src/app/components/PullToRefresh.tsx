@@ -72,6 +72,11 @@ export function PullToRefresh() {
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     if (window.scrollY > 2) return;
+    // Skip when the touch originates from an interactive drag handle (e.g.
+    // the admin Members reorder grip). Otherwise pulling that handle down
+    // would race with PTR and trigger a reload.
+    const target = e.target as Element | null;
+    if (target?.closest?.("[data-drag-handle]")) return;
     startY.current = e.touches[0].clientY;
     active.current = true;
   }, []);
