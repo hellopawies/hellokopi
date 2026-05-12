@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.8",
+    date: "28 Apr 2026",
+    title: "Drink cards line up properly",
+    changes: [
+      "When some drink names wrap to two lines (e.g. \"Kopi O Kosong Peng\") and others don't, the cup count on the shorter card no longer floats mid-air. Cards are now flex columns with the cup count anchored to the bottom, so every row reads as a clean grid regardless of title length.",
+    ],
+  },
+  {
     version: "v3.4.7",
     date: "28 Apr 2026",
     title: "Name selector is now a one-tap grid",
