@@ -492,6 +492,12 @@ function MembersTab() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
+  // Inline rename
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  // Drag-to-reorder
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
@@ -506,6 +512,52 @@ function MembersTab() {
     );
     return () => { cancelled = true; };
   }, []);
+
+  // Global pointer listeners while a drag is in flight — translates pointer
+  // position into row index via document.elementFromPoint, then commits the
+  // reorder on pointerup. Works on touch + mouse + pen.
+  useEffect(() => {
+    if (!draggedId) return;
+
+    const handleMove = (e: PointerEvent) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const row = el?.closest("[data-row-idx]");
+      if (row) {
+        const idx = Number.parseInt(row.getAttribute("data-row-idx") ?? "-1", 10);
+        if (idx >= 0) setOverIdx(idx);
+      }
+    };
+
+    const handleUp = async () => {
+      const dragged = draggedId;
+      const target = overIdx;
+      setDraggedId(null);
+      setOverIdx(null);
+      if (dragged === null || target === null) return;
+      const oldIdx = members.findIndex((m) => m.id === dragged);
+      if (oldIdx === -1 || oldIdx === target) return;
+      const next = [...members];
+      const [moved] = next.splice(oldIdx, 1);
+      next.splice(target, 0, moved);
+      const renumbered = next.map((m, i) => ({ ...m, sort_order: i }));
+      setMembers(renumbered);
+      // Persist every member's new sort_order. For ~15 names this is fine.
+      await Promise.all(
+        renumbered.map((m) =>
+          supabase.from("members").update({ sort_order: m.sort_order }).eq("id", m.id)
+        )
+      ).catch(() => {});
+    };
+
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleUp);
+    return () => {
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleUp);
+    };
+  }, [draggedId, overIdx, members]);
 
   async function addMember(e: React.FormEvent) {
     e.preventDefault();
@@ -537,21 +589,28 @@ function MembersTab() {
     await supabase.from("members").update({ default_lang: next }).eq("id", id);
   }
 
-  async function move(index: number, direction: "up" | "down") {
-    const other = direction === "up" ? index - 1 : index + 1;
-    if (other < 0 || other >= members.length) return;
-    const a = members[index];
-    const b = members[other];
-    const updated = members.map(m => {
-      if (m.id === a.id) return { ...m, sort_order: b.sort_order };
-      if (m.id === b.id) return { ...m, sort_order: a.sort_order };
-      return m;
-    }).sort((x, y) => x.sort_order - y.sort_order);
-    setMembers(updated);
+  function startEdit(member: Member) {
+    setEditingId(member.id);
+    setEditValue(member.name);
+  }
+
+  async function saveEdit() {
+    const id = editingId;
+    if (!id) return;
+    const trimmed = editValue.trim();
+    const target = members.find((m) => m.id === id);
+    setEditingId(null);
+    if (!target || !trimmed || trimmed === target.name) return;
+    const oldName = target.name;
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, name: trimmed } : m)));
+    // Cascade the rename so the member's past orders + favourites keep
+    // pointing at them. Same-name collisions are unlikely in a small office,
+    // but admin should pick unique names anyway.
     await Promise.all([
-      supabase.from("members").update({ sort_order: b.sort_order }).eq("id", a.id),
-      supabase.from("members").update({ sort_order: a.sort_order }).eq("id", b.id),
-    ]);
+      supabase.from("members").update({ name: trimmed }).eq("id", id),
+      supabase.from("orders").update({ person_name: trimmed }).eq("person_name", oldName),
+      supabase.from("user_favourites").update({ person_name: trimmed }).eq("person_name", oldName),
+    ]).catch(() => {});
   }
 
   if (loading) return <BrewingCup />;
@@ -587,45 +646,81 @@ function MembersTab() {
           <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500">No names yet.</p>
         ) : (
           <div className="border-t border-stone-100 dark:border-stone-800">
-            {members.map((member, i) => (
-              <div key={member.id} className="flex items-center gap-1 py-2.5 border-b border-stone-100 dark:border-stone-800">
-                <p className="flex-1 text-sm font-sans text-stone-800 dark:text-stone-100">{member.name}</p>
-                <button
-                  type="button"
-                  onClick={() => toggleLang(member.id)}
-                  aria-label={`Default language for ${member.name}: ${member.default_lang.toUpperCase()}. Tap to switch.`}
-                  className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 px-2 py-1 mr-1 rounded-full border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-150 touch-manipulation active:scale-[0.95] tabular-nums"
+            {members.map((member, i) => {
+              const isDragged = draggedId === member.id;
+              const isDropTarget = draggedId !== null && overIdx === i && !isDragged;
+              const isEditing = editingId === member.id;
+              return (
+                <div
+                  key={member.id}
+                  data-row-idx={i}
+                  className={`flex items-center gap-1 py-2.5 border-b transition-all duration-150 ${
+                    isDragged ? "opacity-30 border-stone-100 dark:border-stone-800" : ""
+                  } ${
+                    isDropTarget ? "border-t-2 border-t-stone-400 dark:border-t-stone-500 -mt-px border-b-stone-100 dark:border-b-stone-800" : "border-stone-100 dark:border-stone-800"
+                  }`}
                 >
-                  {member.default_lang.toUpperCase()}
-                </button>
-                <button
-                  onClick={() => move(i, "up")}
-                  disabled={i === 0}
-                  className="w-8 h-8 flex items-center justify-center text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-200 disabled:opacity-20 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => move(i, "down")}
-                  disabled={i === members.length - 1}
-                  className="w-8 h-8 flex items-center justify-center text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-200 disabled:opacity-20 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => removeMember(member.id)}
-                  className="w-8 h-8 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-red-400 dark:hover:text-red-400 transition-colors touch-manipulation"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+                  {/* Drag handle — pointer-down here starts a reorder */}
+                  <button
+                    type="button"
+                    aria-label={`Drag to reorder ${member.name}`}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      setDraggedId(member.id);
+                      setOverIdx(i);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors touch-none cursor-grab active:cursor-grabbing"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+
+                  {/* Name — tap to edit inline */}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editValue}
+                      autoFocus
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={saveEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); saveEdit(); }
+                        else if (e.key === "Escape") setEditingId(null);
+                      }}
+                      className="flex-1 bg-transparent border-0 border-b border-stone-400 dark:border-stone-500 focus:border-stone-700 dark:focus:border-stone-300 focus:outline-none text-sm font-sans text-stone-800 dark:text-stone-100 py-0.5"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => startEdit(member)}
+                      aria-label={`Edit ${member.name}`}
+                      className="flex-1 text-left text-sm font-sans text-stone-800 dark:text-stone-100 hover:text-stone-500 dark:hover:text-stone-400 transition-colors py-0.5 touch-manipulation"
+                    >
+                      {member.name}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => toggleLang(member.id)}
+                    aria-label={`Default language for ${member.name}: ${member.default_lang.toUpperCase()}. Tap to switch.`}
+                    className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 px-2 py-1 mr-1 rounded-full border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-150 touch-manipulation active:scale-[0.95] tabular-nums"
+                  >
+                    {member.default_lang.toUpperCase()}
+                  </button>
+                  <button
+                    onClick={() => removeMember(member.id)}
+                    aria-label={`Remove ${member.name}`}
+                    className="w-8 h-8 flex items-center justify-center text-stone-300 dark:text-stone-600 hover:text-red-400 dark:hover:text-red-400 transition-colors touch-manipulation"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
         <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-3">&ldquo;Others&rdquo; always appears last.</p>
