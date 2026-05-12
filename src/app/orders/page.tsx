@@ -5,6 +5,8 @@ import BrewingCup from "@/app/components/BrewingCup";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import { drinkColor } from "@/lib/drinkColor";
+import { displayDrinkName } from "@/lib/drinkName";
+import { TempIcon } from "@/app/components/TempIcon";
 import type { Order, DateGroup, Session } from "@/types/order";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
@@ -39,10 +41,11 @@ function describeOrderItems(items: { name: string }[]): string {
   const entries = [...counts.entries()];
   if (entries.length === 1) {
     const [n, qty] = entries[0];
-    return qty > 1 ? `${n} × ${qty}` : n;
+    const display = displayDrinkName(n);
+    return qty > 1 ? `${display} × ${qty}` : display;
   }
   const [first] = entries;
-  return `${first[0]} + ${entries.length - 1} more`;
+  return `${displayDrinkName(first[0])} + ${entries.length - 1} more`;
 }
 
 const QUIPS = [
@@ -106,7 +109,7 @@ function buildShareText(session: Session): string {
     "",
     ...drinkGroups.map(({ drink, names }) => {
       const qty = names.length > 1 ? ` × ${names.length}` : "";
-      return `${drink}${qty}`;
+      return `${displayDrinkName(drink)}${qty}`;
     }),
     "",
     totalParts.join(" · "),
@@ -494,7 +497,8 @@ export default function OrdersPage() {
                                 className="inline-block w-[7px] h-[7px] rounded-full mr-2 align-middle flex-shrink-0"
                                 style={{ backgroundColor: drinkColor(drink) }}
                               />
-                              {drink}
+                              {displayDrinkName(drink)}
+                              <TempIcon name={drink} className="inline w-3 h-3 ml-1.5 align-middle" />
                               {names.length > 1 && (
                                 <span className="ml-1.5 px-1.5 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide align-middle">
                                   × {names.length}

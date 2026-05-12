@@ -8,6 +8,8 @@ import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
 import { drinkColor } from "@/lib/drinkColor";
+import { displayDrinkName } from "@/lib/drinkName";
+import { TempIcon } from "@/app/components/TempIcon";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 import { CATEGORIES } from "@/data/drinks";
 import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
@@ -244,7 +246,9 @@ function DrinkCard({
         `}
       >
         <p className={`text-sm font-sans font-medium leading-snug pr-7 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-          {name}{selected && qty > 1 ? <span className="ml-1 text-[11px] font-normal opacity-60">×{qty}</span> : null}
+          {displayDrinkName(name)}
+          <TempIcon name={name} className="inline w-3 h-3 ml-1.5 align-middle" />
+          {selected && qty > 1 ? <span className="ml-1.5 text-[11px] font-normal opacity-60">×{qty}</span> : null}
         </p>
         {description && (
           <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
@@ -295,7 +299,8 @@ function DrinkRow({
       >
         <div className="flex flex-col gap-0.5 min-w-0 mr-2">
           <span className={`text-sm font-sans font-medium truncate ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
-            {name}
+            {displayDrinkName(name)}
+            <TempIcon name={name} className="inline w-3 h-3 ml-1.5 align-middle" />
           </span>
           <span className={`text-[11px] font-sans truncate ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
             {description}
@@ -669,7 +674,10 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
   }, []);
 
   const time = orderedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE_SG });
-  const drinkLine = items.map(({ name, qty }) => qty > 1 ? `${name} ×${qty}` : name).join(" · ");
+  const drinkLine = items.map(({ name, qty }) => {
+    const display = displayDrinkName(name);
+    return qty > 1 ? `${display} ×${qty}` : display;
+  }).join(" · ");
 
   return (
     <div className="fixed bottom-8 left-0 right-0 z-50 px-4 sm:px-6 pointer-events-none">
@@ -1167,7 +1175,7 @@ function OrderContent() {
                     <ActiveCountdown sessionStart={existingOrder.sessionStart} />
                   </div>
                   <p className="text-sm font-sans text-stone-600 dark:text-stone-400 truncate">
-                    {existingOrder.items.map(({ name: n, qty }) => `${n}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
+                    {existingOrder.items.map(({ name: n, qty }) => `${displayDrinkName(n)}${qty > 1 ? ` ×${qty}` : ""}`).join(" · ")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -1237,7 +1245,8 @@ function OrderContent() {
                             style={{ backgroundColor: drinkColor(n) }}
                           />
                           <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
-                            {n}
+                            {displayDrinkName(n)}
+                            <TempIcon name={n} className="inline w-3 h-3 ml-1.5 align-middle" />
                             {qty > 1 && <span className="ml-1.5 text-[11px] font-normal text-stone-400 dark:text-stone-500 tabular-nums">× {qty}</span>}
                           </span>
                         </div>
@@ -1377,7 +1386,8 @@ function OrderContent() {
               <div className={`flex items-center justify-between gap-3 ${cart.size > 0 ? "pb-2.5 border-b border-stone-100 dark:border-stone-800" : ""}`}>
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
-                    {builderDrink}
+                    {displayDrinkName(builderDrink)}
+                    <TempIcon name={builderDrink} className="inline w-3.5 h-3.5 ml-2 align-middle" />
                   </p>
                   <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-2 touch-manipulation">
                     <Heart filled={userFavs.has(builderDrink)} />
@@ -1411,7 +1421,8 @@ function OrderContent() {
             {cartEntries.map(([drinkName, qty]) => (
               <div key={drinkName} className="flex items-center gap-3">
                 <p className="flex-1 min-w-0 text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">
-                  {drinkName}
+                  {displayDrinkName(drinkName)}
+                  <TempIcon name={drinkName} className="inline w-3 h-3 ml-1.5 align-middle" />
                 </p>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
