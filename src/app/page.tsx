@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { VERSIONS } from "@/data/changelog";
@@ -50,12 +50,8 @@ export default function GreetingPage() {
   });
   const [selected, setSelected] = useState("");
   const [otherName, setOtherName] = useState("");
-  const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [firstLoad] = useState(!hasMounted);
-  const [nameSearch, setNameSearch] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -78,31 +74,6 @@ export default function GreetingPage() {
       );
     return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  useEffect(() => {
-    if (open) {
-      setNameSearch("");
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [open]);
-
-  const filteredColleagues = useMemo(() => {
-    const q = nameSearch.trim().toLowerCase();
-    if (!q) return colleagues;
-    const hasOthers = colleagues.includes("Others");
-    const filtered = colleagues.filter((n) => n !== "Others" && n.toLowerCase().includes(q));
-    return hasOthers ? [...filtered, "Others"] : filtered;
-  }, [nameSearch, colleagues]);
 
   const isOthers = selected === "Others";
   const canContinue = selected && (!isOthers || otherName.trim());
@@ -216,70 +187,30 @@ export default function GreetingPage() {
               className="w-full flex flex-col items-center gap-5 sm:gap-6"
               style={firstLoad ? (ready ? { animation: "fadeUp 0.7s 0.3s ease-out both" } : { opacity: 0 }) : {}}
             >
-              {/* Dropdown */}
-              <div className="w-full relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setOpen((o) => !o)}
-                  className="
-                    w-full bg-transparent border-0 border-b border-stone-300 dark:border-stone-600
-                    hover:border-stone-600 dark:hover:border-stone-400 focus:border-stone-600 dark:focus:border-stone-400 focus:outline-none
-                    text-center py-3.5 transition-colors duration-300
-                    flex items-center justify-center gap-2
-                    touch-manipulation
-                  "
-                >
-                  <span className={`text-base sm:text-lg font-sans font-light tracking-wide ${selected ? "text-stone-800 dark:text-stone-100" : "text-stone-300 dark:text-stone-600"}`}>
-                    {selected || "Select your name"}
-                  </span>
-                  <svg
-                    className={`w-3.5 h-3.5 text-stone-400 dark:text-stone-500 transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {open && (
-                  <div className="
-                    absolute top-full left-0 right-0 z-10 mt-1
-                    bg-[#FAFAF8] dark:bg-[#2c2c2c] border border-stone-200 dark:border-stone-600 rounded-xl shadow-md dark:shadow-black
-                    overflow-hidden
-                  ">
-                    <div className="px-4 py-2.5 border-b border-stone-100 dark:border-[#3a3a3a]">
-                      <input
-                        ref={searchInputRef}
-                        type="text"
-                        value={nameSearch}
-                        onChange={(e) => setNameSearch(e.target.value)}
-                        placeholder="Search…"
-                        className="w-full bg-transparent text-center text-sm font-sans font-light text-stone-800 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-600 focus:outline-none tracking-wide"
-                      />
-                    </div>
-                    <div className="max-h-[45vh] overflow-y-auto divide-y divide-stone-100 dark:divide-[#3a3a3a]">
-                      {filteredColleagues.length === 0 ? (
-                        <p className="px-4 py-3.5 text-center font-serif text-base font-light italic text-stone-400 dark:text-stone-500">No match.</p>
-                      ) : filteredColleagues.map((name) => (
-                        <button
-                          key={name}
-                          type="button"
-                          onClick={() => { setSelected(name); setOpen(false); setOtherName(""); }}
-                          className={`
-                            w-full px-4 py-3.5 text-center text-sm font-sans font-light tracking-wide
-                            transition-colors duration-150 touch-manipulation
-                            ${selected === name
-                              ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900"
-                              : "text-stone-600 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-[#3a3a3a] active:bg-stone-100 dark:active:bg-[#444] hover:text-stone-800 dark:hover:text-stone-100"
-                            }
-                            ${name === "Others" ? "italic" : ""}
-                          `}
-                        >
-                          {name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              {/* Name chip grid — one tap, no dropdown. Others sits last and reveals
+                  a text field below. Scales to ~20 names before getting cramped. */}
+              <div className="w-full grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {colleagues.map((name) => {
+                  const isSelected = selected === name;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => { setSelected(name); if (name !== "Others") setOtherName(""); }}
+                      aria-pressed={isSelected}
+                      className={`
+                        px-3 py-2.5 rounded-full border text-sm font-sans font-light tracking-wide truncate
+                        transition-all duration-150 touch-manipulation active:scale-[0.97]
+                        ${isSelected
+                          ? "bg-stone-800 dark:bg-stone-200 border-stone-800 dark:border-stone-200 text-white dark:text-stone-900 shadow-sm"
+                          : "bg-transparent border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:border-stone-500 dark:hover:border-stone-400 hover:bg-stone-100/50 dark:hover:bg-stone-900/40"}
+                        ${name === "Others" ? "italic" : ""}
+                      `}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
               </div>
 
               {isOthers && (

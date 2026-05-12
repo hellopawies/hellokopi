@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.7",
+    date: "28 Apr 2026",
+    title: "Name selector is now a one-tap grid",
+    changes: [
+      "Picking your name on the home page no longer needs two taps through a dropdown — every name is a pill chip in a single compact grid, all visible at once. Others is the last chip and reveals the name input inline when tapped. Returning users (cached name) see the same Continue + Not you flow as before.",
+    ],
+  },
+  {
     version: "v3.4.6",
     date: "28 Apr 2026",
     title: "All Drinks moves to the middle",
