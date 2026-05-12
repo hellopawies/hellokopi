@@ -660,9 +660,13 @@ function MembersTab() {
                     isDropTarget ? "border-t-2 border-t-stone-400 dark:border-t-stone-500 -mt-px border-b-stone-100 dark:border-b-stone-800" : "border-stone-100 dark:border-stone-800"
                   }`}
                 >
-                  {/* Drag handle — pointer-down here starts a reorder */}
+                  {/* Drag handle — pointer-down here starts a reorder.
+                      data-drag-handle marker lets PullToRefresh skip touches
+                      that originate here, otherwise a downward drag near the
+                      top of the page would trigger a pull-to-refresh. */}
                   <button
                     type="button"
+                    data-drag-handle="true"
                     aria-label={`Drag to reorder ${member.name}`}
                     onPointerDown={(e) => {
                       e.preventDefault();
