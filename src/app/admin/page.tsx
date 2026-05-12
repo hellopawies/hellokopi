@@ -5,6 +5,7 @@ import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import BrewingCup from "@/app/components/BrewingCup";
 import { OTHERS_DRINKS } from "@/data/menu";
+import { displayDrinkName } from "@/lib/drinkName";
 import type { Order } from "@/types/order";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
@@ -261,7 +262,7 @@ function OrdersTab() {
                                 {[...itemMap.entries()].map(([name, qty]) => (
                                   <div key={name} className="flex items-center gap-2.5">
                                     <span className="text-[11px] font-sans text-stone-500 dark:text-stone-400">
-                                      {name}{qty > 1 ? ` ×${qty}` : ""}
+                                      {displayDrinkName(name)}{qty > 1 ? ` ×${qty}` : ""}
                                     </span>
                                     <button
                                       onClick={() => removeItem(order, name)}

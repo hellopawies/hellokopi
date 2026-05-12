@@ -1,5 +1,14 @@
 export const VERSIONS = [
   {
+    version: "v3.4.14",
+    date: "28 Apr 2026",
+    title: "Iced not Peng + hot/iced glyph beside drink names",
+    changes: [
+      "Drinks ending in \"Peng\" now render as \"Iced X\" everywhere — \"Kopi Peng\" reads as \"Iced Kopi\", \"Teh O Kosong Peng\" as \"Iced Teh O Kosong\". Easier for newcomers; raw names stay in the database so history, search and the hot/iced count still work.",
+      "Tiny snowflake (iced, blue) or steam-wisp (hot, red) glyph beside every drink name on cards, cart, last order, /orders rows and the live ticker. Doubles up the colour signal as an accessibility cue — works even if you can't tell red from blue.",
+    ],
+  },
+  {
     version: "v3.4.13",
     date: "28 Apr 2026",
     title: "Last order looks like an actual card",
