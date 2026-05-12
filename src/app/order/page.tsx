@@ -119,7 +119,7 @@ function AnnotatedText({ text, selected }: { text: string; selected?: boolean })
   );
 }
 
-// Lookup map for My Picks + Top Orders descriptions (pre-defined drinks only).
+// Lookup map for descriptions on rendered drink cards (pre-defined drinks only).
 // Combines drinks.ts CATEGORIES (Kopi/Teh/Milo/etc base entries) with menu.ts
 // OTHERS_DRINKS (Bandung Peng, Barley, Michael Jackson, etc.) so every drink
 // surfaced in the UI has a resolvable description.
@@ -186,10 +186,9 @@ function synthesiseDescription(name: string): string | undefined {
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
-type Tab = "crowd" | "yours" | "all";
+type Tab = "yours" | "all";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
-type CrowdItem = { drink_name: string; order_count: number };
 
 // ─── Heart icon ───────────────────────────────────────────────
 function Heart({ filled, bursting }: { filled: boolean; bursting?: boolean }) {
@@ -328,16 +327,6 @@ function DrinkRow({
 
 function TabLoading() {
   return <BrewingCup className="py-16" />;
-}
-
-function SkeletonCard() {
-  return (
-    <div className="rounded-xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-[#111] p-3.5 shadow-sm">
-      <div className="h-3 w-3/4 rounded-full skeleton-shimmer mb-2.5" />
-      <div className="h-2.5 w-1/2 rounded-full skeleton-shimmer mb-4" />
-      <div className="h-2 w-1/3 rounded-full skeleton-shimmer" />
-    </div>
-  );
 }
 
 // ─── Modifier row (pill buttons, one selected at a time) ─────
@@ -731,11 +720,9 @@ function OrderContent() {
   const [orderState, setOrderState] = useState<OrderState>("idle");
   const [tab, setTab] = useState<Tab>("yours");
   const [cart, setCart] = useState<Map<string, number>>(new Map());
-  const [crowdData, setCrowdData] = useState<CrowdItem[]>([]);
   const [userFavs, setUserFavs] = useState<Set<string>>(new Set());
   const [customDrinks, setCustomDrinks] = useState<CustomDrink[]>([]);
   const [hiddenDrinks, setHiddenDrinks] = useState<Set<string>>(new Set());
-  const [loadingCrowd, setLoadingCrowd] = useState(true);
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
   const [builderDrink, setBuilderDrink] = useState("");
@@ -750,7 +737,7 @@ function OrderContent() {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [headerCompact, setHeaderCompact] = useState(false);
 
-  // Description lookup for display in My Picks/Top Orders (pre-defined + custom)
+  // Description lookup for display on drink cards (pre-defined + custom)
   const DRINKS_MAP = useMemo(() => {
     const map = new Map(BASE_DRINKS_MAP);
     for (const d of customDrinks) map.set(d.name, { name: d.name, description: d.description });
@@ -781,27 +768,18 @@ function OrderContent() {
 
   useEffect(() => {
     if (!isConfigured) {
-      setLoadingCrowd(false);
       setLoadingFavs(false);
       return;
     }
     let cancelled = false;
     const sessionWindowStart = new Date(Date.now() - SESSION_MS).toISOString();
     Promise.all([
-      supabase.from("orders").select("items"),
       supabase.from("user_favourites").select("drink_name").eq("person_name", name),
       supabase.from("custom_drinks").select("*"),
       supabase.from("hidden_drinks").select("drink_name"),
       supabase.from("orders").select("id, items, created_at").eq("person_name", name).order("created_at", { ascending: false }),
-    ]).then(([allOrders, favs, custom, hidden, userOrders]) => {
+    ]).then(([favs, custom, hidden, userOrders]) => {
       if (cancelled) return;
-      if (allOrders.data) {
-        const counts = new Map<string, number>();
-        for (const order of allOrders.data)
-          for (const item of order.items ?? [])
-            if (item?.name) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
-        setCrowdData([...counts.entries()].sort((a, b) => b[1] - a[1]).map(([drink_name, order_count]) => ({ drink_name, order_count })));
-      }
       if (favs.data) setUserFavs(new Set(favs.data.map((d: { drink_name: string }) => d.drink_name)));
       if (custom.data) setCustomDrinks(custom.data as CustomDrink[]);
       if (hidden.data) setHiddenDrinks(new Set(hidden.data.map((h: { drink_name: string }) => h.drink_name)));
@@ -821,13 +799,11 @@ function OrderContent() {
           setLastOrder([...counts.entries()].map(([n, qty]) => ({ name: n, qty })));
         }
       }
-      setLoadingCrowd(false);
       setLoadingFavs(false);
     }).catch(() => {
       // Network/Supabase failure — clear loaders so UI doesn't freeze.
-      // Empty state renders gracefully (no favs, no crowd, no existing order).
+      // Empty state renders gracefully (no favs, no existing order).
       if (cancelled) return;
-      setLoadingCrowd(false);
       setLoadingFavs(false);
     });
     return () => { cancelled = true; };
@@ -1085,7 +1061,6 @@ function OrderContent() {
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
     { id: "all",   label: "All Drinks" },
-    { id: "crowd", label: "Top Choice" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
 
@@ -1144,7 +1119,7 @@ function OrderContent() {
                 className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
                 style={{
                   left: 4,
-                  width: "calc((100% - 8px) / 3)",
+                  width: "calc((100% - 8px) / 2)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
@@ -1332,46 +1307,6 @@ function OrderContent() {
                       <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-300 dark:text-stone-600 flex-shrink-0">Try it</span>
                     )}
                   </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TOP ORDERS */}
-          {tab === "crowd" && (
-            <div style={{ animation: "tabIn 0.18s ease-out both" }}>
-              {loadingCrowd && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-                </div>
-              )}
-              {!loadingCrowd && crowdData.length === 0 && (
-                <div className="flex flex-col items-center gap-3 py-16">
-                  <div className="w-px h-8 bg-stone-200 dark:bg-stone-700" />
-                  <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 text-center">
-                    No orders yet — be the first!
-                  </p>
-                </div>
-              )}
-              {!loadingCrowd && crowdData.length > 0 && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {crowdData.map(({ drink_name, order_count }, index) => {
-                    const drink = DRINKS_MAP.get(drink_name);
-                    return (
-                      <DrinkCard
-                        key={drink_name}
-                        name={drink_name}
-                        description={drink?.description ?? synthesiseDescription(drink_name)}
-                        selected={cart.has(drink_name)}
-                        qty={cart.get(drink_name) ?? 0}
-                        onSelect={() => toggleCart(drink_name)}
-                        favourited={userFavs.has(drink_name)}
-                        onToggleFavourite={() => toggleFavourite(drink_name)}
-                        count={order_count}
-                        enterDelay={index * 35}
-                      />
-                    );
-                  })}
                 </div>
               )}
             </div>

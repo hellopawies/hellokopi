@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.12",
+    date: "28 Apr 2026",
+    title: "Removed Top Choice tab",
+    changes: [
+      "The Top Choice tab is gone — it counted all-time orders across everyone forever, which gets misleading the longer the app runs (yesterday's spike becomes a permanent ranking). Order page now has just My Picks and All Drinks. One less Supabase fetch on every visit too.",
+    ],
+  },
+  {
     version: "v3.4.11",
     date: "28 Apr 2026",
     title: "Live pulse on the orders page",
