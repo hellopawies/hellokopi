@@ -1509,10 +1509,7 @@ function OrderContent() {
               {orderState === "loading"
                 ? (isEditing ? "Updating your order…" : "Sending it…")
                 : <>
-                    {isEditing ? "Update order" : "Place order"}{" — "}
-                    <span key={totalDrinks} style={{ display: "inline-block", animation: "countPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}>
-                      {totalDrinks} {totalDrinks === 1 ? "drink" : "drinks"}
-                    </span>
+                    {isEditing ? "Update order" : "Place order"} — {totalDrinks} {totalDrinks === 1 ? "drink" : "drinks"}
                   </>
               }
             </button>
