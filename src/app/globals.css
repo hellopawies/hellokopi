@@ -91,10 +91,15 @@ main {
   50%       { opacity: 0.85; }
 }
 
-/* ── Place Order ambient pulse ── */
+/* ── Place Order / Continue ambient pulse ── */
+/* CSS var so the halo flips colour for dark mode — dark on cream,
+   light on black — and stays visible on both. */
+:root { --pulse-rgb: 28, 25, 23; }
+@media (prefers-color-scheme: dark) { :root { --pulse-rgb: 245, 245, 244; } }
+
 @keyframes btnPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(28, 25, 23, 0); }
-  50%       { box-shadow: 0 0 0 7px rgba(28, 25, 23, 0.07); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--pulse-rgb), 0); }
+  50%       { box-shadow: 0 0 0 7px rgba(var(--pulse-rgb), 0.09); }
 }
 
 /* ── Tab content fade-in ── */

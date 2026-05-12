@@ -1,5 +1,14 @@
 export const VERSIONS = [
   {
+    version: "v3.5.9",
+    date: "28 Apr 2026",
+    title: "Continue button breathes",
+    changes: [
+      "The Continue button on the home page now has the same soft ambient pulse as Place Order — a faint halo every couple of seconds, inviting the tap. Returning users pulse on arrival; first-time pickers pulse once a name is chosen.",
+      "Pulse colour now flips for dark mode (dark halo on cream, light halo on black) so it stays visible on OLED too.",
+    ],
+  },
+  {
     version: "v3.5.8",
     date: "28 Apr 2026",
     title: "Check Orders link on the home page",
