@@ -1409,11 +1409,11 @@ function OrderContent() {
             {builderDrink && (
               <div className={`flex items-center justify-between gap-3 ${cart.size > 0 ? "pb-2.5 border-b border-stone-100 dark:border-stone-800" : ""}`}>
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <p className="font-serif text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
+                  <p className="font-serif text-base sm:text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug line-clamp-2 break-words min-w-0">
                     {displayDrinkName(builderDrink, lang)}
                     <TempIcon name={builderDrink} className="inline w-3.5 h-3.5 ml-2 align-middle" />
                   </p>
-                  <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-2 touch-manipulation">
+                  <button type="button" onClick={() => toggleFavourite(builderDrink)} className="group/heart flex-shrink-0 p-2 -mr-1 touch-manipulation">
                     <Heart filled={userFavs.has(builderDrink)} />
                   </button>
                 </div>

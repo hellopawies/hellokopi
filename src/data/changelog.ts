@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.5.3",
+    date: "28 Apr 2026",
+    title: "Long composed drink names wrap gracefully",
+    changes: [
+      "Builder preview no longer cuts off long names mid-word (\"Horlicks C Gao Siew Dai Pe…\"). Names wrap to a second line if needed, with a smaller serif size on mobile to give them room. Heart and Add stay perfectly aligned.",
+    ],
+  },
+  {
     version: "v3.5.2",
     date: "28 Apr 2026",
     title: "Admin owns the language; flame icon for hot",
