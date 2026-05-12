@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.4.6",
+    date: "28 Apr 2026",
+    title: "All Drinks moves to the middle",
+    changes: [
+      "Order page tabs are now My Picks · All Drinks · Top Choice — the full menu sits in the middle for one-thumb reach. Sliding pill follows the new order automatically.",
+    ],
+  },
+  {
     version: "v3.4.5",
     date: "28 Apr 2026",
     title: "Home-screen icon plays nice with iOS",

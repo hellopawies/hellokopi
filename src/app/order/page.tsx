@@ -1084,8 +1084,8 @@ function OrderContent() {
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
-    { id: "crowd", label: "Top Choice" },
     { id: "all",   label: "All Drinks" },
+    { id: "crowd", label: "Top Choice" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
 
