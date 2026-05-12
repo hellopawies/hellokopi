@@ -1,5 +1,13 @@
 export const VERSIONS = [
   {
+    version: "v3.5.6",
+    date: "28 Apr 2026",
+    title: "Removed Old Tea Hut redirect",
+    changes: [
+      "The \"Looking for something else? · Order direct from Old Tea Hut →\" link at the foot of All Drinks is gone. The team uses the in-app order flow for everything now.",
+    ],
+  },
+  {
     version: "v3.5.5",
     date: "28 Apr 2026",
     title: "AM/PM times + hide trivial fill stat",
