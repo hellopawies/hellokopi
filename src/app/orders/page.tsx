@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import BrewingCup from "@/app/components/BrewingCup";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
+import { drinkColor } from "@/lib/drinkColor";
 import type { Order, DateGroup, Session } from "@/types/order";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
@@ -42,22 +43,6 @@ function describeOrderItems(items: { name: string }[]): string {
   }
   const [first] = entries;
   return `${first[0]} + ${entries.length - 1} more`;
-}
-
-// Colour-coded marker beside each drink on the orders list — lets the runner
-// scan the list visually instead of reading every name. Keyed off the base
-// (the first word or two), with a neutral stone fallback for unknown / custom
-// drinks. Picked to read on both cream and pure-black backgrounds.
-function drinkColor(name: string): string {
-  const n = name.toLowerCase();
-  if (n.startsWith("yuan yang")) return "#7a4e2a"; // coffee + tea blend
-  if (n.startsWith("teh halia")) return "#b06228"; // ginger tea
-  if (n.startsWith("kopi"))      return "#6f4e37"; // coffee brown
-  if (n.startsWith("teh"))       return "#a86b3a"; // tea tan
-  if (n.startsWith("milo"))      return "#2d8a3e"; // milo green
-  if (n.startsWith("horlicks"))  return "#a47d3f"; // malted honey
-  if (n.startsWith("bandung"))   return "#cb6f8a"; // rose
-  return "#a8a29e";                                // stone-400 fallback
 }
 
 const QUIPS = [

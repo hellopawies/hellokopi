@@ -7,6 +7,7 @@ import BrewingCup from "@/app/components/BrewingCup";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
+import { drinkColor } from "@/lib/drinkColor";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 import { CATEGORIES } from "@/data/drinks";
 import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
@@ -1213,21 +1214,36 @@ function OrderContent() {
               {loadingFavs && <TabLoading />}
               {!loadingFavs && lastOrder && lastOrder.length > 0 && (
                 <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium mb-2.5">Last order</p>
-                  <div className="flex flex-col gap-1 mb-3">
-                    {lastOrder.map(({ name: n, qty }) => (
-                      <p key={n} className="text-sm font-sans text-stone-600 dark:text-stone-400">
-                        {n}{qty > 1 ? ` ×${qty}` : ""}
-                      </p>
-                    ))}
+                  <div className="rounded-xl border border-stone-200 dark:border-stone-700/60 bg-white dark:bg-[#111] p-3.5 shadow-sm">
+                    <div className="flex items-center justify-between gap-3 mb-2.5">
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 font-sans font-medium">Last order</p>
+                      <button
+                        type="button"
+                        onClick={() => setCart(new Map(lastOrder.map(({ name: n, qty }) => [n, qty])))}
+                        className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] font-sans font-medium text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 px-2.5 py-1 rounded-full hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-800 dark:hover:text-stone-100 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Re-order
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {lastOrder.map(({ name: n, qty }) => (
+                        <div key={n} className="flex items-center gap-2">
+                          <span
+                            aria-hidden="true"
+                            className="inline-block w-[7px] h-[7px] rounded-full flex-shrink-0"
+                            style={{ backgroundColor: drinkColor(n) }}
+                          />
+                          <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
+                            {n}
+                            {qty > 1 && <span className="ml-1.5 text-[11px] font-normal text-stone-400 dark:text-stone-500 tabular-nums">× {qty}</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setCart(new Map(lastOrder.map(({ name: n, qty }) => [n, qty])))}
-                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
-                  >
-                    Re-order
-                  </button>
                 </div>
               )}
               {!loadingFavs && userFavs.size === 0 && (
