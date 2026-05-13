@@ -246,6 +246,33 @@ function DrinkBuilder({
 
   const [search, setSearch] = useState("");
 
+  const SEARCH_ALIASES: Array<{ tokens: string[]; terms: string[] }> = [
+    { tokens: ["siew dai"], terms: ["siew dai", "less sugar", "low sugar", "less sweet"] },
+    { tokens: ["gah dai"], terms: ["gah dai", "extra sugar", "sweeter", "more sugar"] },
+    { tokens: ["kosong"], terms: ["kosong", "no sugar", "without sugar", "zero sugar"] },
+    { tokens: ["peng"], terms: ["peng", "iced", "ice", "cold"] },
+    { tokens: ["pua sio"], terms: ["pua sio", "warm"] },
+    { tokens: ["gao"], terms: ["gao", "strong", "thick"] },
+    { tokens: ["po"], terms: ["po", "light", "thin"] },
+    { tokens: ["di lo"], terms: ["di lo", "extra strong", "very strong"] },
+    { tokens: ["kopi o", "teh o"], terms: ["black coffee", "black tea"] },
+    { tokens: ["kopi c", "teh c"], terms: ["evaporated milk", "evap milk"] },
+  ];
+
+  function normalizeSearchText(value: string): string {
+    return value
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function collapseToken(value: string): string {
+    return value.replace(/\s+/g, "");
+  }
+
   const allDrinksFlat = useMemo(() => {
     const seen = new Set<string>();
     const out: { name: string; description: string }[] = [];
@@ -263,10 +290,32 @@ function DrinkBuilder({
     return out;
   }, [customDrinks, hiddenDrinks]);
 
+  function includesToken(haystack: string, token: string): boolean {
+    if (token.length <= 2) {
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`\\b${escaped}\\b`).test(haystack);
+    }
+    return haystack.includes(token);
+  }
+
   const searchResults = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearchText(search);
     if (!q) return null;
-    return allDrinksFlat.filter((d) => d.name.toLowerCase().includes(q));
+    const qCompact = collapseToken(q);
+    const expandedTokens = new Set<string>(q.split(" ").filter(Boolean));
+
+    for (const alias of SEARCH_ALIASES) {
+      if (alias.terms.some((term) => q.includes(term))) {
+        alias.tokens.forEach((token) => expandedTokens.add(token));
+      }
+    }
+
+    return allDrinksFlat.filter((d) => {
+      const haystack = normalizeSearchText(`${d.name} ${d.description}`);
+      const haystackCompact = collapseToken(haystack);
+      if (haystack.includes(q) || haystackCompact.includes(qCompact)) return true;
+      return [...expandedTokens].every((token) => includesToken(haystack, token));
+    });
   }, [search, allDrinksFlat]);
 
   const baseChipCls = (active: boolean) =>
