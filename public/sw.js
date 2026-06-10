@@ -13,9 +13,13 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// Network-first: always fetch fresh, fall back to cache if offline
+// Network-first: always fetch fresh, fall back to cache if offline.
+// Same-origin only — avoid caching Supabase API responses (member/order data
+// would otherwise persist unencrypted in Cache Storage and stale rows could
+// surface offline).
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {

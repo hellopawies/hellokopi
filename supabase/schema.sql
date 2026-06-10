@@ -10,12 +10,15 @@
 -- ============================================================
 
 -- Orders ------------------------------------------------------
+-- Field-length caps below are a guardrail against runaway anon writes — RLS
+-- is wide open by design, so a misbehaving (or malicious) client could
+-- otherwise dump megabyte rows in a loop and exhaust storage.
 create table if not exists orders (
   id          uuid        primary key default gen_random_uuid(),
-  order_ref   text        not null,
-  person_name text        not null,
-  items       jsonb       not null default '[]'::jsonb,
-  notes       text,
+  order_ref   text        not null check (char_length(order_ref) <= 32),
+  person_name text        not null check (char_length(person_name) between 1 and 60),
+  items       jsonb       not null default '[]'::jsonb check (jsonb_array_length(items) <= 50),
+  notes       text                 check (char_length(coalesce(notes, '')) <= 500),
   created_at  timestamptz not null default now()
 );
 
@@ -28,8 +31,8 @@ create policy "orders_delete" on orders for delete using (true);
 -- User favourites (per-person saved picks) -------------------
 create table if not exists user_favourites (
   id          uuid        primary key default gen_random_uuid(),
-  person_name text        not null,
-  drink_name  text        not null,
+  person_name text        not null check (char_length(person_name) between 1 and 60),
+  drink_name  text        not null check (char_length(drink_name) between 1 and 80),
   created_at  timestamptz not null default now(),
   unique (person_name, drink_name)
 );
@@ -45,7 +48,7 @@ create policy "favs_delete" on user_favourites for delete using (true);
 -- kopitiam terms ("Kopi Peng Siew Dai"). User can toggle during a session.
 create table if not exists members (
   id           uuid        primary key default gen_random_uuid(),
-  name         text        not null,
+  name         text        not null check (char_length(name) between 1 and 60),
   sort_order   integer     not null default 0,
   default_lang text        not null default 'en' check (default_lang in ('en', 'sin')),
   created_at   timestamptz not null default now()
@@ -60,9 +63,9 @@ create policy "members_delete" on members for delete using (true);
 -- Custom drinks (admin-added entries that augment the static menu) --
 create table if not exists custom_drinks (
   id          uuid        primary key default gen_random_uuid(),
-  name        text        not null,
-  description text        not null default '',
-  category_id text        not null,
+  name        text        not null check (char_length(name) between 1 and 80),
+  description text        not null default '' check (char_length(description) <= 200),
+  category_id text        not null check (char_length(category_id) <= 40),
   created_at  timestamptz not null default now()
 );
 
@@ -74,7 +77,7 @@ create policy "custom_drinks_delete" on custom_drinks for delete using (true);
 -- Hidden drinks (admin-flagged drinks suppressed from the menu) -----
 create table if not exists hidden_drinks (
   id         uuid        primary key default gen_random_uuid(),
-  drink_name text        not null unique,
+  drink_name text        not null unique check (char_length(drink_name) between 1 and 80),
   created_at timestamptz not null default now()
 );
 
