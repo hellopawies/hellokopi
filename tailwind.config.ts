@@ -18,6 +18,10 @@ const config: Config = {
       },
       colors: {
         cream: "#FAFAF8",
+        // Signature accent — the warm kopi brown that ties drink-colour dots,
+        // focus rings, and small accent lifts together. Used sparingly so
+        // it stays special.
+        kopi: "#a47d3f",
         stone: {
           50: "#FAFAF9",
           100: "#F5F5F4",

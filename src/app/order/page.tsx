@@ -10,7 +10,7 @@ import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
 import { drinkColor } from "@/lib/drinkColor";
-import { displayDrinkName, translateModifier } from "@/lib/drinkName";
+import { displayDrinkName, translateModifier, drinkTemp } from "@/lib/drinkName";
 import { useLanguage } from "@/lib/language";
 import { TempIcon } from "@/app/components/TempIcon";
 import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
@@ -197,6 +197,28 @@ type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 
 // ─── Heart icon ───────────────────────────────────────────────
+/**
+ * Inline qty indicator (B6). Renders up to 3 tiny cup pictograms; 4+
+ * fall back to a plain "× N" numeral so the line doesn't blow out.
+ * Sits next to the drink name in the cart bar + last-order card.
+ */
+function CupGlyph({ qty }: { qty: number }) {
+  if (qty <= 1) return null;
+  if (qty <= 3) {
+    return (
+      <span className="inline-flex items-center gap-[3px] ml-2 align-middle text-stone-400 dark:text-stone-500">
+        {Array.from({ length: qty }).map((_, i) => (
+          <svg key={i} viewBox="0 0 16 16" width={10} height={10} fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+            <path d="M3 5 L4 12 Q4.2 13 5 13 L11 13 Q11.8 13 12 12 L13 5 Z" strokeLinejoin="round" />
+            <path d="M12 7 Q14.2 7 14.2 8.5 Q14.2 10 12 10" strokeLinecap="round" />
+          </svg>
+        ))}
+      </span>
+    );
+  }
+  return <span className="ml-1.5 text-[11px] font-normal text-stone-400 dark:text-stone-500 tabular-nums align-middle">× {qty}</span>;
+}
+
 function Heart({ filled, bursting }: { filled: boolean; bursting?: boolean }) {
   return (
     <svg
@@ -251,9 +273,27 @@ function DrinkCard({
           ${hero ? "p-5 sm:p-6" : "p-3.5"}
           ${selected
             ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
-            : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
+            : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm dark:before:absolute dark:before:inset-x-0 dark:before:top-0 dark:before:h-px dark:before:bg-gradient-to-r dark:before:from-transparent dark:before:via-stone-500/30 dark:before:to-transparent dark:before:content-['']"}
         `}
       >
+        {/* Temperature edge band — a 2px coloured stripe along the top
+            doubles up the hot/iced signal and gives the card a visual
+            spine. Hidden when selected (dark fill obscures it anyway). */}
+        {!selected && (() => {
+          const t = drinkTemp(name);
+          if (!t) return null;
+          return (
+            <span
+              aria-hidden
+              className="absolute inset-x-0 top-0 h-[2px] pointer-events-none rounded-t-xl"
+              style={{
+                background: t === "iced"
+                  ? "linear-gradient(90deg, transparent, rgba(99,152,238,0.85), transparent)"
+                  : "linear-gradient(90deg, transparent, rgba(239,68,68,0.7), transparent)",
+              }}
+            />
+          );
+        })()}
         {hero && !selected && (
           // Soft radial wash in the drink's signature colour — gives the
           // hero tile a visual identity beyond just being larger. Sits
@@ -280,17 +320,22 @@ function DrinkCard({
             </span>
           </div>
         )}
-        <p className={`relative font-sans font-medium leading-snug pr-7 ${
-          hero ? "text-base sm:text-lg" : "text-sm"
+        {/* Drink name — now serif (C9) so cards read like a menu, not a UI. */}
+        <p className={`relative font-serif font-light tracking-wide leading-snug pr-7 ${
+          hero ? "text-lg sm:text-xl" : "text-[15px]"
         } ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
           {displayDrinkName(name, lang)}
           <TempIcon name={name} className={`inline ml-1.5 align-middle ${hero ? "w-3.5 h-3.5" : "w-3 h-3"}`} />
           {selected && qty > 1 ? <span className="ml-1.5 text-[11px] font-normal opacity-60">×{qty}</span> : null}
         </p>
         {description && (
-          <p className={`font-sans mt-0.5 leading-snug ${
-            hero ? "text-xs sm:text-[13px] mt-1.5" : "text-[11px]"
-          } ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
+          // Quoted-aside treatment (E15): italic serif with a thin vertical
+          // rule. Reads as a chef's note rather than a UI label.
+          <p className={`font-serif italic font-light leading-relaxed border-l ${
+            hero ? "text-xs sm:text-[13px] mt-2 pl-2.5" : "text-[11px] mt-1 pl-2"
+          } ${selected
+            ? "text-stone-300 dark:text-stone-600 border-stone-600 dark:border-stone-400"
+            : "text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700"}`}>
             <AnnotatedText text={description} selected={selected} />
           </p>
         )}
@@ -1151,7 +1196,7 @@ function OrderContent() {
         {/* Greeting */}
         <div className="px-5 sm:px-8 pt-16 sm:pt-10 pb-4">
           <div className="max-w-lg mx-auto">
-            <h1 className={`font-serif font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight transition-all duration-300 ${headerCompact ? "text-lg sm:text-xl" : "text-3xl sm:text-4xl"}`}>
+            <h1 className={`font-serif font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight transition-all duration-300 ${headerCompact ? "text-lg sm:text-xl" : "text-[2.4rem] sm:text-[3rem]"}`}>
               Hello, {name}
             </h1>
             <p className={`font-serif font-light italic text-stone-400 dark:text-stone-500 overflow-hidden transition-all duration-300 ${headerCompact ? "opacity-0 max-h-0 mt-0" : "text-base sm:text-lg opacity-100 max-h-16 mt-1.5"}`}>
@@ -1189,14 +1234,16 @@ function OrderContent() {
         <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
             <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
-              {/* Sliding pill */}
+              {/* Sliding pill — kopi-brown underglow (E14) gives the active
+                  tab a tinted shadow so it reads as raised, not just filled. */}
               <div
-                className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 rounded-full pointer-events-none"
                 style={{
                   left: 4,
                   width: "calc((100% - 8px) / 2)",
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(164,125,63,0.22)",
                 }}
               />
               {TABS.map((t) => (
@@ -1310,10 +1357,10 @@ function OrderContent() {
                             className="inline-block w-[7px] h-[7px] rounded-full flex-shrink-0"
                             style={{ backgroundColor: drinkColor(n) }}
                           />
-                          <span className="text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug">
+                          <span className="font-serif text-[15px] font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug">
                             {displayDrinkName(n, lang)}
                             <TempIcon name={n} className="inline w-3 h-3 ml-1.5 align-middle" />
-                            {qty > 1 && <span className="ml-1.5 text-[11px] font-normal text-stone-400 dark:text-stone-500 tabular-nums">× {qty}</span>}
+                            <CupGlyph qty={qty} />
                           </span>
                         </div>
                       ))}
@@ -1322,11 +1369,24 @@ function OrderContent() {
                 </div>
               )}
               {!loadingFavs && userFavs.size === 0 && (
-                <div className="flex flex-col items-center gap-3 py-16">
-                  <div className="w-px h-8 bg-stone-200 dark:bg-stone-700" />
-                  <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 text-center px-8">
-                    Tap ♡ on any drink to save it here
-                  </p>
+                // Settled empty state (E18) — mirrors the /orders treatment:
+                // small cup outline + serif italic line + tracked-uppercase
+                // sub-label. Consistent voice across every empty surface.
+                <div className="flex flex-col items-center gap-4 py-16">
+                  <svg viewBox="0 0 64 64" width="40" height="40" className="text-stone-300 dark:text-stone-700" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+                    <path d="M16 26 L20 50 Q21 54 25 54 L39 54 Q43 54 44 50 L48 26 Z" strokeLinejoin="round" />
+                    <path d="M44 34 Q54 34 54 41 Q54 48 44 48" strokeLinecap="round" />
+                    <path d="M12 56 Q32 61 52 56" strokeLinecap="round" opacity="0.6" />
+                    <path d="M28 18 L32 12 L36 18" strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
+                  </svg>
+                  <div className="flex flex-col items-center gap-1.5 px-8">
+                    <p className="font-serif text-base font-light italic text-stone-500 dark:text-stone-400 text-center">
+                      Save the ones you like.
+                    </p>
+                    <p className="text-[11px] uppercase tracking-[0.22em] font-sans text-stone-400 dark:text-stone-500">
+                      Tap ♡ on any drink
+                    </p>
+                  </div>
                 </div>
               )}
               {!loadingFavs && userFavs.size > 0 && (
@@ -1436,11 +1496,19 @@ function OrderContent() {
         </div>
       </div>
 
-      {/* Fixed bottom bar — builder preview and/or cart */}
+      {/* Floating dock cart (D10) — lifted further from the edge with a
+          stronger drop shadow and a soft kopi-brown underglow when items
+          are in the cart (D11 page tint). Reads as a discrete object
+          floating above the page rather than a strip glued to the bottom. */}
       {(cart.size > 0 || builderDrink) && (
-        <div className="fixed bottom-8 left-0 right-0 z-40 px-4 sm:px-6">
+        <div className="fixed bottom-6 sm:bottom-8 left-0 right-0 z-40 px-4 sm:px-6">
           <div
-            className="max-w-lg mx-auto rounded-2xl bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/50 px-4 pt-3.5 pb-4 flex flex-col gap-2.5 border border-stone-200 dark:border-stone-700/60"
+            className="max-w-lg mx-auto rounded-[20px] bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl px-4 pt-3.5 pb-4 flex flex-col gap-2.5 border border-stone-200 dark:border-stone-700/60"
+            style={{
+              boxShadow: cart.size > 0
+                ? "0 24px 48px -16px rgba(0,0,0,0.18), 0 12px 24px -10px rgba(164,125,63,0.25)"
+                : "0 16px 36px -14px rgba(0,0,0,0.16), 0 6px 14px -6px rgba(0,0,0,0.08)",
+            }}
           >
 
             {/* Builder preview row */}
@@ -1485,9 +1553,12 @@ function OrderContent() {
             </div>
             {cartEntries.map(([drinkName, qty]) => (
               <div key={drinkName} className="flex items-center gap-3">
-                <p className="flex-1 min-w-0 text-sm font-sans font-medium text-stone-800 dark:text-stone-100 truncate">
+                {/* C9: drink name in serif within the cart too, so the
+                    list reads like a menu rather than a sans-serif tally. */}
+                <p className="flex-1 min-w-0 font-serif text-[15px] font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
                   {displayDrinkName(drinkName, lang)}
                   <TempIcon name={drinkName} className="inline w-3 h-3 ml-1.5 align-middle" />
+                  <CupGlyph qty={qty} />
                 </p>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
@@ -1536,7 +1607,18 @@ function OrderContent() {
               {orderState === "loading"
                 ? (isEditing ? "Updating your order…" : "Sending it…")
                 : <>
-                    {isEditing ? "Update order" : "Place order"} — {totalDrinks} {totalDrinks === 1 ? "drink" : "drinks"}
+                    {isEditing ? "Update order" : "Place order"} —{" "}
+                    {/* Spring-scale the count on change (E17). The key
+                        forces React to re-mount the badge, replaying the
+                        keyframe each time. */}
+                    <span
+                      key={totalDrinks}
+                      className="inline-block tabular-nums"
+                      style={{ animation: "qtyPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}
+                    >
+                      {totalDrinks}
+                    </span>{" "}
+                    {totalDrinks === 1 ? "drink" : "drinks"}
                   </>
               }
             </button>

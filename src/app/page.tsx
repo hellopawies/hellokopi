@@ -119,7 +119,7 @@ export default function GreetingPage() {
 
   return (
     <main className="relative min-h-[100dvh] bg-[#FAFAF8] dark:bg-black flex flex-col items-center justify-center px-5 sm:px-8 py-16">
-      {/* Ambient gradient drift */}
+      {/* Ambient gradient drift — main wash. */}
       <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden dark:opacity-0">
         <div
           className="absolute w-[130%] h-[130%] -top-[15%] -left-[15%]"
@@ -129,18 +129,40 @@ export default function GreetingPage() {
           }}
         />
       </div>
+      {/* Parallax secondary glow (D12) — a small warm pool that drifts on
+          a different rhythm, sitting behind the brand. Creates the
+          two-plane depth feeling without a heavy hero image. */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute w-[70%] h-[70%] top-[20%] right-[-10%] opacity-50 dark:opacity-20"
+          style={{
+            background: "radial-gradient(circle at center, rgba(164,125,63,0.18) 0%, transparent 60%)",
+            animation: "gradientDrift 26s ease-in-out infinite reverse",
+          }}
+        />
+      </div>
       <div
         className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center gap-8 sm:gap-10"
       >
-        {/* Brand */}
+        {/* Brand mark — wordmark with a small cup pictogram. Centred dot
+            on either side of the name plus a tiny saucer-cup glyph that
+            anchors the type, so the mark feels developed rather than just
+            "small uppercase text". */}
         <div
           style={firstLoad ? (ready ? { animation: "fadeUp 0.7s ease-out both" } : { opacity: 0 }) : {}}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-1.5"
         >
-          <span className="text-[11px] uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 font-sans font-medium">
-            hello kopi
-          </span>
-          <div className="w-6 h-px bg-stone-300 dark:bg-stone-700 mt-1" />
+          <div className="flex items-center gap-2.5">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" className="text-stone-400 dark:text-stone-500" aria-hidden="true">
+              <path d="M5 9 L6.5 18 Q6.8 19.5 8 19.5 L14 19.5 Q15.2 19.5 15.5 18 L17 9 Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none" />
+              <path d="M15.5 12 Q19.5 12 19.5 14.5 Q19.5 17 15.5 17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+              <path d="M3.5 21.5 Q11 23 18.5 21.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.6" />
+            </svg>
+            <span className="text-[11px] uppercase tracking-[0.32em] text-stone-500 dark:text-stone-400 font-sans font-medium">
+              hello kopi
+            </span>
+          </div>
+          <div className="w-6 h-px bg-stone-300 dark:bg-stone-700" />
         </div>
 
         {cachedName ? (

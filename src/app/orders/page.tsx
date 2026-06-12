@@ -327,7 +327,7 @@ export default function OrdersPage() {
           <div className="max-w-lg mx-auto">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-baseline gap-3">
-                <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
+                <h1 className="font-serif text-[2.4rem] sm:text-[3rem] font-light tracking-wide text-stone-800 dark:text-stone-100 leading-tight">
                   Orders
                 </h1>
                 {isConfigured && (
@@ -374,12 +374,13 @@ export default function OrdersPage() {
             {visibleGroups.length > 0 ? (
               <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
                 <div
-                  className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 shadow-sm rounded-full pointer-events-none"
+                  className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 rounded-full pointer-events-none"
                   style={{
                     left: 4,
                     width: `calc((100% - 8px) / ${visibleGroups.length})`,
                     transform: `translateX(${tabIndex * 100}%)`,
                     transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(164,125,63,0.22)",
                   }}
                 />
                 {visibleGroups.map(({ dateKey }) => (
