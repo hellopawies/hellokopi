@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { VERSIONS } from "@/data/changelog";
 import { TIMEZONE_SG } from "@/lib/constants";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -277,14 +276,13 @@ export default function GreetingPage() {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer — version number only, no longer a link (the changelog list
+          is gone). Reads from src/data/changelog.ts so a one-line bump there
+          updates this marker. */}
       <div className="absolute bottom-6 sm:bottom-8 flex justify-center">
-        <Link
-          href="/changelog"
-          className="text-[10px] font-sans text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors duration-200 tracking-wide"
-        >
+        <span className="text-[10px] font-sans text-stone-300 dark:text-stone-600 tracking-wide">
           {VERSIONS[0].version}
-        </Link>
+        </span>
       </div>
 
       <style jsx global>{`
