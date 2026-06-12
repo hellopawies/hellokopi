@@ -173,7 +173,7 @@ export default function GreetingPage() {
                   mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
                   text-sm tracking-wide font-sans font-medium
-                  transition-all duration-200 touch-manipulation
+                  transition-all duration-200 ease-spring touch-manipulation
                   shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                   hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900
                   active:bg-stone-800 dark:active:bg-stone-300 active:text-white dark:active:text-stone-900
@@ -222,7 +222,7 @@ export default function GreetingPage() {
                       type="button"
                       onClick={() => { setSelected(c.name); if (c.name !== "Others") setOtherName(""); }}
                       aria-pressed={isSelected}
-                      className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+                      className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] ${
                         isSelected
                           ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
                           : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
@@ -261,7 +261,7 @@ export default function GreetingPage() {
                   mt-1 w-full sm:w-auto sm:px-10 py-3.5 rounded-xl
                   border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300
                   text-sm tracking-wide font-sans font-medium
-                  transition-all duration-200 touch-manipulation
+                  transition-all duration-200 ease-spring touch-manipulation
                   shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                   hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900
                   active:bg-stone-800 dark:active:bg-stone-300 active:text-white dark:active:text-stone-900

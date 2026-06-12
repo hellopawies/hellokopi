@@ -34,6 +34,9 @@ const config: Config = {
       animation: {
         "fade-up": "fadeUp 0.6s ease-out forwards",
         "fade-in": "fadeIn 0.8s ease-out forwards",
+        // Pure-CSS shimmer for skeleton placeholders. 1.6s feels right —
+        // fast enough to read as "loading", slow enough not to be twitchy.
+        shimmer: "shimmer 1.6s linear infinite",
       },
       keyframes: {
         fadeUp: {
@@ -44,6 +47,18 @@ const config: Config = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        shimmer: {
+          "0%":   { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+      },
+      // Spring-style easing — replaces ease-out almost everywhere. `spring`
+      // overshoots slightly (chip / button feedback); `spring-soft` settles
+      // without overshoot (sheets, tab pill).
+      transitionTimingFunction: {
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "spring-soft": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "spring-snap": "cubic-bezier(0.5, 1.5, 0.5, 1)",
       },
     },
   },

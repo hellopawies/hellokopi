@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import BrewingCup from "@/app/components/BrewingCup";
+import { SessionSkeleton } from "@/app/components/Skeleton";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import { drinkColor } from "@/lib/drinkColor";
@@ -410,7 +410,12 @@ export default function OrdersPage() {
       <div className="px-5 sm:px-8 pt-6 pb-16">
         <div className="max-w-lg mx-auto">
 
-          {loading && <BrewingCup />}
+          {loading && (
+            <div className="flex flex-col gap-5">
+              <SessionSkeleton />
+              <SessionSkeleton />
+            </div>
+          )}
           {!loading && error && (
             <div className="flex flex-col items-center gap-4 py-20">
               <p className="text-sm font-sans text-stone-500 dark:text-stone-400 text-center">
@@ -418,7 +423,7 @@ export default function OrdersPage() {
               </p>
               <button
                 onClick={load}
-                className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 px-5 py-2.5 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
+                className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 px-5 py-2.5 rounded-xl hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 ease-spring touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
               >
                 Try again
               </button>

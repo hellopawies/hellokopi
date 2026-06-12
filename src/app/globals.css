@@ -27,12 +27,48 @@ body {
 }
 
 @keyframes pageIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 main {
-  animation: pageIn 0.3s ease-out;
+  /* Spring-soft easing replaces ease-out — same duration, more "settle". */
+  animation: pageIn 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Shimmer skeleton ──────────────────────────────────────────
+   Light-weight stand-in for content that's still loading. A pale
+   gradient sweeps left across the tile every 1.6s. Replaces the
+   brewing-cup loader on tab-level loads where the final layout
+   is predictable. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(214, 211, 209, 0.35) 0%,
+    rgba(231, 229, 228, 0.85) 50%,
+    rgba(214, 211, 209, 0.35) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(41, 37, 36, 0.5) 0%,
+      rgba(68, 64, 60, 0.85) 50%,
+      rgba(41, 37, 36, 0.5) 100%
+    );
+    background-size: 200% 100%;
+  }
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+/* Honour reduced-motion: drop the sweep, keep the placeholder. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
 }
 
 .liquid-glass-top {
@@ -102,9 +138,11 @@ main {
   50%       { box-shadow: 0 0 0 7px rgba(var(--pulse-rgb), 0.09); }
 }
 
-/* ── Tab content fade-in ── */
+/* ── Tab content fade-in ──
+   Slightly larger travel + spring easing so the new tab feels like
+   it springs into place rather than fading politely. */
 @keyframes tabIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
