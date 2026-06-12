@@ -83,7 +83,7 @@ function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
           <button
             type="submit"
             disabled={!password || checking}
-            className="mt-1 w-full py-3.5 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
+            className="mt-1 w-full py-3.5 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 ease-spring touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
           >
             {checking ? "Checking…" : "Enter"}
           </button>
@@ -194,7 +194,7 @@ function OrdersTab() {
   if (error) return (
     <div className="flex flex-col items-center gap-4 py-20">
       <p className="text-[11px] uppercase tracking-[0.25em] font-sans text-stone-400 dark:text-stone-500 text-center">Could not load orders.</p>
-      <button onClick={load} className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 rounded-xl px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]">Try again</button>
+      <button onClick={load} className="text-[11px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-300 dark:border-stone-600 rounded-xl px-5 py-2.5 hover:border-stone-500 dark:hover:border-stone-400 transition-all duration-200 ease-spring touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]">Try again</button>
     </div>
   );
   if (orders.length === 0) return (
@@ -228,7 +228,7 @@ function OrdersTab() {
           />
           <button
             onClick={downloadCSV}
-            className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
+            className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 ease-spring touch-manipulation shadow-sm hover:shadow-md active:scale-[0.95]"
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -399,7 +399,7 @@ function MenuTab() {
                   type="button"
                   onClick={() => setNewTemp(t)}
                   aria-pressed={active}
-                  className={`px-3 py-1 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-150 touch-manipulation active:scale-[0.95] ${
+                  className={`px-3 py-1 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] ${
                     active
                       ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-sm"
                       : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500"
@@ -413,7 +413,7 @@ function MenuTab() {
           <button
             type="submit"
             disabled={!newName.trim() || adding}
-            className="mt-1 w-full py-3 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
+            className="mt-1 w-full py-3 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 text-[11px] uppercase tracking-[0.25em] font-sans font-medium transition-all duration-200 ease-spring touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed focus:outline-none"
           >
             {adding ? "Adding…" : "Add Drink"}
           </button>
@@ -598,7 +598,7 @@ function MembersTab() {
           <button
             type="submit"
             disabled={!newName.trim() || adding}
-            className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium px-4 py-2 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] focus:outline-none"
+            className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium px-4 py-2 rounded-xl border border-stone-800 dark:border-stone-300 text-stone-800 dark:text-stone-300 hover:bg-stone-800 dark:hover:bg-stone-300 hover:text-white dark:hover:text-stone-900 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200 ease-spring touch-manipulation shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] focus:outline-none"
           >
             {adding ? "…" : "Add"}
           </button>
@@ -647,7 +647,7 @@ function MembersTab() {
                     type="button"
                     onClick={() => toggleLang(member.id)}
                     aria-label={`Default language for ${member.name}: ${member.default_lang.toUpperCase()}. Tap to switch.`}
-                    className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 px-2 py-1 mr-1 rounded-full border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-150 touch-manipulation active:scale-[0.95] tabular-nums"
+                    className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 px-2 py-1 mr-1 rounded-full border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] tabular-nums"
                   >
                     {member.default_lang.toUpperCase()}
                   </button>

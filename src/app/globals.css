@@ -32,8 +32,9 @@ body {
 }
 
 main {
-  /* Spring-soft easing replaces ease-out — same duration, more "settle". */
-  animation: pageIn 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Spring-soft easing — keep the settle character but tighter so it
+     stays snappy on low-end devices. */
+  animation: pageIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ── Shimmer skeleton ──────────────────────────────────────────
