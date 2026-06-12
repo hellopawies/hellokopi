@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import BrewingCup from "@/app/components/BrewingCup";
 import { MyPicksBentoSkeleton } from "@/app/components/Skeleton";
+import { useDelayed } from "@/lib/useDelayed";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
@@ -246,21 +247,40 @@ function DrinkCard({
         type="button"
         onClick={onSelect}
         className={`
-          h-full w-full flex flex-col text-left border rounded-xl transition-all duration-200 ease-spring touch-manipulation active:scale-[0.97]
+          relative overflow-hidden h-full w-full flex flex-col text-left border rounded-xl transition-all duration-200 ease-spring touch-manipulation active:scale-[0.97]
           ${hero ? "p-5 sm:p-6" : "p-3.5"}
           ${selected
             ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
             : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
         `}
       >
-        {hero && (
+        {hero && !selected && (
+          // Soft radial wash in the drink's signature colour — gives the
+          // hero tile a visual identity beyond just being larger. Sits
+          // behind content; pointer-events-none so it can't catch taps.
           <span
             aria-hidden
-            className="block w-2 h-2 rounded-full mb-2"
-            style={{ background: drinkColor(name) }}
+            className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none opacity-40 dark:opacity-25"
+            style={{
+              background: `radial-gradient(circle, ${drinkColor(name)} 0%, transparent 65%)`,
+            }}
           />
         )}
-        <p className={`font-sans font-medium leading-snug pr-7 ${
+        {hero && (
+          <div className="flex items-center gap-2 mb-2 relative">
+            <span
+              aria-hidden
+              className="block w-2.5 h-2.5 rounded-full"
+              style={{ background: drinkColor(name) }}
+            />
+            <span className={`text-[9px] uppercase tracking-[0.22em] font-sans font-medium ${
+              selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"
+            }`}>
+              Featured pick
+            </span>
+          </div>
+        )}
+        <p className={`relative font-sans font-medium leading-snug pr-7 ${
           hero ? "text-base sm:text-lg" : "text-sm"
         } ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
           {displayDrinkName(name, lang)}
@@ -758,6 +778,9 @@ function OrderContent() {
   const [customDrinks, setCustomDrinks] = useState<CustomDrink[]>([]);
   const [hiddenDrinks, setHiddenDrinks] = useState<Set<string>>(new Set());
   const [loadingFavs, setLoadingFavs] = useState(true);
+  // Skeleton only renders if loading hasn't finished within 200ms — fast
+  // fetches go straight to content without a flash of placeholder.
+  const showSkeleton = useDelayed(200);
   const [lastOrder, setLastOrder] = useState<{ name: string; qty: number }[] | null>(null);
   const [builderDrink, setBuilderDrink] = useState("");
   const [existingOrder, setExistingOrder] = useState<{ id: string; items: CartItem[]; sessionStart: Date } | null>(null);
@@ -1262,7 +1285,7 @@ function OrderContent() {
           {/* MY PICKS */}
           {tab === "yours" && (
             <div style={{ animation: "tabIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
-              {loadingFavs && <TabLoading />}
+              {loadingFavs && showSkeleton && <TabLoading />}
               {!loadingFavs && lastOrder && lastOrder.length > 0 && (
                 <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
                   <div className="rounded-xl border border-stone-200 dark:border-stone-700/60 bg-white dark:bg-[#111] p-3.5 shadow-sm">
@@ -1307,21 +1330,21 @@ function OrderContent() {
                 </div>
               )}
               {!loadingFavs && userFavs.size > 0 && (
-                // Bento layout: with ≥3 saved picks, the first becomes a 2x2
-                // hero on ≥sm; the rest tile as half-width cards alongside.
-                // With 1-2 picks the hero would leave an orphan cell, so we
-                // fall back to plain equal-size tiles. grid-auto-flow:dense
-                // lets later small cards fill the space beside the hero.
+                // Bento layout. Mobile keeps a 2-col grid (preserves the
+                // comfortable density small tiles used to have); ≥sm
+                // expands to 4 cols so the first pick (when 3+ saved)
+                // can take a 2x2 hero slot beside the smaller tiles.
+                // grid-auto-flow:dense fills any gaps the hero leaves.
                 <div
-                  className="grid grid-cols-4 gap-2.5 mb-5"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5"
                   style={{ gridAutoFlow: "dense" }}
                 >
                   {[...userFavs].map((drinkName, index) => {
                     const drink = DRINKS_MAP.get(drinkName);
                     const promoteHero = userFavs.size >= 3 && index === 0;
                     const span = promoteHero
-                      ? "col-span-4 sm:col-span-2 sm:row-span-2"
-                      : "col-span-2";
+                      ? "col-span-2 sm:row-span-2"
+                      : "col-span-1 sm:col-span-2";
                     return (
                       <div key={drinkName} className={span}>
                         <DrinkCard

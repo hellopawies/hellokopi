@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SessionSkeleton } from "@/app/components/Skeleton";
+import { useDelayed } from "@/lib/useDelayed";
+import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
 import { drinkColor } from "@/lib/drinkColor";
@@ -166,10 +168,23 @@ function Countdown({ sessionStart }: { sessionStart: Date }) {
   );
 }
 
+/** Time-of-day-aware empty-state line shown when no orders exist yet. */
+function emptyStateLine(): string {
+  const h = new Date().getHours();
+  if (h < 11) return "Quiet morning. First sip's all yours.";
+  if (h < 14) return "Lunch lull — be the first to call a run?";
+  if (h < 17) return "Afternoon slump approaching. Just saying.";
+  if (h < 21) return "Evening hush. Nobody's brewing.";
+  return "Late-night quiet — nothing in the cup yet.";
+}
+
 export default function OrdersPage() {
   const [groups, setGroups] = useState<DateGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Gate the skeleton placeholder so it only shows if the fetch actually
+  // takes >200ms. Fast loads (cached, fresh page) skip straight to content.
+  const showSkeleton = useDelayed(200);
   // Tracks whether the component is still mounted, so async fetches don't
   // setState after unmount.
   const mountedRef = useRef(true);
@@ -410,7 +425,7 @@ export default function OrdersPage() {
       <div className="px-5 sm:px-8 pt-6 pb-16">
         <div className="max-w-lg mx-auto">
 
-          {loading && (
+          {loading && showSkeleton && (
             <div className="flex flex-col gap-5" role="status" aria-label="Loading orders">
               <SessionSkeleton />
               <SessionSkeleton />
@@ -435,11 +450,28 @@ export default function OrdersPage() {
             </p>
           )}
           {!loading && !error && isConfigured && groups.length === 0 && (
-            <div className="flex flex-col items-center gap-3 py-24">
-              <div className="w-px h-10 bg-stone-200 dark:bg-stone-700" />
-              <p className="font-serif text-lg font-light italic text-stone-400 dark:text-stone-500">
-                No orders yet.
-              </p>
+            // Friendlier empty state — small cup outline + time-aware
+            // copy + a way back to /order so the page isn't a dead end.
+            <div className="flex flex-col items-center gap-5 py-20">
+              <svg viewBox="0 0 64 64" width="48" height="48" className="text-stone-300 dark:text-stone-700" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+                <path d="M16 26 L20 50 Q21 54 25 54 L39 54 Q43 54 44 50 L48 26 Z" strokeLinejoin="round" />
+                <path d="M44 34 Q54 34 54 41 Q54 48 44 48" strokeLinecap="round" />
+                <path d="M12 56 Q32 61 52 56" strokeLinecap="round" opacity="0.6" />
+              </svg>
+              <div className="flex flex-col items-center gap-1.5">
+                <p className="font-serif text-lg font-light italic text-stone-500 dark:text-stone-400">
+                  {emptyStateLine()}
+                </p>
+                <p className="text-[11px] uppercase tracking-[0.22em] font-sans text-stone-400 dark:text-stone-500">
+                  Nothing brewing yet
+                </p>
+              </div>
+              <Link
+                href="/order"
+                className="mt-1 text-[10px] uppercase tracking-[0.25em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-full hover:border-stone-500 dark:hover:border-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95]"
+              >
+                Start a kopi run →
+              </Link>
             </div>
           )}
 

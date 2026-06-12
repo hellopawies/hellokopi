@@ -1,5 +1,18 @@
 export const VERSIONS = [
   {
+    version: "v3.5.11",
+    date: "12 Jun 2026",
+    title: "Bento polish + friendlier empty state + tighter feel",
+    changes: [
+      "My Picks bento now keeps mobile at the comfortable 2-column density — only ≥sm-width screens get the 4-column bento layout. Stops small-card titles from cramping on iPhone-SE-class screens.",
+      "Featured pick (your first saved drink, when you have 3+) now has a soft radial wash in the drink's signature colour + a small \"Featured pick\" label. Visually unmistakable as the hero of the tile.",
+      "Skeleton loaders only appear if a fetch actually takes >200ms — fast loads go straight to content, no flash of placeholder.",
+      "Tightened the whole-page entrance animation (0.42s → 0.32s) so it stays snappy on low-end devices while keeping the spring settle.",
+      "Empty Orders page is no longer a single \"No orders yet\" line — there's a small cup outline, a time-of-day-aware one-liner (\"Lunch lull — be the first to call a run?\"), and a one-tap link to start a run.",
+      "Honours prefers-reduced-motion across the whole app now — all spring overshoots, scale taps, and breathing animations zero out for users who set that preference.",
+    ],
+  },
+  {
     version: "v3.5.10",
     date: "12 Jun 2026",
     title: "Spring motion + bento My Picks + shimmer loaders",
