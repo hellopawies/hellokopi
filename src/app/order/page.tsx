@@ -581,17 +581,6 @@ function JustTypeTab({
         />
       </div>
 
-      {/* Empty-state tip — single italic line of example phrases. Not
-          interactive; just a gentle hint at what the matcher can handle. */}
-      {!trimmed && (
-        <p className="text-[12px] font-serif italic font-light text-stone-400 dark:text-stone-500 leading-relaxed">
-          <span className="text-[10px] not-italic uppercase tracking-[0.22em] font-sans font-medium text-stone-400 dark:text-stone-500 mr-2">
-            Try
-          </span>
-          &ldquo;kopi c siew dai peng&rdquo;, &ldquo;iced milo&rdquo;, &ldquo;2 teh tarik&rdquo;.
-        </p>
-      )}
-
       {/* Multi-drink summary card */}
       {trimmed && isMulti && (
         <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#111] p-4 flex flex-col gap-3">
