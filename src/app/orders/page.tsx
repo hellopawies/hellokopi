@@ -395,7 +395,7 @@ export default function OrdersPage() {
         <div
           key={latestActivity.at}
           className="px-5 sm:px-8 pt-3"
-          style={{ animation: "tabIn 0.35s ease-out both" }}
+          style={{ animation: "tabIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both" }}
         >
           <p className="max-w-lg mx-auto text-[11px] font-sans text-stone-500 dark:text-stone-400 text-center">
             <span className="font-serif italic text-stone-400 dark:text-stone-500">Just now · </span>
@@ -411,7 +411,7 @@ export default function OrdersPage() {
         <div className="max-w-lg mx-auto">
 
           {loading && (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5" role="status" aria-label="Loading orders">
               <SessionSkeleton />
               <SessionSkeleton />
             </div>

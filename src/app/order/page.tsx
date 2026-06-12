@@ -1307,18 +1307,19 @@ function OrderContent() {
                 </div>
               )}
               {!loadingFavs && userFavs.size > 0 && (
-                // Bento layout: first pick becomes a 2x2 hero on ≥sm; the rest
-                // tile as half-width cards. Drops to a single column on mobile
-                // so cards stay tappable. grid-auto-flow:dense lets later
-                // small cards fill leftover space beside the hero.
+                // Bento layout: with ≥3 saved picks, the first becomes a 2x2
+                // hero on ≥sm; the rest tile as half-width cards alongside.
+                // With 1-2 picks the hero would leave an orphan cell, so we
+                // fall back to plain equal-size tiles. grid-auto-flow:dense
+                // lets later small cards fill the space beside the hero.
                 <div
                   className="grid grid-cols-4 gap-2.5 mb-5"
                   style={{ gridAutoFlow: "dense" }}
                 >
                   {[...userFavs].map((drinkName, index) => {
                     const drink = DRINKS_MAP.get(drinkName);
-                    const isHero = index === 0;
-                    const span = isHero
+                    const promoteHero = userFavs.size >= 3 && index === 0;
+                    const span = promoteHero
                       ? "col-span-4 sm:col-span-2 sm:row-span-2"
                       : "col-span-2";
                     return (
@@ -1332,7 +1333,7 @@ function OrderContent() {
                           favourited={true}
                           onToggleFavourite={() => toggleFavourite(drinkName)}
                           enterDelay={index * 35}
-                          hero={isHero}
+                          hero={promoteHero}
                         />
                       </div>
                     );
