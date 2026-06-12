@@ -751,40 +751,6 @@ function DrinkBuilder({
     ];
   }, [customDrinks, hiddenDrinks]);
 
-  const [search, setSearch] = useState("");
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const handleSearchSelect = useCallback((drinkName: string) => {
-    onToggleCart(drinkName);
-    setSearch("");
-    requestAnimationFrame(() => searchRef.current?.focus());
-  }, [onToggleCart]);
-
-  const allDrinksFlat = useMemo(() => {
-    const validCatIds = new Set<string>([...DRINK_BASES.map((b) => b.id), "others"]);
-    const seen = new Set<string>();
-    const out: { name: string; description: string }[] = [];
-    for (const cat of CATEGORIES) {
-      if (!validCatIds.has(cat.id)) continue;
-      for (const d of cat.drinks) {
-        if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
-      }
-    }
-    for (const d of OTHERS_DRINKS) {
-      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
-    }
-    for (const d of customDrinks) {
-      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push({ name: d.name, description: d.description }); }
-    }
-    return out;
-  }, [customDrinks, hiddenDrinks]);
-
-  const searchResults = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return null;
-    return allDrinksFlat.filter((d) => d.name.toLowerCase().includes(q));
-  }, [search, allDrinksFlat]);
-
   const baseChipCls = (active: boolean) =>
     `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] ${
       active
@@ -794,44 +760,13 @@ function DrinkBuilder({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Search */}
-      <input
-        ref={searchRef}
-        type="text"
-        value={search}
-        onChange={(e) => { setSearch(e.target.value); if (e.target.value) setBaseId(null); }}
-        placeholder="Search drinks…"
-        className="w-full bg-transparent border-0 border-b border-stone-200 dark:border-stone-700 focus:border-stone-500 dark:focus:border-stone-400 focus:outline-none text-stone-800 dark:text-stone-100 text-sm font-sans font-light placeholder:text-stone-300 dark:placeholder:text-stone-600 py-2.5 tracking-wide transition-colors duration-200"
-      />
-
-      {/* Search results */}
-      {searchResults ? (
-        <div className="border-t border-stone-100 dark:border-stone-800 -mt-2">
-          {searchResults.length === 0 ? (
-            <p className="font-serif text-base font-light italic text-stone-400 dark:text-stone-500 py-8 text-center">No results.</p>
-          ) : searchResults.map((drink) => (
-            <DrinkRow
-              key={drink.name}
-              name={drink.name}
-              description={drink.description}
-              selected={cart.has(drink.name)}
-              qty={cart.get(drink.name) ?? 0}
-              onSelect={() => handleSearchSelect(drink.name)}
-              favourited={userFavs.has(drink.name)}
-              onToggleFavourite={() => onToggleFavourite(drink.name)}
-            />
-          ))}
-        </div>
-      ) : (
-      <>
-
       {/* Base selector */}
       <div className="flex flex-wrap gap-2">
         {DRINK_BASES.map((b) => (
           <button
             key={b.id}
             type="button"
-            onClick={() => { setSearch(""); setBaseId(baseId === b.id ? null : b.id); }}
+            onClick={() => setBaseId(baseId === b.id ? null : b.id)}
             className={baseChipCls(baseId === b.id)}
           >
             {b.label}
@@ -839,7 +774,7 @@ function DrinkBuilder({
         ))}
         <button
           type="button"
-          onClick={() => { setSearch(""); setBaseId(baseId === "others" ? null : "others"); }}
+          onClick={() => setBaseId(baseId === "others" ? null : "others")}
           className={baseChipCls(baseId === "others")}
         >
           Others
@@ -933,8 +868,6 @@ function DrinkBuilder({
         </div>
       )}
 
-      </>
-      )}
     </div>
   );
 }
