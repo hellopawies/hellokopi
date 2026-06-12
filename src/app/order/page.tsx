@@ -193,7 +193,7 @@ function synthesiseDescription(name: string): string | undefined {
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
-type Tab = "yours" | "type" | "all";
+type Tab = "yours" | "all";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 
@@ -564,7 +564,7 @@ function JustTypeTab({
     <div style={{ animation: "tabIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both" }} className="flex flex-col gap-4">
       <div>
         <label htmlFor="just-type-input" className="text-[10px] uppercase tracking-[0.22em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2 block">
-          What do you want?
+          Type your order
         </label>
         <input
           id="just-type-input"
@@ -1440,7 +1440,6 @@ function OrderContent() {
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
-    { id: "type",  label: "Just Type" },
     { id: "all",   label: "All Drinks" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
@@ -1593,6 +1592,19 @@ function OrderContent() {
           {/* MY PICKS */}
           {tab === "yours" && (
             <div style={{ animation: "tabIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+              {/* Just Type — fast natural-language entry at the top of My
+                  Picks. Sits above the saved picks so a regular ("kopi c
+                  peng") goes in two taps without ever needing to scroll. */}
+              <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
+                <JustTypeTab
+                  cart={cart}
+                  onAddMultiple={addToCart}
+                  userFavs={userFavs}
+                  onToggleFavourite={toggleFavourite}
+                  customDrinks={customDrinks}
+                  hiddenDrinks={hiddenDrinks}
+                />
+              </div>
               {loadingFavs && showSkeleton && <TabLoading />}
               {!loadingFavs && lastOrder && lastOrder.length > 0 && (
                 <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
@@ -1736,18 +1748,6 @@ function OrderContent() {
                 </div>
               )}
             </div>
-          )}
-
-          {/* JUST TYPE — natural-language entry */}
-          {tab === "type" && (
-            <JustTypeTab
-              cart={cart}
-              onAddMultiple={addToCart}
-              userFavs={userFavs}
-              onToggleFavourite={toggleFavourite}
-              customDrinks={customDrinks}
-              hiddenDrinks={hiddenDrinks}
-            />
           )}
 
           {/* ALL DRINKS — builder */}
