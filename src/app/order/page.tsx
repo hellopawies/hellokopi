@@ -16,6 +16,7 @@ import { TempIcon } from "@/app/components/TempIcon";
 import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
 import { CATEGORIES } from "@/data/drinks";
 import { DRINK_BASES, OTHERS_DRINKS, type DrinkSpecial } from "@/data/menu";
+import { searchDrinks, parseChunks } from "@/lib/drinkSearch";
 
 function haptic(pattern: number | number[] = 8) {
   try { navigator.vibrate?.(pattern); } catch {}
@@ -192,7 +193,7 @@ function synthesiseDescription(name: string): string | undefined {
 
 interface CustomDrink { id: string; name: string; description: string; category_id: string; }
 
-type Tab = "yours" | "all";
+type Tab = "yours" | "type" | "all";
 type CartItem = { name: string; qty: number };
 type OrderState = "idle" | "loading" | { orderedAt: Date; sessionStart: Date; items: CartItem[] } | "error";
 
@@ -457,6 +458,253 @@ function ModifierRow({
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Just Type — natural-language order entry ─────────────────
+// User types "kopi c siu dai pneg" / "2 milo peng" / "iced coffee less sweet"
+// → fuzzy matcher (src/lib/drinkSearch.ts) suggests real menu items. Tap or
+// press Enter on a suggestion to add to cart. Multi-drink chunks ("3 kopi,
+// 1 teh") are parsed and matched separately. No LLM, no network, no deps.
+function JustTypeTab({
+  cart, onAddMultiple, userFavs, onToggleFavourite,
+  customDrinks, hiddenDrinks,
+}: {
+  cart: Map<string, number>;
+  /** Adds N copies of a drink to the cart. Typing always adds, never toggles. */
+  onAddMultiple: (name: string, n: number) => void;
+  userFavs: Set<string>;
+  onToggleFavourite: (name: string) => void;
+  customDrinks: CustomDrink[];
+  hiddenDrinks: Set<string>;
+}) {
+  const { lang } = useLanguage();
+  const [input, setInput] = useState("");
+  const [focused, setFocused] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Build the search catalogue from the same sources as DrinkBuilder.
+  const catalogue = useMemo(() => {
+    const validCatIds = new Set<string>([...DRINK_BASES.map((b) => b.id), "others"]);
+    const seen = new Set<string>();
+    const out: { name: string; description: string }[] = [];
+    for (const cat of CATEGORIES) {
+      if (!validCatIds.has(cat.id)) continue;
+      for (const d of cat.drinks) {
+        if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
+      }
+    }
+    for (const d of OTHERS_DRINKS) {
+      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) { seen.add(d.name); out.push(d); }
+    }
+    for (const d of customDrinks) {
+      if (!seen.has(d.name) && !hiddenDrinks.has(d.name)) {
+        seen.add(d.name);
+        out.push({ name: d.name, description: d.description });
+      }
+    }
+    return out;
+  }, [customDrinks, hiddenDrinks]);
+
+  // Parse the input into 1+ chunks (multi-drink), match each against the
+  // catalogue. For a single chunk we surface up to 5 suggestions; for
+  // multi-chunk we show one best match per chunk so the screen doesn't
+  // explode with options.
+  const parsedChunks = useMemo(() => parseChunks(input), [input]);
+  const matchesPerChunk = useMemo(() => {
+    return parsedChunks.map((chunk) => ({
+      chunk,
+      matches: searchDrinks(chunk.query, catalogue, parsedChunks.length === 1 ? 5 : 1),
+    }));
+  }, [parsedChunks, catalogue]);
+
+  const isMulti = parsedChunks.length > 1;
+  const flatMatches = matchesPerChunk.flatMap((m) => m.matches);
+  // Reset keyboard focus whenever the match list changes.
+  useEffect(() => { setFocused(0); }, [input]);
+
+  function commitMatch(name: string, qty: number) {
+    // Always add (never toggle). Typing the same drink twice means "two of
+    // them", not "remove the one I just added".
+    onAddMultiple(name, qty);
+    setInput("");
+    inputRef.current?.focus();
+  }
+
+  function commitAllMulti() {
+    for (const { chunk, matches } of matchesPerChunk) {
+      const m = matches[0];
+      if (m) onAddMultiple(m.name, chunk.qty);
+    }
+    setInput("");
+    inputRef.current?.focus();
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (isMulti) {
+        commitAllMulti();
+      } else if (flatMatches[focused]) {
+        commitMatch(flatMatches[focused].name, parsedChunks[0]?.qty ?? 1);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocused((f) => Math.min(f + 1, Math.max(flatMatches.length - 1, 0)));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocused((f) => Math.max(f - 1, 0));
+    }
+  }
+
+  const trimmed = input.trim();
+
+  return (
+    <div style={{ animation: "tabIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both" }} className="flex flex-col gap-4">
+      <div>
+        <label htmlFor="just-type-input" className="text-[10px] uppercase tracking-[0.22em] font-sans font-medium text-stone-400 dark:text-stone-500 mb-2 block">
+          What do you want?
+        </label>
+        <input
+          id="just-type-input"
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Try: kopi c siew dai peng"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className="w-full bg-transparent border-0 border-b border-stone-300 dark:border-stone-600 focus:border-stone-700 dark:focus:border-stone-300 focus:outline-none text-stone-800 dark:text-stone-100 font-serif text-xl sm:text-2xl font-light tracking-wide placeholder:text-stone-300 dark:placeholder:text-stone-600 py-3 transition-colors duration-200"
+        />
+      </div>
+
+      {/* Empty state — gentle hint when input is blank */}
+      {!trimmed && (
+        <div className="flex flex-col gap-2 py-2">
+          <p className="text-[11px] uppercase tracking-[0.22em] font-sans text-stone-400 dark:text-stone-500">
+            Try
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {["kopi c siew dai peng", "iced milo", "2 teh tarik", "kopi peng, 1 horlicks"].map((eg) => (
+              <button
+                key={eg}
+                type="button"
+                onClick={() => { setInput(eg); inputRef.current?.focus(); }}
+                className="text-[12px] font-serif italic font-light text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 px-3 py-1.5 rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95]"
+              >
+                {eg}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Multi-drink summary card */}
+      {trimmed && isMulti && (
+        <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#111] p-4 flex flex-col gap-3">
+          <p className="text-[10px] uppercase tracking-[0.22em] font-sans text-stone-400 dark:text-stone-500">
+            {matchesPerChunk.length} drinks parsed
+          </p>
+          <div className="flex flex-col gap-2">
+            {matchesPerChunk.map(({ chunk, matches }, i) => {
+              const m = matches[0];
+              return (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <span className="text-[11px] font-sans font-medium text-stone-500 dark:text-stone-400 tabular-nums w-6 text-right flex-shrink-0">
+                    × {chunk.qty}
+                  </span>
+                  {m ? (
+                    <>
+                      <span className="font-serif text-base font-light tracking-wide text-stone-800 dark:text-stone-100 truncate">
+                        {displayDrinkName(m.name, lang)}
+                      </span>
+                      <TempIcon name={m.name} className="w-3 h-3 flex-shrink-0" />
+                    </>
+                  ) : (
+                    <span className="font-serif italic font-light text-stone-400 dark:text-stone-500 text-sm truncate">
+                      &ldquo;{chunk.query}&rdquo; — no match
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={commitAllMulti}
+            disabled={matchesPerChunk.every((m) => !m.matches[0])}
+            className="self-end px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] shadow-sm hover:shadow-md bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Add all to cart
+          </button>
+        </div>
+      )}
+
+      {/* Single-drink suggestion list */}
+      {trimmed && !isMulti && flatMatches.length > 0 && (
+        <div className="flex flex-col gap-1.5" role="listbox" aria-label="Drink suggestions">
+          <p className="text-[10px] uppercase tracking-[0.22em] font-sans text-stone-400 dark:text-stone-500 mb-1">
+            {parsedChunks[0]?.qty && parsedChunks[0].qty > 1
+              ? `Adding × ${parsedChunks[0].qty} of`
+              : "Did you mean"}
+          </p>
+          {flatMatches.map((m, i) => (
+            <button
+              key={m.name}
+              type="button"
+              onClick={() => commitMatch(m.name, parsedChunks[0]?.qty ?? 1)}
+              onMouseEnter={() => setFocused(i)}
+              role="option"
+              aria-selected={focused === i}
+              className={`w-full text-left flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 ease-spring touch-manipulation active:scale-[0.98] ${
+                focused === i
+                  ? "bg-stone-50 dark:bg-stone-900 border-stone-400 dark:border-stone-500 shadow-md"
+                  : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 shadow-sm"
+              }`}
+            >
+              <TempIcon name={m.name} className="w-3.5 h-3.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-serif text-base sm:text-lg font-light tracking-wide text-stone-800 dark:text-stone-100 leading-snug truncate">
+                  {displayDrinkName(m.name, lang)}
+                </p>
+                {m.description && (
+                  <p className="text-[11px] font-serif italic font-light text-stone-400 dark:text-stone-500 mt-0.5 truncate">
+                    {m.description}
+                  </p>
+                )}
+              </div>
+              <span
+                onClick={(e) => { e.stopPropagation(); onToggleFavourite(m.name); }}
+                className="flex-shrink-0 p-1.5 -mr-1 cursor-pointer touch-manipulation"
+                role="button"
+                aria-label={userFavs.has(m.name) ? `Remove ${m.name} from My Picks` : `Save ${m.name} to My Picks`}
+              >
+                <Heart filled={userFavs.has(m.name)} />
+              </span>
+              {cart.has(m.name) && (
+                <span className="text-[10px] uppercase tracking-[0.15em] font-sans font-medium text-stone-400 dark:text-stone-500 flex-shrink-0">
+                  in cart · {cart.get(m.name)}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* No match */}
+      {trimmed && !isMulti && flatMatches.length === 0 && (
+        <div className="flex flex-col items-center gap-3 py-10 px-6 text-center">
+          <p className="font-serif text-base font-light italic text-stone-500 dark:text-stone-400">
+            Couldn&rsquo;t place that.
+          </p>
+          <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500">
+            Try a kopitiam term — &ldquo;kopi c peng&rdquo;, &ldquo;teh tarik&rdquo;, &ldquo;milo dinosaur&rdquo;.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -1022,6 +1270,18 @@ function OrderContent() {
     });
   }
 
+  /** Adds N copies of a drink to the cart in one call — Just Type uses
+      this to convert "2 kopi c" into a cart entry of qty 2. */
+  function addToCart(drinkName: string, n: number) {
+    if (n <= 0) return;
+    haptic(8);
+    setCart((prev) => {
+      const next = new Map(prev);
+      next.set(drinkName, (next.get(drinkName) ?? 0) + n);
+      return next;
+    });
+  }
+
   function incrementCart(drinkName: string) {
     haptic(8);
     setCart((prev) => {
@@ -1180,6 +1440,7 @@ function OrderContent() {
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "yours", label: "My Picks" },
+    { id: "type",  label: "Just Type" },
     { id: "all",   label: "All Drinks" },
   ];
   const tabIndex = TABS.findIndex((t) => t.id === tab);
@@ -1240,7 +1501,7 @@ function OrderContent() {
                 className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 rounded-full pointer-events-none"
                 style={{
                   left: 4,
-                  width: "calc((100% - 8px) / 2)",
+                  width: `calc((100% - 8px) / ${TABS.length})`,
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
                   boxShadow: "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(164,125,63,0.22)",
@@ -1475,6 +1736,18 @@ function OrderContent() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* JUST TYPE — natural-language entry */}
+          {tab === "type" && (
+            <JustTypeTab
+              cart={cart}
+              onAddMultiple={addToCart}
+              userFavs={userFavs}
+              onToggleFavourite={toggleFavourite}
+              customDrinks={customDrinks}
+              hiddenDrinks={hiddenDrinks}
+            />
           )}
 
           {/* ALL DRINKS — builder */}
