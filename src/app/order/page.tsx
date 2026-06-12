@@ -581,25 +581,15 @@ function JustTypeTab({
         />
       </div>
 
-      {/* Empty state — gentle hint when input is blank */}
+      {/* Empty-state tip — single italic line of example phrases. Not
+          interactive; just a gentle hint at what the matcher can handle. */}
       {!trimmed && (
-        <div className="flex flex-col gap-2 py-2">
-          <p className="text-[11px] uppercase tracking-[0.22em] font-sans text-stone-400 dark:text-stone-500">
+        <p className="text-[12px] font-serif italic font-light text-stone-400 dark:text-stone-500 leading-relaxed">
+          <span className="text-[10px] not-italic uppercase tracking-[0.22em] font-sans font-medium text-stone-400 dark:text-stone-500 mr-2">
             Try
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {["kopi c siew dai peng", "iced milo", "2 teh tarik", "kopi peng, 1 horlicks"].map((eg) => (
-              <button
-                key={eg}
-                type="button"
-                onClick={() => { setInput(eg); inputRef.current?.focus(); }}
-                className="text-[12px] font-serif italic font-light text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 px-3 py-1.5 rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95]"
-              >
-                {eg}
-              </button>
-            ))}
-          </div>
-        </div>
+          </span>
+          &ldquo;kopi c siew dai peng&rdquo;, &ldquo;iced milo&rdquo;, &ldquo;2 teh tarik&rdquo;.
+        </p>
       )}
 
       {/* Multi-drink summary card */}
