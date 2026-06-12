@@ -71,6 +71,21 @@ main {
   .skeleton { animation: none; }
 }
 
+/* ── Global reduced-motion ──
+   Vestibular-sensitive users get the same content with motion disabled.
+   We blanket-zero transitions and infinite animations (breathe / pulse /
+   gradient drift / shimmer), but keep one-shot entrance fades very short
+   so the UI still acknowledges state changes. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  main { animation: none; }
+}
+
 .liquid-glass-top {
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);

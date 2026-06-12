@@ -54,12 +54,13 @@ export function MembersChipSkeleton() {
 }
 
 /** Orders list session card placeholder — the runner sees this on /orders
-    while the network round-trip lands. */
+    while the network round-trip lands. Decorative; the parent wrapper
+    carries the aria-label so multiple stacked skeletons announce once. */
 export function SessionSkeleton() {
   return (
     <div
       className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-5 flex flex-col gap-4"
-      aria-label="Loading orders"
+      aria-hidden="true"
     >
       <div className="flex items-center justify-between gap-3">
         <SkeletonBox className="h-5 w-32" />
