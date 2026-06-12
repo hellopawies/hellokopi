@@ -25,12 +25,15 @@ export function Header() {
   useEffect(() => {
     try { setCachedName(localStorage.getItem("hellokopi_name")); } catch {}
   }, [path]);
-  const showAdminLink = !onAdmin && cachedName !== null && ADMIN_NAMES.has(cachedName);
+  // Admin gear is suppressed on the home page — the greeting screen is for
+  // picking a name, not jumping into admin. Aaron still gets the shortcut
+  // on every other route.
+  const showAdminLink = !onAdmin && !onHome && cachedName !== null && ADMIN_NAMES.has(cachedName);
 
   return (
     <>
       {/* Top-left cluster: home + (Aaron-only) admin gear */}
-      {(!onHome || showAdminLink) && (
+      {!onHome && (
         <div className="fixed top-0 left-0 z-50 p-5 sm:p-6 flex items-center gap-3">
           {!onHome && (
             <Link
