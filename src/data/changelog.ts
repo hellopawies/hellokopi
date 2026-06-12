@@ -1,5 +1,15 @@
 export const VERSIONS = [
   {
+    version: "v3.5.10",
+    date: "12 Jun 2026",
+    title: "Spring motion + bento My Picks + shimmer loaders",
+    changes: [
+      "Chips, pills, tab fades and primary buttons now use a soft spring curve — taps settle with a tiny overshoot instead of an ease-out slide. Same durations, more \"alive\".",
+      "My Picks layout is now a bento grid: your most-recently-saved drink gets a larger tile with a coloured dot and a bit more breathing room, the rest sit beside it. Single column on mobile so cards stay tappable.",
+      "Replaced the brewing-cup loader on the orders list and My Picks with shimmer skeletons shaped like the real content — the page snaps to its final layout while data lands, so nothing pops in. Honours prefers-reduced-motion (sweep disabled, placeholder stays).",
+    ],
+  },
+  {
     version: "v3.5.9",
     date: "28 Apr 2026",
     title: "Continue button breathes",

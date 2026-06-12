@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from "rea
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import BrewingCup from "@/app/components/BrewingCup";
+import { MyPicksBentoSkeleton } from "@/app/components/Skeleton";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { generateOrderRef } from "@/lib/orderRef";
@@ -218,7 +219,7 @@ function Heart({ filled, bursting }: { filled: boolean; bursting?: boolean }) {
 
 // ─── Drink card (grid view) ───────────────────────────────────
 function DrinkCard({
-  name, description, selected, qty, onSelect, favourited, onToggleFavourite, count, enterDelay,
+  name, description, selected, qty, onSelect, favourited, onToggleFavourite, count, enterDelay, hero,
 }: {
   name: string;
   description?: string;
@@ -229,31 +230,47 @@ function DrinkCard({
   onToggleFavourite: () => void;
   count?: number;
   enterDelay?: number;
+  /** Promotes the card to a larger bento tile — larger serif name, drink-
+      colour dot, room for description to breathe. Used for the first
+      saved pick on My Picks. */
+  hero?: boolean;
 }) {
   const [bursting, setBursting] = useState(false);
   const { lang } = useLanguage();
   return (
     <div
       className="relative h-full"
-      style={enterDelay !== undefined ? { animation: `pageIn 0.3s ease-out ${enterDelay}ms both` } : undefined}
+      style={enterDelay !== undefined ? { animation: `pageIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) ${enterDelay}ms both` } : undefined}
     >
       <button
         type="button"
         onClick={onSelect}
         className={`
-          h-full w-full flex flex-col text-left p-3.5 border rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.97]
+          h-full w-full flex flex-col text-left border rounded-xl transition-all duration-200 ease-spring touch-manipulation active:scale-[0.97]
+          ${hero ? "p-5 sm:p-6" : "p-3.5"}
           ${selected
             ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
             : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm"}
         `}
       >
-        <p className={`text-sm font-sans font-medium leading-snug pr-7 ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
+        {hero && (
+          <span
+            aria-hidden
+            className="block w-2 h-2 rounded-full mb-2"
+            style={{ background: drinkColor(name) }}
+          />
+        )}
+        <p className={`font-sans font-medium leading-snug pr-7 ${
+          hero ? "text-base sm:text-lg" : "text-sm"
+        } ${selected ? "text-white dark:text-stone-900" : "text-stone-800 dark:text-stone-100"}`}>
           {displayDrinkName(name, lang)}
-          <TempIcon name={name} className="inline w-3 h-3 ml-1.5 align-middle" />
+          <TempIcon name={name} className={`inline ml-1.5 align-middle ${hero ? "w-3.5 h-3.5" : "w-3 h-3"}`} />
           {selected && qty > 1 ? <span className="ml-1.5 text-[11px] font-normal opacity-60">×{qty}</span> : null}
         </p>
         {description && (
-          <p className={`text-[11px] font-sans mt-0.5 leading-snug ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
+          <p className={`font-sans mt-0.5 leading-snug ${
+            hero ? "text-xs sm:text-[13px] mt-1.5" : "text-[11px]"
+          } ${selected ? "text-stone-300 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"}`}>
             <AnnotatedText text={description} selected={selected} />
           </p>
         )}
@@ -335,7 +352,9 @@ function DrinkRow({
 }
 
 function TabLoading() {
-  return <BrewingCup className="py-16" />;
+  // Layout-shaped skeleton instead of a centred cup — keeps the My Picks
+  // grid from popping in once data lands.
+  return <MyPicksBentoSkeleton count={5} />;
 }
 
 // ─── Modifier row (pill buttons, one selected at a time) ─────
@@ -350,7 +369,7 @@ function ModifierRow({
   disabled?: boolean;
 }) {
   const pillCls = (active: boolean) =>
-    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+    `px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] ${
       active
         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
         : "bg-stone-100 dark:bg-stone-900 text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
@@ -475,7 +494,7 @@ function DrinkBuilder({
   }, [search, allDrinksFlat]);
 
   const baseChipCls = (active: boolean) =>
-    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+    `px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] ${
       active
         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
         : "bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-500 shadow-sm hover:shadow-md"
@@ -606,7 +625,7 @@ function DrinkBuilder({
                     key={sp.label}
                     type="button"
                     onClick={() => setSpecial(special === sp.label ? "" : sp.label)}
-                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] ${
+                    className={`px-3 py-1.5 text-[11px] font-sans border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] ${
                       special === sp.label
                         ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200 shadow-md"
                         : "bg-stone-100 dark:bg-stone-900 text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:border-stone-500 shadow-sm hover:shadow-md"
@@ -705,7 +724,7 @@ function SuccessToast({ items, orderedAt, onDismiss }: {
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <Link
                 href="/orders"
-                className="text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                className="text-[11px] uppercase tracking-[0.15em] font-sans font-medium text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 px-3 py-1.5 rounded-full hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95]"
               >
                 View
               </Link>
@@ -1206,7 +1225,7 @@ function OrderContent() {
                   <button
                     type="button"
                     onClick={cancelOrder}
-                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-red-400 dark:text-red-300 border border-red-200 dark:border-red-800 dark:bg-red-950 px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900 transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-red-400 dark:text-red-300 border border-red-200 dark:border-red-800 dark:bg-red-950 px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900 transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95]"
                   >
                     Cancel
                   </button>
@@ -1218,7 +1237,7 @@ function OrderContent() {
                       setIsEditing(true);
                       setExistingOrder(null);
                     }}
-                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 touch-manipulation active:scale-[0.95]"
+                    className="text-[11px] uppercase tracking-[0.2em] font-sans font-medium text-stone-500 dark:text-stone-200 border border-stone-200 dark:border-stone-600 dark:bg-stone-800 px-3 py-1.5 rounded-full hover:border-stone-500 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-white transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95]"
                   >
                     Edit
                   </button>
@@ -1242,7 +1261,7 @@ function OrderContent() {
 
           {/* MY PICKS */}
           {tab === "yours" && (
-            <div style={{ animation: "tabIn 0.18s ease-out both" }}>
+            <div style={{ animation: "tabIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
               {loadingFavs && <TabLoading />}
               {!loadingFavs && lastOrder && lastOrder.length > 0 && (
                 <div className="mb-5 pb-5 border-b border-stone-100 dark:border-stone-800">
@@ -1288,21 +1307,34 @@ function OrderContent() {
                 </div>
               )}
               {!loadingFavs && userFavs.size > 0 && (
-                <div className="grid grid-cols-2 gap-2.5 mb-5">
+                // Bento layout: first pick becomes a 2x2 hero on ≥sm; the rest
+                // tile as half-width cards. Drops to a single column on mobile
+                // so cards stay tappable. grid-auto-flow:dense lets later
+                // small cards fill leftover space beside the hero.
+                <div
+                  className="grid grid-cols-4 gap-2.5 mb-5"
+                  style={{ gridAutoFlow: "dense" }}
+                >
                   {[...userFavs].map((drinkName, index) => {
                     const drink = DRINKS_MAP.get(drinkName);
+                    const isHero = index === 0;
+                    const span = isHero
+                      ? "col-span-4 sm:col-span-2 sm:row-span-2"
+                      : "col-span-2";
                     return (
-                      <DrinkCard
-                        key={drinkName}
-                        name={drinkName}
-                        description={drink?.description ?? synthesiseDescription(drinkName)}
-                        selected={cart.has(drinkName)}
-                        qty={cart.get(drinkName) ?? 0}
-                        onSelect={() => toggleCart(drinkName)}
-                        favourited={true}
-                        onToggleFavourite={() => toggleFavourite(drinkName)}
-                        enterDelay={index * 35}
-                      />
+                      <div key={drinkName} className={span}>
+                        <DrinkCard
+                          name={drinkName}
+                          description={drink?.description ?? synthesiseDescription(drinkName)}
+                          selected={cart.has(drinkName)}
+                          qty={cart.get(drinkName) ?? 0}
+                          onSelect={() => toggleCart(drinkName)}
+                          favourited={true}
+                          onToggleFavourite={() => toggleFavourite(drinkName)}
+                          enterDelay={index * 35}
+                          hero={isHero}
+                        />
+                      </div>
                     );
                   })}
                 </div>
@@ -1315,7 +1347,7 @@ function OrderContent() {
                     type="button"
                     onClick={handleSurprise}
                     disabled={surprise === "picking"}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed transition-all duration-200 touch-manipulation active:scale-[0.98] ${
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed transition-all duration-200 ease-spring touch-manipulation active:scale-[0.98] ${
                       surprise !== "idle" && surprise !== "picking"
                         ? "border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-900"
                         : "border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500"
@@ -1363,7 +1395,7 @@ function OrderContent() {
 
           {/* ALL DRINKS — builder */}
           {tab === "all" && (
-            <div style={{ animation: "tabIn 0.18s ease-out both" }}>
+            <div style={{ animation: "tabIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
               <DrinkBuilder
                 cart={cart}
                 onToggleCart={toggleCart}
@@ -1405,7 +1437,7 @@ function OrderContent() {
                 <button
                   type="button"
                   onClick={() => toggleCart(builderDrink)}
-                  className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 touch-manipulation active:scale-[0.95] shadow-sm hover:shadow-md ${
+                  className={`flex-shrink-0 px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-sans font-medium border rounded-full transition-all duration-200 ease-spring touch-manipulation active:scale-[0.95] shadow-sm hover:shadow-md ${
                     cart.has(builderDrink)
                       ? "bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200"
                       : "text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 hover:border-stone-600 dark:hover:border-stone-400"
@@ -1471,7 +1503,7 @@ function OrderContent() {
                 w-full py-3 rounded-xl
                 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
                 text-sm tracking-wide font-sans font-medium
-                transition-all duration-200 touch-manipulation
+                transition-all duration-200 ease-spring touch-manipulation
                 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
                 hover:bg-stone-700 dark:hover:bg-stone-300 active:bg-stone-900 dark:active:bg-stone-100
                 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none
