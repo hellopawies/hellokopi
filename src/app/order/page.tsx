@@ -266,46 +266,58 @@ function DrinkCard({
       className="relative h-full"
       style={enterDelay !== undefined ? { animation: `pageIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) ${enterDelay}ms both` } : undefined}
     >
-      {/* Newsprint: hairline-bordered card with sharper corners, no drop
-          shadow, no hover-lift. The card *is* the page — it doesn't float
-          above it. Temperature band + drink-colour dot stay (functional). */}
       <button
         type="button"
         onClick={onSelect}
         className={`
-          relative overflow-hidden h-full w-full flex flex-col text-left border-2 rounded-sm transition-colors duration-200 touch-manipulation active:opacity-80
+          relative overflow-hidden h-full w-full flex flex-col text-left border rounded-xl transition-all duration-200 ease-spring touch-manipulation active:scale-[0.97]
           ${hero ? "p-5 sm:p-6" : "p-3.5"}
           ${selected
-            ? "bg-stone-900 border-stone-900 dark:bg-stone-100 dark:border-stone-100"
-            : "bg-cream dark:bg-black border-stone-900 dark:border-stone-100 hover:bg-stone-100 dark:hover:bg-stone-900"}
+            ? "bg-stone-800 border-stone-800 dark:bg-stone-200 dark:border-stone-200 shadow-md"
+            : "bg-white dark:bg-[#111] border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 hover:shadow-md hover:-translate-y-0.5 shadow-sm dark:before:absolute dark:before:inset-x-0 dark:before:top-0 dark:before:h-px dark:before:bg-gradient-to-r dark:before:from-transparent dark:before:via-stone-500/30 dark:before:to-transparent dark:before:content-['']"}
         `}
       >
-        {/* Temperature band — kept as a functional signal. Slightly thicker
-            (3px) for newsprint emphasis; spans the full card width. */}
+        {/* Temperature edge band — a 2px coloured stripe along the top
+            doubles up the hot/iced signal and gives the card a visual
+            spine. Hidden when selected (dark fill obscures it anyway). */}
         {!selected && (() => {
           const t = drinkTemp(name);
           if (!t) return null;
           return (
             <span
               aria-hidden
-              className="absolute inset-x-0 top-0 h-[3px] pointer-events-none"
+              className="absolute inset-x-0 top-0 h-[2px] pointer-events-none rounded-t-xl"
               style={{
-                background: t === "iced" ? "rgba(99,152,238,0.85)" : "rgba(239,68,68,0.8)",
+                background: t === "iced"
+                  ? "linear-gradient(90deg, transparent, rgba(99,152,238,0.85), transparent)"
+                  : "linear-gradient(90deg, transparent, rgba(239,68,68,0.7), transparent)",
               }}
             />
           );
         })()}
+        {hero && !selected && (
+          // Soft radial wash in the drink's signature colour — gives the
+          // hero tile a visual identity beyond just being larger. Sits
+          // behind content; pointer-events-none so it can't catch taps.
+          <span
+            aria-hidden
+            className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none opacity-40 dark:opacity-25"
+            style={{
+              background: `radial-gradient(circle, ${drinkColor(name)} 0%, transparent 65%)`,
+            }}
+          />
+        )}
         {hero && (
           <div className="flex items-center gap-2 mb-2 relative">
             <span
               aria-hidden
-              className="block w-2.5 h-2.5"
+              className="block w-2.5 h-2.5 rounded-full"
               style={{ background: drinkColor(name) }}
             />
-            <span className={`font-serif italic text-[13px] font-light ${
-              selected ? "text-stone-300 dark:text-stone-600" : "text-stone-500 dark:text-stone-400"
+            <span className={`text-[9px] uppercase tracking-[0.22em] font-sans font-medium ${
+              selected ? "text-stone-400 dark:text-stone-600" : "text-stone-400 dark:text-stone-500"
             }`}>
-              Featured
+              Featured pick
             </span>
           </div>
         )}
