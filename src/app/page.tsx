@@ -181,7 +181,6 @@ export default function GreetingPage() {
             >
               <button
                 onClick={handleCachedContinue}
-                style={{ animation: "btnPulse 2.5s ease-in-out infinite" }}
                 className="
                   mt-1 w-full sm:w-auto sm:px-12 py-3.5
                   border-2 border-stone-900 dark:border-stone-100
@@ -273,7 +272,6 @@ export default function GreetingPage() {
               <button
                 type="submit"
                 disabled={!canContinue}
-                style={canContinue ? { animation: "btnPulse 2.5s ease-in-out infinite" } : undefined}
                 className="
                   mt-1 w-full sm:w-auto sm:px-12 py-3.5
                   border-2 border-stone-900 dark:border-stone-100

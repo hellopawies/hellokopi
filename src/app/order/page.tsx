@@ -1393,17 +1393,17 @@ function OrderContent() {
         {/* Tabs */}
         <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
-            <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
-              {/* Sliding pill — kopi-brown underglow (E14) gives the active
-                  tab a tinted shadow so it reads as raised, not just filled. */}
+            {/* Newsprint tabs — top + bottom black rules, sliding ink-fill
+                pill underneath that's square (no rounding) and shadowless.
+                Active label flips italic + cream/black. Inactive labels
+                stay tracked-uppercase since they're UI chrome. */}
+            <div className="relative flex border-y-2 border-stone-900 dark:border-stone-100">
               <div
-                className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 rounded-full pointer-events-none"
+                className="absolute top-0 bottom-0 bg-stone-900 dark:bg-stone-100 pointer-events-none"
                 style={{
-                  left: 4,
-                  width: `calc((100% - 8px) / ${TABS.length})`,
+                  width: `calc(100% / ${TABS.length})`,
                   transform: `translateX(${tabIndex * 100}%)`,
                   transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(164,125,63,0.22)",
                 }}
               />
               {TABS.map((t) => (
@@ -1411,11 +1411,11 @@ function OrderContent() {
                   key={t.id}
                   onClick={() => { setTab(t.id); if (t.id !== "all") setBuilderDrink(""); }}
                   className={`
-                    relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
-                    font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
+                    relative z-10 flex-1 py-2.5 text-center text-[11px] uppercase tracking-[0.2em]
+                    font-sans font-medium transition-colors duration-200 touch-manipulation whitespace-nowrap
                     ${tab === t.id
-                      ? "text-stone-800 dark:text-stone-100"
-                      : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-400"}
+                      ? "text-cream dark:text-stone-900"
+                      : "text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100"}
                   `}
                 >
                   {t.label}
@@ -1669,20 +1669,14 @@ function OrderContent() {
         </div>
       </div>
 
-      {/* Floating dock cart (D10) — lifted further from the edge with a
-          stronger drop shadow and a soft kopi-brown underglow when items
-          are in the cart (D11 page tint). Reads as a discrete object
-          floating above the page rather than a strip glued to the bottom. */}
+      {/* Newsprint cart strip — no more rounded dock. A flat panel pinned
+          to the bottom edge with a 3px black rule on top, like a footer
+          block on a broadsheet's back page. Subtle backdrop blur stays
+          so content scrolls behind it. */}
       {(cart.size > 0 || builderDrink) && (
-        <div className="fixed bottom-6 sm:bottom-8 left-0 right-0 z-40 px-4 sm:px-6">
-          <div
-            className="max-w-lg mx-auto rounded-[20px] bg-[#FAFAF8]/95 dark:bg-[#111]/95 backdrop-blur-xl px-4 pt-3.5 pb-4 flex flex-col gap-2.5 border border-stone-200 dark:border-stone-700/60"
-            style={{
-              boxShadow: cart.size > 0
-                ? "0 24px 48px -16px rgba(0,0,0,0.18), 0 12px 24px -10px rgba(164,125,63,0.25)"
-                : "0 16px 36px -14px rgba(0,0,0,0.16), 0 6px 14px -6px rgba(0,0,0,0.08)",
-            }}
-          >
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          <div className="border-t-[3px] border-stone-900 dark:border-stone-100 bg-cream/95 dark:bg-black/95 backdrop-blur-xl">
+            <div className="max-w-lg mx-auto px-4 sm:px-6 pt-3.5 pb-5 flex flex-col gap-2.5">
 
             {/* Builder preview row */}
             {builderDrink && (
@@ -1760,20 +1754,17 @@ function OrderContent() {
                 </div>
               </div>
             ))}
-            <div
-              className="mt-1 rounded-xl"
-              style={orderState !== "loading" ? { animation: "btnPulse 2.5s ease-in-out infinite" } : undefined}
-            >
+            <div className="mt-1">
             <button
               onClick={placeOrder}
               disabled={orderState === "loading" || !isConfigured}
               className="
-                w-full py-3 rounded-xl
-                bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900
-                text-sm tracking-wide font-sans font-medium
-                transition-all duration-200 ease-spring touch-manipulation
-                shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]
-                hover:bg-stone-700 dark:hover:bg-stone-300 active:bg-stone-900 dark:active:bg-stone-100
+                w-full py-3.5
+                bg-stone-900 dark:bg-stone-100 text-cream dark:text-stone-900
+                font-serif text-lg font-light italic tracking-wide
+                border-2 border-stone-900 dark:border-stone-100
+                transition-colors duration-200 touch-manipulation
+                hover:bg-cream hover:text-stone-900 dark:hover:bg-black dark:hover:text-stone-100
                 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none
               "
             >
@@ -1802,6 +1793,7 @@ function OrderContent() {
               </p>
             )}
             </>)}
+            </div>
           </div>
         </div>
       )}
