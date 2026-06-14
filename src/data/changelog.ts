@@ -9,5 +9,5 @@
 //             v3.5.12.
 
 export const VERSIONS = [
-  { version: "v3.8.0" },
+  { version: "v3.7.0" },
 ] as const;

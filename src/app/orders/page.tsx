@@ -372,13 +372,15 @@ export default function OrdersPage() {
         <div className="px-5 sm:px-8 pb-3 border-b border-stone-100 dark:border-stone-800">
           <div className="max-w-lg mx-auto">
             {visibleGroups.length > 0 ? (
-              <div className="relative flex border-y-2 border-stone-900 dark:border-stone-100">
+              <div className="relative flex bg-stone-100 dark:bg-stone-900 rounded-full p-1">
                 <div
-                  className="absolute top-0 bottom-0 bg-stone-900 dark:bg-stone-100 pointer-events-none"
+                  className="absolute top-1 bottom-1 bg-white dark:bg-stone-700 rounded-full pointer-events-none"
                   style={{
-                    width: `calc(100% / ${visibleGroups.length})`,
+                    left: 4,
+                    width: `calc((100% - 8px) / ${visibleGroups.length})`,
                     transform: `translateX(${tabIndex * 100}%)`,
                     transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(164,125,63,0.22)",
                   }}
                 />
                 {visibleGroups.map(({ dateKey }) => (
@@ -386,11 +388,11 @@ export default function OrdersPage() {
                     key={dateKey}
                     onClick={() => setSelectedDate(dateKey)}
                     className={`
-                      relative z-10 flex-1 py-2.5 text-center text-[11px] uppercase tracking-[0.2em]
-                      font-sans font-medium transition-colors duration-200 touch-manipulation whitespace-nowrap
+                      relative z-10 flex-1 py-1.5 text-center text-[10px] uppercase tracking-[0.15em]
+                      font-sans font-medium rounded-full transition-colors duration-200 touch-manipulation whitespace-nowrap
                       ${selectedDate === dateKey
-                        ? "text-cream dark:text-stone-900"
-                        : "text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100"}
+                        ? "text-stone-800 dark:text-stone-100"
+                        : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-400"}
                     `}
                   >
                     {dateLabel(dateKey)}
@@ -493,25 +495,24 @@ export default function OrdersPage() {
                 const fillLabel = fillMin > 0 ? `${fillMin}m ${fillSec}s` : `${fillSec}s`;
                 const peopleCount = new Set(session.orders.map((o) => o.person_name)).size;
                 return (
-                  <div key={si} className="border-t-2 border-stone-900 dark:border-stone-100 pt-4">
-                    {/* Session header — newsprint masthead-row style: italic
-                        serif time range, square stat tags, kept readable
-                        with rounded-sm corners on the inline tags. */}
+                  <div key={si}>
                     <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="font-serif italic text-lg font-light text-stone-900 dark:text-stone-100 tracking-wide">
-                          {formatTime(session.sessionStart)} – {formatTime(new Date(session.sessionStart.getTime() + SESSION_MS))}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[12px] uppercase tracking-[0.2em] text-stone-700 dark:text-stone-200 font-sans font-medium">
+                          {formatTime(session.sessionStart)}
+                          {" – "}
+                          {formatTime(new Date(session.sessionStart.getTime() + SESSION_MS))}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 bg-stone-900 dark:bg-stone-100 text-cream dark:text-stone-900 text-[11px] font-sans font-medium tracking-wide rounded-sm">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-stone-800 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] font-sans font-medium tracking-wide">
                           {cups} {cups === 1 ? "cup" : "cups"}
                         </span>
                         {hotCups > 0 && (
-                          <span className="inline-flex items-center px-2 py-0.5 border-2 border-red-500 dark:border-red-400 text-red-500 dark:text-red-400 text-[11px] font-sans font-medium tabular-nums tracking-wide rounded-sm">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full border bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 text-[11px] font-sans font-medium tabular-nums tracking-wide">
                             {hotCups} hot
                           </span>
                         )}
                         {icedCups > 0 && (
-                          <span className="inline-flex items-center px-2 py-0.5 border-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400 text-[11px] font-sans font-medium tabular-nums tracking-wide rounded-sm">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full border bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-500 dark:text-blue-400 text-[11px] font-sans font-medium tabular-nums tracking-wide">
                             {icedCups} iced
                           </span>
                         )}
@@ -534,23 +535,23 @@ export default function OrdersPage() {
                             key={drink}
                             onClick={() => toggleTick(tickKey)}
                             aria-pressed={isTicked}
-                            className={`w-full text-left py-3.5 px-2 -mx-2 border-b border-stone-300 dark:border-stone-700 transition-colors duration-200 touch-manipulation hover:bg-stone-100/60 dark:hover:bg-stone-900/60 ${isTicked ? "opacity-40" : ""}`}
+                            className={`w-full text-left py-3.5 px-2 -mx-2 rounded-md border-b border-stone-100 dark:border-stone-800 transition-all duration-200 touch-manipulation hover:bg-stone-100/60 dark:hover:bg-stone-900/60 ${isTicked ? "opacity-40" : ""}`}
                           >
-                            <p className={`font-serif text-base font-light tracking-wide text-stone-900 dark:text-stone-100 leading-snug ${isTicked ? "line-through" : ""}`}>
+                            <p className={`text-sm font-sans font-medium text-stone-800 dark:text-stone-100 leading-snug ${isTicked ? "line-through" : ""}`}>
                               <span
                                 aria-hidden="true"
-                                className="inline-block w-[8px] h-[8px] mr-2 align-middle flex-shrink-0"
+                                className="inline-block w-[7px] h-[7px] rounded-full mr-2 align-middle flex-shrink-0"
                                 style={{ backgroundColor: drinkColor(drink) }}
                               />
                               {displayDrinkName(drink, lang)}
                               <TempIcon name={drink} className="inline w-3 h-3 ml-1.5 align-middle" />
                               {names.length > 1 && (
-                                <span className="ml-2 px-1.5 py-0.5 border border-stone-700 dark:border-stone-300 text-[10px] font-sans font-medium text-stone-700 dark:text-stone-300 tracking-wide align-middle tabular-nums">
+                                <span className="ml-1.5 px-1.5 py-0.5 border border-stone-200 dark:border-stone-600 rounded-full text-[10px] font-sans font-medium text-stone-500 dark:text-stone-400 tracking-wide align-middle">
                                   × {names.length}
                                 </span>
                               )}
                             </p>
-                            <p className="font-serif italic text-[12px] font-light text-stone-500 dark:text-stone-400 mt-1 leading-relaxed">
+                            <p className="text-[11px] font-sans text-stone-400 dark:text-stone-500 mt-1 leading-relaxed">
                               {(() => {
                                 const counts = new Map<string, number>();
                                 for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
