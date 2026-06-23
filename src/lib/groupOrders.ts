@@ -1,4 +1,4 @@
-import type { Order, Session, DateGroup } from "@/types/order";
+import type { Order, Session, DateGroup } from "@/lib/order";
 import { SESSION_MS, TIMEZONE_SG } from "@/lib/constants";
 
 export function groupOrders(orders: Order[]): DateGroup[] {

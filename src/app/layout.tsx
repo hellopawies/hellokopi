@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "./components/Header";
-import { PullToRefresh } from "./components/PullToRefresh";
+import { Header } from "@/components/Header";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { LanguageProvider } from "@/lib/language";
 
 // Self-hosted via next/font — replaces the previous render-blocking
