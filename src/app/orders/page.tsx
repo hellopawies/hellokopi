@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { SessionSkeleton } from "@/app/components/Skeleton";
+import { SessionSkeleton } from "@/components/Skeleton";
 import { useDelayed } from "@/lib/useDelayed";
 import Link from "next/link";
 import { supabase, isConfigured } from "@/lib/supabase";
@@ -9,8 +9,8 @@ import { groupOrders } from "@/lib/groupOrders";
 import { drinkColor } from "@/lib/drinkColor";
 import { displayDrinkName } from "@/lib/drinkName";
 import { useLanguage } from "@/lib/language";
-import { TempIcon } from "@/app/components/TempIcon";
-import type { Order, DateGroup, Session } from "@/types/order";
+import { TempIcon } from "@/components/TempIcon";
+import type { Order, DateGroup, Session } from "@/lib/order";
 import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
 
 function groupByDrink(session: Session): { drink: string; names: string[] }[] {

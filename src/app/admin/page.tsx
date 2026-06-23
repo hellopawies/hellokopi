@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
 import { groupOrders } from "@/lib/groupOrders";
-import BrewingCup from "@/app/components/BrewingCup";
+import BrewingCup from "@/components/BrewingCup";
 import { OTHERS_DRINKS } from "@/data/menu";
 import { displayDrinkName } from "@/lib/drinkName";
 import { useLanguage } from "@/lib/language";
-import type { Order } from "@/types/order";
+import type { Order } from "@/lib/order";
 import { SESSION_MS, TIMEZONE_SG, formatTime } from "@/lib/constants";
 
 // Client-side hash. Anyone with the bundle can reverse this — it's just a soft
