@@ -188,10 +188,20 @@ export function searchDrinks(
   return scored.filter((s) => s.score >= threshold).slice(0, limit);
 }
 
+/** English number words → integer. Covers the realistic typing range. */
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5,
+  six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12,
+  // Tolerate common single-letter shorthands
+  a: 1, an: 1,
+};
+
 /**
  * Parse multi-drink input. "2 kopi c, 1 teh peng" → two chunks. Recognised
- * separators: comma, "and", "+", "&". Leading integer (1–9) becomes the qty.
- * No separator → single chunk with qty 1.
+ * separators: comma, "and", "+", "&". Leading qty can be either a digit
+ * ("2 kopi") or an English number word ("two kopi", "a teh"). No separator
+ * → single chunk with qty 1.
  */
 export function parseChunks(input: string): Chunk[] {
   const parts = input
@@ -199,11 +209,21 @@ export function parseChunks(input: string): Chunk[] {
     .map((s) => s.trim())
     .filter(Boolean);
   return parts.map((part) => {
-    const m = part.match(/^(\d+)\s*(?:x\s+|×\s+)?(.+)$/i);
-    if (m) {
-      const qty = Math.min(99, Math.max(1, parseInt(m[1], 10)));
-      return { qty, query: m[2].trim() };
+    // Digit prefix
+    const digit = part.match(/^(\d+)\s*(?:x\s+|×\s+)?(.+)$/i);
+    if (digit) {
+      const qty = Math.min(99, Math.max(1, parseInt(digit[1], 10)));
+      return { qty, query: digit[2].trim() };
+    }
+    // Word prefix ("two kopi c", "a teh peng")
+    const word = part.match(/^(\w+)\s+(.+)$/);
+    if (word) {
+      const key = word[1].toLowerCase();
+      if (key in NUMBER_WORDS) {
+        return { qty: NUMBER_WORDS[key], query: word[2].trim() };
+      }
     }
     return { qty: 1, query: part };
   });
 }
+
