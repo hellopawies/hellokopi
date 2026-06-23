@@ -26,14 +26,31 @@ export interface Chunk {
  */
 const SYNONYMS: ReadonlyArray<readonly [string, string[]]> = [
   // Multi-word first (longest-match wins in expandPhrase below)
-  ["less sweet",   ["siew", "dai"]],
-  ["extra sweet",  ["gah", "dai"]],
-  ["no sugar",     ["kosong"]],
-  ["extra strong", ["di", "lo"]],
-  ["extra thick",  ["gao"]],
-  ["ginger tea",   ["teh", "halia"]],
-  ["milk tea",     ["teh"]],
-  ["soya milk",    ["soya"]],
+  // -- sweetness axis: SIN has three positions (siew dai / gah dai / kosong);
+  //    English speakers reach for "sugar" or "sweet" interchangeably, so map
+  //    both phrasings to the same SIN tokens.
+  ["less sweet",      ["siew", "dai"]],
+  ["less sweetened",  ["siew", "dai"]],
+  ["less sugar",      ["siew", "dai"]],
+  ["lesser sugar",    ["siew", "dai"]],
+  ["lesser sweet",    ["siew", "dai"]],
+  ["light sugar",     ["siew", "dai"]],
+  ["light sweet",     ["siew", "dai"]],
+  ["extra sweet",     ["gah", "dai"]],
+  ["extra sweetened", ["gah", "dai"]],
+  ["extra sugar",     ["gah", "dai"]],
+  ["more sugar",      ["gah", "dai"]],
+  ["more sweet",      ["gah", "dai"]],
+  ["very sweet",      ["gah", "dai"]],
+  ["no sugar",        ["kosong"]],
+  ["without sugar",   ["kosong"]],
+  ["no sweet",        ["kosong"]],
+  ["unsweetened",     ["kosong"]],
+  ["extra strong",    ["di", "lo"]],
+  ["extra thick",     ["gao"]],
+  ["ginger tea",      ["teh", "halia"]],
+  ["milk tea",        ["teh"]],
+  ["soya milk",       ["soya"]],
 
   // Single-word EN → SIN
   ["iced",    ["peng"]],
