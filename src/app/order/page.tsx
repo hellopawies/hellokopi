@@ -295,18 +295,6 @@ function DrinkCard({
             />
           );
         })()}
-        {hero && !selected && (
-          // Soft radial wash in the drink's signature colour — gives the
-          // hero tile a visual identity beyond just being larger. Sits
-          // behind content; pointer-events-none so it can't catch taps.
-          <span
-            aria-hidden
-            className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none opacity-40 dark:opacity-25"
-            style={{
-              background: `radial-gradient(circle, ${drinkColor(name)} 0%, transparent 65%)`,
-            }}
-          />
-        )}
         {hero && (
           <div className="flex items-center gap-2 mb-2 relative">
             <span
