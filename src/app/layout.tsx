@@ -46,6 +46,30 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <head>
+        {/* Content-Security-Policy (defense-in-depth). GitHub Pages can't set
+            HTTP headers, so this is the <meta> form. 'unsafe-inline' is
+            required for scripts/styles because a static Next export injects
+            inline hydration scripts and there's no way to attach a per-request
+            nonce. The high-value directives here are connect-src (only this
+            origin + our Supabase project can receive fetch/websocket traffic,
+            so a future XSS can't exfiltrate data elsewhere) and object-src
+            'none'. frame-ancestors / X-Frame-Options need a real header and
+            can't be set from a static host. */}
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content={[
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data:",
+            "font-src 'self'",
+            "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+            "manifest-src 'self'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+          ].join("; ")}
+        />
         <link rel="manifest" href="/hellokopi/manifest.json" />
         {/* Default apple-touch-icon — cream brand background, blends with iOS
             light home screen and tinted modes. Dark variant kicks in via
